@@ -1,0 +1,24 @@
+# Cliente
+version: '3'
+services:
+  client:
+    container_name: client
+    entrypoint: python3 /main.py
+    environment:
+      - PYTHONUNBUFFERED=1
+      - HOST=receiver
+      - PORT=12345
+      - HOST_CONSULT=results_verifier
+      - PORT_CONSULT=12346
+      - CHUNK_SIZE=100
+      - MAX_RETRIES=50
+      - AMOUNT_QUERIES=3
+    image: client:latest
+    networks:      
+      - testing_net
+    volumes:
+    - ./client/results:/results
+networks:
+    testing_net:
+      external:
+        name: tp1_testing_net

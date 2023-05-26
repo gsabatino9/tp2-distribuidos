@@ -1,0 +1,41 @@
+{
+  "config": {
+  	"queues": {
+  		"joiners": {
+  			"stations": "joiner_stations_q",
+  			"weather": "joiner_weather_q",
+  			"join_trip_stations": "join_trip_stations_q",
+  			"join_trip_weather": "join_trip_weather_q"
+  		},
+  		"filters": {
+  			"filter_trip_stations": "filter_joined_stations_q",
+  			"filter_trip_weather": "filter_joined_weather_q",
+  			"filter_year": "filter_year_q",
+  			"filter_pretoc": "filter_pretoc_q",
+  			"filter_distance": "filter_distance_q"
+  		},
+  		"groupby_query1": "groupby_start_date_q",
+  		"groupby_query2": "groupby_start_station_q",
+  		"groupby_query3": "groupby_end_station_q",
+  		"applier_query1": "mean_duration_applier_q",
+  		"applier_query2": "double_year_applier_q",
+  		"applier_query3": "mean_distance_applier_q",
+  		"results_verifier": "query_results_q"
+  	},
+  	"eof_manager_queues": {
+  		"joiners": "eof_manager_joiners_q",
+  		"filters": "eof_manager_filters_q",
+  		"groupby": "eof_manager_groupby_q",
+  		"appliers": "eof_manager_applier_q",
+  		"results_verifier": "eof_manager_query_result_q"
+  	},
+  	"amount_nodes": {
+  		"filter_year": 1,
+  		"filter_pretoc": 1,
+  		"filter_distance": 1,
+  		"applier_query1": 1,
+  		"applier_query2": 1,
+  		"applier_query3": 1
+  	}
+  }
+}
