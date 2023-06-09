@@ -1,11 +1,10 @@
-# Trabajo Práctico 1 - Sistemas Distribuidos
-> Alumno: Gonzalo Sabatino. Padrón: 104609.
+# Trabajo Práctico 2 - Sistemas Distribuidos
+> Alumnos: 
+Gonzalo Sabatino. Padrón: 104609.
+Mateo Capón Blanquer. Padrón: 104258.
 
 - [Link al set de datos](https://www.kaggle.com/datasets/jeanmidev/public-bike-sharing-in-north-america).
 - [Link a notebook de muestra de comandos](https://www.kaggle.com/code/pablodroca/bike-rides-analyzer).
-
-## Video de ejecución del sistema
-[Enlace al video](https://youtu.be/6_RNVpIEv2g).
 
 ## Ejecución
 > Nota: La estructura de los archivos de datos debe ser data/montreal, data/toronto, data/washington. Tal cual como fue bajada de kaggle.
