@@ -1,6 +1,7 @@
 import signal, sys
 from server.common.queue.connection import Connection
 from server.common.utils_messages_eof import *
+from server.common.utils_messages_status import get_id_client_from_msg
 
 
 class EOFManager:
@@ -12,6 +13,7 @@ class EOFManager:
         name_weather_queue,
         name_join_stations_queue,
         name_join_weather_queue,
+        name_status_queue,
     ):
         self.__init_eof_manager()
         self.__connect(
@@ -21,6 +23,7 @@ class EOFManager:
             name_weather_queue,
             name_join_stations_queue,
             name_join_weather_queue,
+            name_status_queue,
         )
         self.__run()
 
@@ -40,6 +43,7 @@ class EOFManager:
         name_weather_queue,
         name_join_stations_queue,
         name_join_weather_queue,
+        name_status_queue,
     ):
         try:
             self.queue_connection = Connection()
@@ -55,6 +59,8 @@ class EOFManager:
                 name_join_weather_queue
             )
 
+            self.status_queue = self.queue_connection.pubsub_queue(name_status_queue)
+
         except OSError as e:
             print(f"error: creating_queue_connection | log: {e}")
             self.stop()
@@ -63,8 +69,13 @@ class EOFManager:
         """
         start receiving messages.
         """
+        self.status_queue.receive(self.receive_new_client)
         self.recv_queue.receive(self.receive_msg)
         self.queue_connection.start_receiving()
+
+    def receive_new_client(self, ch, method, properties, body):
+        id_new_client = get_id_client_from_msg(body)
+        print(f"action: new_client | result: success | id_new_client: {id_new_client}")
 
     def receive_msg(self, ch, method, properties, body):
         header = decode(body)

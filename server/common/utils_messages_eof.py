@@ -7,7 +7,7 @@ def decode(header_bytes):
 
 
 def eof_msg(header):
-    return MessageEOF(MessageEOF.EOF, header.data_type).encode()
+    return MessageEOF(MessageEOF.EOF, header.data_type, header.id_client).encode()
 
 
 def is_eof(header):
@@ -22,9 +22,13 @@ def is_weather(header):
     return header.data_type == MessageEOF.WEATHER
 
 
-def ack_msg():
-    return MessageEOF.ack(MessageEOF.TRIP)
+def ack_msg(header_bytes):
+    id_client = get_id_client(header_bytes)
+    return MessageEOF.ack(MessageEOF.TRIP, id_client)
 
+def get_id_client(header_bytes):
+    header = decode(header_bytes)
+    return header.id_client
 
 class MessageEOF:
     # msg type
@@ -36,24 +40,24 @@ class MessageEOF:
     WEATHER = 1
     TRIP = 2
 
-    HEADER_CODE = "!BB"
+    HEADER_CODE = "!BBB"
     SIZE_HEADER = calcsize(HEADER_CODE)
 
-    Header = namedtuple("Header", "msg_type data_type")
+    Header = namedtuple("Header", "msg_type data_type id_client")
 
-    def __init__(self, msg_type, data_type):
-        self.header = self.Header(msg_type, data_type)
+    def __init__(self, msg_type, data_type, id_client):
+        self.header = self.Header(msg_type, data_type, id_client)
 
     def encode(self):
-        return pack(self.HEADER_CODE, self.header.msg_type, self.header.data_type)
+        return pack(self.HEADER_CODE, *self.header)
 
     @classmethod
-    def eof(cls, data_type):
-        return cls(cls.EOF, data_type).encode()
+    def eof(cls, data_type, id_client):
+        return cls(cls.EOF, data_type, id_client).encode()
 
     @classmethod
-    def ack(cls, data_type):
-        return cls(cls.ACK, data_type).encode()
+    def ack(cls, data_type, id_client):
+        return cls(cls.ACK, data_type, id_client).encode()
 
     @staticmethod
     def decode(header_bytes):

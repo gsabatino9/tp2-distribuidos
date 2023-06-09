@@ -2,8 +2,8 @@ from collections import namedtuple
 from struct import pack, unpack, calcsize
 
 
-def construct_msg(grouped_trips):
-    return MessageGroup(1, grouped_trips).encode()
+def construct_msg(id_client, grouped_trips):
+    return MessageGroup(id_client, grouped_trips).encode()
 
 
 def decode(body):
@@ -26,15 +26,15 @@ class MessageGroup:
     SIZE_HEADER = calcsize(HEADER_CODE)
 
     # Define the named tuples used in the protocol
-    Header = namedtuple("Header", "num_query len")
+    Header = namedtuple("Header", "id_client len")
     Payload = namedtuple("Payload", "data")
 
-    def __init__(self, num_query, payload):
+    def __init__(self, id_client, payload):
         if payload is None:
             payload = []
         payload_bytes = self._pack_payload(payload)
 
-        self.header = self.Header(num_query, len(payload_bytes))
+        self.header = self.Header(id_client, len(payload_bytes))
         self.payload = self.Payload(payload_bytes)
 
     def encode(self):
@@ -45,7 +45,7 @@ class MessageGroup:
 
     @staticmethod
     def encode_header(header):
-        return pack(MessageGroup.HEADER_CODE, header.num_query, header.len)
+        return pack(MessageGroup.HEADER_CODE, *header)
 
     @staticmethod
     def encode_payload(len_payload, payload):

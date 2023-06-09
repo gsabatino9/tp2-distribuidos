@@ -21,6 +21,10 @@ class CommunicationServer:
     def getpeername(self):
         return self.comm.getpeername()
 
+    def send_id_client(self, id_client):
+        msg = MessageServer.id_client_message(id_client)
+        self.comm.send_message(msg)
+
     def send_files_received(self):
         msg = MessageServer.files_received_message()
         self.comm.send_message(msg)

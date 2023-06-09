@@ -19,10 +19,10 @@ class GroupbyEndStation:
 
     def gen_key_value(self, trip):
         distance = haversine(
-            (float(trip[1]), float(trip[2])), (float(trip[4]), float(trip[5]))
+            (float(trip[0]), float(trip[1])), (float(trip[3]), float(trip[4]))
         )
 
-        return trip[3], distance
+        return trip[2], distance
 
     def stop(self):
         self.groupby_controller.stop()

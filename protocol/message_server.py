@@ -5,8 +5,9 @@ from struct import pack, unpack, calcsize
 class MessageServer:
     # Constants for message types
     FILES_RECEIVED = 0
-    QUERIES_PROCESSED = 1
-    SEND_LAST = 2
+    SEND_RESULT = 1
+    SEND_LAST_RESULT = 2
+    SEND_ID_CLIENT = 3
 
     # Struct format for message header
     HEADER_CODE = "!BBI"
@@ -114,8 +115,12 @@ class MessageServer:
 
     @classmethod
     def results_message(cls, id_query, results):
-        return cls(cls.QUERIES_PROCESSED, id_query, results).encode()
+        return cls(cls.SEND_RESULT, id_query, results).encode()
 
     @classmethod
     def last_chunk_message(cls):
-        return cls(cls.SEND_LAST, 0, list("")).encode()
+        return cls(cls.SEND_LAST_RESULT, 0, list("")).encode()
+
+    @classmethod
+    def id_client_message(cls, id_client):
+        return cls(cls.SEND_ID_CLIENT, id_client, list("")).encode()

@@ -1,64 +1,71 @@
 from protocol.communication_client import CommunicationClient
-from common.utils import construct_payload, construct_city, is_eof
+from common.utils import construct_payload, is_eof
 import csv, socket, time, signal, sys
 from itertools import islice
 from datetime import datetime, timedelta
 
 
 class Client:
-    def __init__(self, host, port, chunk_size, max_retries, amount_queries):
-        self.__init_client(chunk_size, max_retries, amount_queries)
+    def __init__(self, host, port, chunk_size, max_retries, suscriptions):
+        self.__init_client(chunk_size, max_retries, suscriptions)
         try:
             self.__connect(host, port)
         except OSError as e:
             print(f"error: creating_queue_connection | log: {e}")
             self.stop()
 
-    def __init_client(self, chunk_size, max_retries, amount_queries):
+    def __init_client(self, chunk_size, max_retries, suscriptions):
         self.running = True
         signal.signal(signal.SIGTERM, self.stop)
 
         self.chunk_size = chunk_size
         self.max_retries = max_retries
-        self.amount_queries = amount_queries
+        self.suscriptions = suscriptions
 
     def __connect(self, host, port):
         client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         client_socket.connect((host, port))
-        self.conn = CommunicationClient(client_socket)
+        self.conn = CommunicationClient(client_socket, self.suscriptions)
 
         print(
-            f"action: client_connected | result: success | addr: {self.conn.getpeername()}"
+            f"action: client_connected | result: success | addr: {self.conn.getpeername()} | suscriptions: {self.suscriptions}"
         )
 
-    def run(self, filepaths, types_files, cities, addr_consult):
-        self.__send_files(filepaths, types_files, cities)
+    def run(self, filepath, types_files, addr_consult):
+        self.__recv_id()
+        self.__send_files(filepath, types_files)
         self.__get_results(addr_consult)
 
-    def __send_files(self, filepaths, types_files, cities):
+    def __recv_id(self):
+        self.id_client = self.conn.recv_id_client()
+        print(
+            f"action: id_client_received | result: success | id_client: {self.id_client}"
+        )
+
+    def __send_files(self, filepath, types_files):
         for file in types_files:
-            self.__send_type_file(filepaths, file, cities)
+            self.__send_type_file(filepath, file)
 
         print(f"action: waiting_ack_files")
         self.conn.recv_files_received()
         print(f"action: ack_files | result: success | msg: all files sent to server")
         self.conn.stop()
 
-    def __send_type_file(self, filepaths, type_file, cities):
+    def __send_type_file(self, filepath, type_file):
         """
         it sends all the files of the same type (stations, weather, trips).
         """
         send_data = 0
-        for i, filepath in enumerate(filepaths):
-            with open(filepath + type_file + ".csv", newline="") as csvfile:
-                reader = csv.reader(csvfile, delimiter=",")
-                # skip header
-                next(reader)
-                send_data += self.__send_file_in_chunks(type_file, cities[i], reader)
 
-        self.__send_last(type_file, cities[i], send_data)
+        with open(filepath + type_file + ".csv", newline="") as csvfile:
+            reader = csv.reader(csvfile, delimiter=",")
+            # skip header
+            next(reader)
+            send_data += self.__send_file_in_chunks(type_file, reader)
 
-    def __send_file_in_chunks(self, type_file, city, reader):
+        self.__send_last(type_file, send_data)
+
+    def __send_file_in_chunks(self, type_file, reader):
         """
         it sends a file with grouped rows (chunk).
         """
@@ -69,21 +76,20 @@ class Client:
             if not chunk:
                 break
             chunk = self.__preprocess_chunk(type_file, chunk)
-            self.__send_chunk(type_file, chunk, city, False)
+            self.__send_chunk(type_file, chunk, False)
             send_data += 1
 
         return send_data
 
-    def __send_last(self, type_file, city, send_data):
-        self.__send_chunk(type_file, list(""), city, True)
+    def __send_last(self, type_file, send_data):
+        self.__send_chunk(type_file, list(""), True)
         print(
             f"action: file_sent | result: success | type_file: {type_file} | amount_chunks: {send_data}"
         )
 
-    def __send_chunk(self, data_type, chunk, city, last_chunk):
-        city = construct_city(city)
+    def __send_chunk(self, data_type, chunk, last_chunk):
         payload = construct_payload(chunk)
-        self.conn.send(data_type, payload, city, last_chunk)
+        self.conn.send(data_type, payload, last_chunk)
 
     def __preprocess_chunk(self, type_file, chunk):
         if type_file == "trips":
@@ -112,7 +118,7 @@ class Client:
 
     def __get_results(self, addr_consult):
         self.__connect_with_consults_server(addr_consult[0], addr_consult[1])
-        results = {i: [] for i in range(1, self.amount_queries + 1)}
+        results = {i: [] for i in self.suscriptions}
         ended = False
 
         while not ended:
@@ -141,6 +147,7 @@ class Client:
     def __try_connect(self, host, port):
         try:
             self.__connect(host, port)
+            self.conn.set_id_client(self.id_client)
             return True
         except:
             print(f"action: client_connected | result: failure | msg: retry in 1 sec")

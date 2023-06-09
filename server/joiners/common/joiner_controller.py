@@ -1,7 +1,7 @@
 import signal, sys
 from server.common.queue.connection import Connection
 from server.common.utils_messages_client import *
-from server.common.utils_messages_eof import ack_msg
+from server.common.utils_messages_eof import ack_msg, get_id_client
 
 
 class JoinerController:
@@ -65,32 +65,29 @@ class JoinerController:
 
     def __static_data_arrived(self, body):
         header, chunk_data = decode(body)
-        city = obtain_city(header)
+        self.__add_chunk_data(header.id_client, chunk_data)
 
-        self.__add_chunk_data(chunk_data, city)
-
-    def __add_chunk_data(self, chunk_data, city):
+    def __add_chunk_data(self, id_client, chunk_data):
         """
         stores all of the chunk of data.
         """
         for data in chunk_data:
             data = data.split(",")
-            self.joiner.add_data(city, data)
+            self.joiner.add_data(id_client, data)
 
     def process_join_messages(self, ch, method, properties, body):
         if is_eof(body):
-            self.__last_trip_arrived()
+            self.__last_trip_arrived(body)
         else:
             self.__request_join_arrived(body)
 
     def __request_join_arrived(self, body):
         header, trips = decode(body)
-        city = obtain_city(header)
 
-        joined_trips = self.__join_trips(trips, city)
+        joined_trips = self.__join_trips(header.id_client, trips)
         self.__send_next_stage(header, joined_trips)
 
-    def __join_trips(self, trips, city):
+    def __join_trips(self, id_client, trips):
         """
         try to join each trip in the chunk.
         returns the result of each successful join operation.
@@ -99,7 +96,7 @@ class JoinerController:
 
         for trip in trips:
             trip = trip.split(",")
-            ret = self.joiner.join_trip(city, trip)
+            ret = self.joiner.join_trip(id_client, trip)
             if ret:
                 self.amount_joined += 1
                 joined_trips.append(ret)
@@ -111,8 +108,9 @@ class JoinerController:
             msg = construct_msg(header, joined_trips)
             self.next_stage_queue.send(msg)
 
-    def __last_trip_arrived(self):
-        self.em_queue.send(ack_msg())
+    def __last_trip_arrived(self, body):
+        self.joiner.delete_client(get_id_client(body))
+        self.em_queue.send(ack_msg(body))
         print(f"action: eof_trips_arrived | amount_joined: {self.amount_joined}")
 
     def stop(self, *args):

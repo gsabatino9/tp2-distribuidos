@@ -9,21 +9,26 @@ class StationsData:
             if i != idx_code and i != idx_yearid:
                 self.idxs_joined_data.append(i)
 
-    def add_data(self, city, station):
+    def add_data(self, id_client, station):
         code, yearid = station[self.idx_code], station[self.idx_yearid]
-        self.stations[city, code, yearid] = [
+        self.stations[id_client, code, yearid] = [
             elem for i, elem in enumerate(station) if i in self.idxs_joined_data
         ]
 
-    def join_trip(self, city, trip):
+    def join_trip(self, id_client, trip):
         try:
             start_code, end_code, yearid = trip[1], trip[3], trip[6]
-            start_station = self.__join_trip(city, start_code, yearid)
-            end_station = self.__join_trip(city, end_code, yearid)
+            start_station = self.__join_trip(id_client, start_code, yearid)
+            end_station = self.__join_trip(id_client, end_code, yearid)
 
-            return ",".join([city] + trip + start_station + end_station)
+            return ",".join(trip + start_station + end_station)
         except:
             return None
 
-    def __join_trip(self, city, code, yearid):
-        return self.stations[city, code, yearid]
+    def __join_trip(self, id_client, code, yearid):
+        return self.stations[id_client, code, yearid]
+
+    def delete_client(self, id_client):
+        keys_to_delete = [key for key in self.stations.keys() if key[0] == id_client]
+        for key in keys_to_delete:
+            del self.stations[key]

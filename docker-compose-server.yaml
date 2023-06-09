@@ -28,6 +28,7 @@ services:
       - NAME_WEATHER_QUEUE=joiner_weather_q
       - NAME_TRIPS_QUEUES=['join_trip_stations_q', 'join_trip_weather_q']
       - NAME_EM_QUEUE=eof_manager_joiners_q
+      - NAME_STATUS_QUEUE=new_clients_q
       - AMOUNT_QUERIES=3
     image: receiver:latest
     ports:
@@ -260,6 +261,7 @@ services:
       - NAME_WEATHER_QUEUE=joiner_weather_q
       - NAME_JOIN_STATIONS_QUEUE=join_trip_stations_q
       - NAME_JOIN_WEATHER_QUEUE=join_trip_weather_q
+      - NAME_STATUS_QUEUE=new_clients_q
     image: eof_manager_joiners:latest
     networks:      
       - testing_net
@@ -276,6 +278,7 @@ services:
       - NAME_RECV_QUEUE=eof_manager_filters_q
       - NAME_FILTERS_QUEUE=['filter_year_q', 'filter_pretoc_q', 'filter_distance_q']
       - NAME_SEND_QUEUE=eof_manager_groupby_q
+      - NAME_STATUS_QUEUE=new_clients_q
       - SIZE_WORKERS=[1, 1, 1]
     image: eof_manager_filters:latest
     networks:      
@@ -293,6 +296,7 @@ services:
       - NAME_RECV_QUEUE=eof_manager_groupby_q
       - NAME_GROUPBY_QUEUE=['groupby_start_date_q', 'groupby_start_station_q', 'groupby_end_station_q']
       - NAME_SEND_QUEUE=eof_manager_applier_q
+      - NAME_STATUS_QUEUE=new_clients_q
     image: eof_manager_groupby:latest
     networks:      
       - testing_net
@@ -309,6 +313,7 @@ services:
       - NAME_RECV_QUEUE=eof_manager_applier_q
       - NAME_APPLIERS_QUEUES=['mean_duration_applier_q', 'double_year_applier_q', 'mean_distance_applier_q']
       - NAME_SEND_QUEUE=eof_manager_query_result_q
+      - NAME_STATUS_QUEUE=new_clients_q
       - SIZE_WORKERS=[1, 1, 1]
     image: eof_manager_appliers:latest
     networks:      
@@ -325,6 +330,7 @@ services:
       - PYTHONUNBUFFERED=1
       - NAME_RECV_QUEUE=eof_manager_query_result_q
       - NAME_VERIFIER_QUEUE=query_results_q
+      - NAME_STATUS_QUEUE=new_clients_q
       - SIZE_QUERIES=3
     image: eof_manager_query_results:latest
     networks:      

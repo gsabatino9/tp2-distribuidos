@@ -7,6 +7,7 @@ NAME_STATIONS_QUEUE = os.environ.get("NAME_STATIONS_QUEUE")
 NAME_WEATHER_QUEUE = os.environ.get("NAME_WEATHER_QUEUE")
 NAME_TRIPS_QUEUES = os.environ.get("NAME_TRIPS_QUEUES")
 NAME_EM_QUEUE = os.environ.get("NAME_EM_QUEUE")
+NAME_STATUS_QUEUE = os.environ.get("NAME_STATUS_QUEUE")
 AMOUNT_QUERIES = int(os.environ.get("AMOUNT_QUERIES"))
 
 
@@ -19,6 +20,7 @@ def main():
         NAME_WEATHER_QUEUE,
         name_trips_queues,
         NAME_EM_QUEUE,
+        NAME_STATUS_QUEUE,
         AMOUNT_QUERIES,
     )
     receiver.run()

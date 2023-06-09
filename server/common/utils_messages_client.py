@@ -26,16 +26,7 @@ def is_eof(body):
         return True
 
 
-def obtain_city(header):
-    if header.city == MessageClient.MONTREAL:
-        return "montreal"
-    elif header.city == MessageClient.TORONTO:
-        return "toronto"
-    else:
-        return "washington"
-
-
 def construct_msg(header, trips_array):
-    return MessageClient(
-        header.data_type, header.msg_type, header.city, trips_array
-    ).encode()
+    msg_client = MessageClient(header.id_client, header.queries_suscriptions)
+
+    return msg_client.new_message(header.data_type, header.msg_type, trips_array)

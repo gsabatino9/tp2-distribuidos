@@ -1,14 +1,22 @@
 import signal, sys
 from server.common.queue.connection import Connection
 from server.common.utils_messages_eof import *
+from server.common.utils_messages_status import get_id_client_from_msg
 
 
 class EOFManager:
     def __init__(
-        self, name_recv_queue, name_appliers_queues, name_send_queue, size_workers
+        self,
+        name_recv_queue,
+        name_appliers_queues,
+        name_send_queue,
+        name_status_queue,
+        size_workers,
     ):
         self.__init_eof_manager(size_workers)
-        self.__connect(name_recv_queue, name_appliers_queues, name_send_queue)
+        self.__connect(
+            name_recv_queue, name_appliers_queues, name_send_queue, name_status_queue
+        )
         self.__run()
 
     def __init_eof_manager(self, size_workers):
@@ -21,7 +29,9 @@ class EOFManager:
 
         print("action: eof_manager_started | result: success")
 
-    def __connect(self, name_recv_queue, name_appliers_queues, name_send_queue):
+    def __connect(
+        self, name_recv_queue, name_appliers_queues, name_send_queue, name_status_queue
+    ):
         try:
             self.queue_connection = Connection()
             self.recv_queue = self.queue_connection.pubsub_queue(name_recv_queue)
@@ -29,6 +39,7 @@ class EOFManager:
                 self.queue_connection.basic_queue(q) for q in name_appliers_queues
             ]
             self.send_queue = self.queue_connection.pubsub_queue(name_send_queue)
+            self.status_queue = self.queue_connection.pubsub_queue(name_status_queue)
         except OSError as e:
             print(f"error: creating_queue_connection | log: {e}")
             self.stop()
@@ -37,8 +48,13 @@ class EOFManager:
         """
         start receiving messages.
         """
+        self.status_queue.receive(self.receive_new_client)
         self.recv_queue.receive(self.receive_msg)
         self.queue_connection.start_receiving()
+
+    def receive_new_client(self, ch, method, properties, body):
+        id_new_client = get_id_client_from_msg(body)
+        print(f"action: new_client | result: success | id_new_client: {id_new_client}")
 
     def receive_msg(self, ch, method, properties, body):
         header = decode(body)

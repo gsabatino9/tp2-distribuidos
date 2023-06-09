@@ -7,6 +7,7 @@ NAME_STATIONS_QUEUE = os.environ.get("NAME_STATIONS_QUEUE")
 NAME_WEATHER_QUEUE = os.environ.get("NAME_WEATHER_QUEUE")
 NAME_JOIN_STATIONS_QUEUE = os.environ.get("NAME_JOIN_STATIONS_QUEUE")
 NAME_JOIN_WEATHER_QUEUE = os.environ.get("NAME_JOIN_WEATHER_QUEUE")
+NAME_STATUS_QUEUE = os.environ.get("NAME_STATUS_QUEUE")
 
 
 def main():
@@ -17,6 +18,7 @@ def main():
         NAME_WEATHER_QUEUE,
         NAME_JOIN_STATIONS_QUEUE,
         NAME_JOIN_WEATHER_QUEUE,
+        NAME_STATUS_QUEUE,
     )
     e.stop()
 

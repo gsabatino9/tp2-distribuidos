@@ -29,6 +29,9 @@
   		"appliers": "eof_manager_applier_q",
   		"results_verifier": "eof_manager_query_result_q"
   	},
+    "status_queues": {
+      "new_clients": "new_clients_q"
+    },
   	"amount_nodes": {
   		"filter_year": 1,
   		"filter_pretoc": 1,

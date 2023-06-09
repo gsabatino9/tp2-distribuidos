@@ -50,7 +50,7 @@ class ApplierController:
 
     def process_messages(self, ch, method, properties, body):
         if is_eof(body):
-            self.__eof_arrived(ch)
+            self.__eof_arrived(ch, body)
         else:
             self.__agroup_trips_arrived(body)
 
@@ -58,7 +58,7 @@ class ApplierController:
         header, agrouped_trips = decode(body)
 
         result_trips = self.__apply_condition_to_agrouped_trips(agrouped_trips)
-        self.__send_result(result_trips)
+        self.__send_result(header.id_client, result_trips)
 
     def __apply_condition_to_agrouped_trips(self, agrouped_trips):
         """
@@ -80,14 +80,14 @@ class ApplierController:
 
         return result_trips
 
-    def __send_result(self, trips_to_next_stage):
+    def __send_result(self, id_client, trips_to_next_stage):
         if len(trips_to_next_stage) > 0:
-            msg = construct_msg(trips_to_next_stage)
+            msg = construct_msg(id_client, trips_to_next_stage)
             self.send_queue.send(msg, routing_key=self.id_query)
 
-    def __eof_arrived(self, ch):
+    def __eof_arrived(self, ch, body):
         ch.stop_consuming()
-        self.em_queue.send(ack_msg())
+        self.em_queue.send(ack_msg(body))
         print("action: eof_trips_arrived")
 
     def stop(self, *args):

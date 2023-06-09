@@ -12,49 +12,81 @@ class MessageClient:
     SEND_DATA = 0
     SEND_LAST = 1
 
-    # Constants for cities
-    MONTREAL = 0
-    TORONTO = 1
-    WASHINGTON = 2
-
     # Struct format for message header
-    HEADER_CODE = "!BBBI"
+    DATA_TYPE_LEN = "B"
+    MSG_TYPE_LEN = "B"
+    ID_CLIENT_LEN = "B"
+    ID_BATCH_LEN = "I"
+    QUERIES_SUSCRIPTIONS_LEN = "B"
+    LEN_PAYLOAD_LEN = "I"
+    HEADER_CODE = (
+        "!"
+        + DATA_TYPE_LEN
+        + MSG_TYPE_LEN
+        + ID_CLIENT_LEN
+        + ID_BATCH_LEN
+        + QUERIES_SUSCRIPTIONS_LEN
+        + LEN_PAYLOAD_LEN
+    )
     # Size of header in bytes
     SIZE_HEADER = calcsize(HEADER_CODE)
 
     # Define the named tuples used in the protocol
-    Header = namedtuple("Header", "data_type msg_type city len")
+    Header = namedtuple(
+        "Header", "data_type msg_type id_client id_batch queries_suscriptions len"
+    )
     Payload = namedtuple("Payload", "data")
 
-    def __init__(self, data_type, msg_type, city, payload):
+    def __init__(self, id_client, queries_suscriptions):
+        self.id_client = id_client
+        self.queries_suscriptions = queries_suscriptions
+        self.id_batch = 0
+
+    def new_message(self, data_type, msg_type, payload):
         if payload is None:
             payload = []
         payload_bytes = self._pack_payload(payload)
 
-        self.header = self.Header(data_type, msg_type, city, len(payload_bytes))
-        self.payload = self.Payload(payload_bytes)
+        header = self.Header(
+            data_type,
+            msg_type,
+            self.id_client,
+            self.id_batch,
+            self.queries_suscriptions,
+            len(payload_bytes),
+        )
+        self.id_batch += 1
+        payload = self.Payload(payload_bytes)
 
-    def encode(self):
+        return self.encode(header, payload)
+
+    """
+    def __init__(self, data_type, msg_type, queries_suscriptions, payload):
+        if payload is None:
+            payload = []
+        payload_bytes = self._pack_payload(payload)
+
+        self.header = self.Header(
+            data_type, msg_type, queries_suscriptions, len(payload_bytes)
+        )
+        self.payload = self.Payload(payload_bytes)
+    """
+
+    def encode(self, header, payload):
         """
         Encode the message as bytes to be sent over the network.
 
         Returns:
                 bytes: The encoded message as bytes.
         """
-        header = self.encode_header(self.header)
-        payload = self.encode_payload(self.header.len, self.payload)
+        encoded_header = self.encode_header(header)
+        encoded_payload = self.encode_payload(header.len, payload)
 
-        return header + payload
+        return encoded_header + encoded_payload
 
     @staticmethod
     def encode_header(header):
-        return pack(
-            MessageClient.HEADER_CODE,
-            header.data_type,
-            header.msg_type,
-            header.city,
-            header.len,
-        )
+        return pack(MessageClient.HEADER_CODE, *header)
 
     @staticmethod
     def encode_payload(len_payload, payload):
@@ -121,21 +153,18 @@ class MessageClient:
         payload = payload_bytes.decode("utf-8").split("\0")
         return MessageClient.Payload(payload)
 
-    @classmethod
-    def station_message(cls, payload, city, is_last=False):
-        data_type = cls.STATION_DATA
-        msg_type = cls.SEND_LAST if is_last else cls.SEND_DATA
+    def station_message(self, payload, is_last=False):
+        data_type = self.STATION_DATA
+        msg_type = self.SEND_LAST if is_last else self.SEND_DATA
 
-        return cls(data_type, msg_type, city, payload).encode()
+        return self.new_message(data_type, msg_type, payload)
 
-    @classmethod
-    def weather_message(cls, payload, city, is_last=False):
-        data_type = cls.WEATHER_DATA
-        msg_type = cls.SEND_LAST if is_last else cls.SEND_DATA
-        return cls(data_type, msg_type, city, payload).encode()
+    def weather_message(self, payload, is_last=False):
+        data_type = self.WEATHER_DATA
+        msg_type = self.SEND_LAST if is_last else self.SEND_DATA
+        return self.new_message(data_type, msg_type, payload)
 
-    @classmethod
-    def trip_message(cls, payload, city, is_last=False):
-        data_type = cls.TRIP_DATA
-        msg_type = cls.SEND_LAST if is_last else cls.SEND_DATA
-        return cls(data_type, msg_type, city, payload).encode()
+    def trip_message(self, payload, is_last=False):
+        data_type = self.TRIP_DATA
+        msg_type = self.SEND_LAST if is_last else self.SEND_DATA
+        return self.new_message(data_type, msg_type, payload)

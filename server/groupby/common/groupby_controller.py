@@ -2,7 +2,7 @@ import signal, sys
 from server.common.queue.connection import Connection
 from server.groupby.common.groupby import Groupby
 from server.common.utils_messages_client import decode, is_eof
-from server.common.utils_messages_eof import ack_msg
+from server.common.utils_messages_eof import ack_msg, get_id_client
 from server.common.utils_messages_group import construct_msg
 
 
@@ -50,7 +50,7 @@ class GroupbyController:
 
     def process_messages(self, ch, method, properties, body):
         if is_eof(body):
-            self.__eof_arrived()
+            self.__eof_arrived(body)
         else:
             self.__data_arrived(body)
 
@@ -59,22 +59,30 @@ class GroupbyController:
 
         for trip in filtered_trips:
             trip = trip.split(",")
-            self.__agroup_trip(trip)
+            self.__agroup_trip(header.id_client, trip)
 
-    def __agroup_trip(self, trip):
+    def __agroup_trip(self, id_client, trip):
         """
         agroup the trip by the key and store the value that
         generates gen_key_value custom function.
         """
         key, value = self.gen_key_value(trip)
-        self.groupby.add_data(key, value)
+        self.groupby.add_data(id_client, key, value)
 
-    def __eof_arrived(self):
-        self.__send_to_apply()
-        self.em_queue.send(ack_msg())
+    def __eof_arrived(self, body):
+        id_client = get_id_client(body)
+        
+        self.__send_to_apply(id_client)
+        self.__delete_client(id_client)
+        self.em_queue.send(ack_msg(body))
         print("action: eof_trips_arrived")
 
-    def __send_to_apply(self):
+    def __delete_client(self, id_client):
+        self.groupby.delete_client(id_client)
+        print(f"action: delete_client | result: success | id_client: {id_client}")
+
+
+    def __send_to_apply(self, id_client):
         """
         sends the grouped data.
         build chunk to send each message.
@@ -84,16 +92,16 @@ class GroupbyController:
         for i, key in enumerate(self.groupby.grouped_data):
             to_send.append(self.__str_from_key(key))
 
-            if self.__finish_chunk_to_send(i, to_send):
+            if self.__finish_chunk_to_send(id_client, i, to_send):
                 to_send = []
 
-    def __finish_chunk_to_send(self, i, to_send):
+    def __finish_chunk_to_send(self, id_client, i, to_send):
         """
         stop building the message if the maximum number of data in a chunk has been reached,
         or if is the last data group.
         """
         if (i + 1) % self.chunk_size == 0 or i + 1 == len(self.groupby.grouped_data):
-            msg = construct_msg(to_send)
+            msg = construct_msg(id_client, to_send)
             self.send_queue.send(msg)
 
             return True
@@ -106,7 +114,7 @@ class GroupbyController:
         concatenates the key with all the values.
         """
         value = self.groupby.grouped_data[key]
-        to_ret = f"{key},"
+        to_ret = f"{key[1]},"
         for v in value:
             to_ret += f"{v},"
 

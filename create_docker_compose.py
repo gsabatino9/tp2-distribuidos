@@ -8,6 +8,7 @@ def main():
 
     queues = json_config["config"]["queues"]
     em_queues = json_config["config"]["eof_manager_queues"]
+    status_queues = json_config["config"]["status_queues"]
     amount_nodes = json_config["config"]["amount_nodes"]
 
     receiver = RECEIVER.format(
@@ -18,6 +19,7 @@ def main():
             queues["joiners"]["join_trip_weather"],
         ],
         em_queues["joiners"],
+        status_queues["new_clients"],
     )
     joiner_stations = JOINER_STATIONS.format(
         queues["joiners"]["stations"],
@@ -38,20 +40,25 @@ def main():
         queues["joiners"]["stations"],
         queues["joiners"]["weather"],
         queues["joiners"]["join_trip_stations"],
-        queues["joiners"]["join_trip_weather"]
+        queues["joiners"]["join_trip_weather"],
+        status_queues["new_clients"],
     )
 
     filters_pretoc, filters_year, filters_distance, em_filters = init_filters(
-        queues, em_queues, amount_nodes
+        queues, em_queues, status_queues, amount_nodes
     )
 
     appliers_query1, appliers_query2, appliers_query3, em_appliers = init_appliers(
-        queues, em_queues, amount_nodes
+        queues, em_queues, status_queues, amount_nodes
     )
 
-    groupby1, groupby2, groupby3, em_groupby = init_groupby(queues, em_queues)
+    groupby1, groupby2, groupby3, em_groupby = init_groupby(
+        queues, em_queues, status_queues
+    )
 
-    results_verifier, em_results = init_results_verifier(queues, em_queues)
+    results_verifier, em_results = init_results_verifier(
+        queues, em_queues, status_queues
+    )
 
     compose = (
         INIT_DOCKER.format()
@@ -79,7 +86,7 @@ def main():
         compose_file.write(compose)
 
 
-def init_filters(queues, em_queues, amount_nodes):
+def init_filters(queues, em_queues, status_queues, amount_nodes):
     filters_q = queues["filters"]
 
     filters_pretoc = ""
@@ -123,13 +130,14 @@ def init_filters(queues, em_queues, amount_nodes):
             filters_q["filter_distance"],
         ],
         em_queues["groupby"],
+        status_queues["new_clients"],
         [amount_nodes[k] for k in amount_nodes if "filter" in k],
     )
 
     return filters_pretoc, filters_year, filters_distance, em_filters
 
 
-def init_appliers(queues, em_queues, amount_nodes):
+def init_appliers(queues, em_queues, status_queues, amount_nodes):
     appliers_query1 = ""
     for i in range(1, amount_nodes["applier_query1"] + 1):
         appliers_query1 += APPLIER_QUERY1.format(
@@ -164,13 +172,14 @@ def init_appliers(queues, em_queues, amount_nodes):
         em_queues["appliers"],
         [queues["applier_query1"], queues["applier_query2"], queues["applier_query3"]],
         em_queues["results_verifier"],
+        status_queues["new_clients"],
         [amount_nodes[k] for k in amount_nodes if "applier" in k],
     )
 
     return appliers_query1, appliers_query2, appliers_query3, em_appliers
 
 
-def init_groupby(queues, em_queues):
+def init_groupby(queues, em_queues, status_queues):
     groupby1 = GROUPBY_QUERY1.format(
         queues["groupby_query1"], em_queues["groupby"], queues["applier_query1"]
     )
@@ -185,18 +194,21 @@ def init_groupby(queues, em_queues):
         em_queues["groupby"],
         [queues["groupby_query1"], queues["groupby_query2"], queues["groupby_query3"]],
         em_queues["appliers"],
+        status_queues["new_clients"],
     )
 
     return groupby1, groupby2, groupby3, em_groupby
 
 
-def init_results_verifier(queues, em_queues):
+def init_results_verifier(queues, em_queues, status_queues):
     results_verifier = RESULTS_VERIFIER.format(
         queues["results_verifier"], em_queues["results_verifier"]
     )
 
     em_results = EM_RESULTS.format(
-        em_queues["results_verifier"], queues["results_verifier"]
+        em_queues["results_verifier"],
+        queues["results_verifier"],
+        status_queues["new_clients"],
     )
 
     return results_verifier, em_results

@@ -4,6 +4,8 @@ from server.common.queue.connection import Connection
 from common.utils import is_eof
 from server.common.utils_messages_eof import eof_msg
 from server.common.utils_messages_client import is_station, is_weather, encode_header
+from server.common.utils_messages_status import id_client_msg
+from random import randint
 
 
 class Receiver:
@@ -15,12 +17,14 @@ class Receiver:
         name_weather_queue,
         name_trips_queues,
         name_em_queue,
+        name_status_queue,
         amount_queries,
     ):
         self.__init_receiver(amount_queries)
 
         self.__connect_queue(name_stations_queue, name_weather_queue, name_trips_queues)
         self.__connect_eof_manager_queue(name_em_queue)
+        self.__connect_status_queue(name_status_queue)
         self.__connect_client(host, port)
 
     def __init_receiver(self, amount_queries):
@@ -48,6 +52,9 @@ class Receiver:
     def __connect_eof_manager_queue(self, name_em_queue):
         self.em_queue = self.queue_connection.pubsub_queue(name_em_queue)
 
+    def __connect_status_queue(self, name_status_queue):
+        self.status_queue = self.queue_connection.pubsub_queue(name_status_queue)
+
     def __connect_client(self, host, port):
         try:
             skt = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -56,9 +63,10 @@ class Receiver:
 
             client_socket, _ = skt.accept()
             self.client_connection = CommunicationServer(client_socket)
+            id_client = self.__asign_id_to_client()
 
             print(
-                "action: client_connected | result: success | msg: starting to receive data"
+                f"action: client_connected | result: success | msg: starting to receive data | id_client: {id_client}"
             )
         except OSError as e:
             print(f"error: creating_client_connection | log: {e}")
@@ -82,6 +90,19 @@ class Receiver:
                 self.__route_message(header, payload_bytes)
 
         self.__send_ack_client()
+
+    def __asign_id_to_client(self):
+        id_client = self.__get_id_client()
+        self.client_connection.send_id_client(id_client)
+        self.__inform_new_client(id_client)
+
+        return id_client
+
+    def __get_id_client(self):
+        return randint(0, 250)
+
+    def __inform_new_client(self, id_client):
+        self.status_queue.send(id_client_msg(id_client))
 
     def __send_eof(self, header):
         self.em_queue.send(eof_msg(header))
