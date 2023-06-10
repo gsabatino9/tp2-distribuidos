@@ -64,7 +64,7 @@ class ResultsVerifier:
     def __add_client(self, id_client):
         print(f"action: add_client | result: success | id_client: {id_client}")
         self.ids_clients.add(id_client)
-        for id_query in range(1, self.amount_queries+1):
+        for id_query in range(1, self.amount_queries + 1):
             self.queries_ended[id_client, id_query] = False
             self.queries_results[id_client, id_query] = []
 

@@ -26,7 +26,7 @@ services:
       - PORT=12345
       - NAME_STATIONS_QUEUE=joiner_stations_q
       - NAME_WEATHER_QUEUE=joiner_weather_q
-      - NAME_TRIPS_QUEUES=['join_trip_stations_q', 'join_trip_weather_q']
+      - NAME_TRIPS_QUEUES=['join_trip_stations_q', 'join_trip_weather_q', 'groupby_all_elements_q']
       - NAME_EM_QUEUE=eof_manager_joiners_q
       - NAME_STATUS_QUEUE=new_clients_q
       - AMOUNT_QUERIES=3
@@ -135,7 +135,7 @@ services:
       - PYTHONUNBUFFERED=1
       - NAME_RECV_QUEUE=groupby_start_date_q
       - NAME_EM_QUEUE=eof_manager_groupby_q
-      - NAME_SEND_QUEUE=mean_duration_applier_q
+      - NAME_SEND_QUEUE=mean_duration_applier_1_q
       - CHUNK_SIZE=100
     image: groupby_start_date:latest
     networks:      
@@ -178,16 +178,34 @@ services:
       rabbitmq:
         condition: service_healthy
 
-
   
-  mean_duration_applier_1:
-    container_name: mean_duration_applier_1
+  groupby_all_elements:
+    container_name: groupby_all_elements
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
-      - NAME_RECV_QUEUE=mean_duration_applier_q
+      - NAME_RECV_QUEUE=groupby_all_elements_q
+      - NAME_EM_QUEUE=eof_manager_groupby_q
+      - NAME_SEND_QUEUE=mean_duration_applier_4_q
+      - CHUNK_SIZE=100
+    image: groupby_all_elements:latest
+    networks:      
+      - testing_net
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+
+  
+  mean_duration_applier_1_1:
+    container_name: mean_duration_applier_1_1
+    entrypoint: python3 /main.py
+    environment:
+      - PYTHONUNBUFFERED=1
+      - NAME_RECV_QUEUE=mean_duration_applier_1_q
       - NAME_EM_QUEUE=eof_manager_applier_q
       - NAME_SEND_QUEUE=query_results_q
+      - ID_QUERY=1
     image: mean_duration_applier:latest
     networks:      
       - testing_net
@@ -227,6 +245,23 @@ services:
       rabbitmq:
         condition: service_healthy
 
+  
+  mean_duration_applier_4_1:
+    container_name: mean_duration_applier_4_1
+    entrypoint: python3 /main.py
+    environment:
+      - PYTHONUNBUFFERED=1
+      - NAME_RECV_QUEUE=mean_duration_applier_4_q
+      - NAME_EM_QUEUE=eof_manager_applier_q
+      - NAME_SEND_QUEUE=query_results_q
+      - ID_QUERY=4
+    image: mean_duration_applier:latest
+    networks:      
+      - testing_net
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
 
   
   results_verifier:
@@ -238,7 +273,7 @@ services:
       - PORT=12346
       - NAME_RECV_QUEUE=query_results_q
       - NAME_EM_QUEUE=eof_manager_query_result_q
-      - AMOUNT_QUERIES=3
+      - AMOUNT_QUERIES=4
     ports:
       - 12346:12346
     image: results_verifier:latest
@@ -294,7 +329,7 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
       - NAME_RECV_QUEUE=eof_manager_groupby_q
-      - NAME_GROUPBY_QUEUE=['groupby_start_date_q', 'groupby_start_station_q', 'groupby_end_station_q']
+      - NAME_GROUPBY_QUEUE=['groupby_start_date_q', 'groupby_start_station_q', 'groupby_end_station_q', 'groupby_all_elements_q']
       - NAME_SEND_QUEUE=eof_manager_applier_q
       - NAME_STATUS_QUEUE=new_clients_q
     image: eof_manager_groupby:latest
@@ -311,10 +346,10 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
       - NAME_RECV_QUEUE=eof_manager_applier_q
-      - NAME_APPLIERS_QUEUES=['mean_duration_applier_q', 'double_year_applier_q', 'mean_distance_applier_q']
+      - NAME_APPLIERS_QUEUES=['mean_duration_applier_1_q', 'double_year_applier_q', 'mean_distance_applier_q', 'mean_duration_applier_4_q']
       - NAME_SEND_QUEUE=eof_manager_query_result_q
       - NAME_STATUS_QUEUE=new_clients_q
-      - SIZE_WORKERS=[1, 1, 1]
+      - SIZE_WORKERS=[1, 1, 1, 1]
     image: eof_manager_appliers:latest
     networks:      
       - testing_net
@@ -331,7 +366,7 @@ services:
       - NAME_RECV_QUEUE=eof_manager_query_result_q
       - NAME_VERIFIER_QUEUE=query_results_q
       - NAME_STATUS_QUEUE=new_clients_q
-      - SIZE_QUERIES=3
+      - SIZE_QUERIES=4
     image: eof_manager_query_results:latest
     networks:      
       - testing_net

@@ -12,7 +12,7 @@ services:
       - PORT_CONSULT=12346
       - CHUNK_SIZE=100
       - MAX_RETRIES=50
-      - SUSCRIPTIONS=[1,2,3]
+      - SUSCRIPTIONS=[1,2,3,4]
     image: client:latest
     networks:      
       - testing_net

@@ -17,9 +17,11 @@
   		"groupby_query1": "groupby_start_date_q",
   		"groupby_query2": "groupby_start_station_q",
   		"groupby_query3": "groupby_end_station_q",
-  		"applier_query1": "mean_duration_applier_q",
+      "groupby_query4": "groupby_all_elements_q",
+  		"applier_query1": "mean_duration_applier_1_q",
   		"applier_query2": "double_year_applier_q",
   		"applier_query3": "mean_distance_applier_q",
+      "applier_query4": "mean_duration_applier_4_q",
   		"results_verifier": "query_results_q"
   	},
   	"eof_manager_queues": {
@@ -38,7 +40,8 @@
   		"filter_distance": 1,
   		"applier_query1": 1,
   		"applier_query2": 1,
-  		"applier_query3": 1
+  		"applier_query3": 1,
+      "applier_query4": 1
   	}
   }
 }

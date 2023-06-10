@@ -28,10 +28,12 @@ services:
   <GROUPBY_QUERY1>
   <GROUPBY_QUERY2>
   <GROUPBY_QUERY3>
+  <GROUPBY_QUERY4>
 
   <APPLIER_QUERY1>
   <APPLIER_QUERY2>
   <APPLIER_QUERY3>
+  <APPLIER_QUERY4>
 
   <RESULTS_VERIFIER>
     
@@ -214,15 +216,34 @@ GROUPBY_QUERY3 = """
         condition: service_healthy
 """
 
-APPLIER_QUERY1 = """
-  mean_duration_applier_{}:
-    container_name: mean_duration_applier_{}
+GROUPBY_QUERY4 = """
+  groupby_all_elements:
+    container_name: groupby_all_elements
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
       - NAME_RECV_QUEUE={}
       - NAME_EM_QUEUE={}
       - NAME_SEND_QUEUE={}
+      - CHUNK_SIZE=100
+    image: groupby_all_elements:latest
+    networks:      
+      - testing_net
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+"""
+
+APPLIER_QUERY1 = """
+  mean_duration_applier_1_{}:
+    container_name: mean_duration_applier_1_{}
+    entrypoint: python3 /main.py
+    environment:
+      - PYTHONUNBUFFERED=1
+      - NAME_RECV_QUEUE={}
+      - NAME_EM_QUEUE={}
+      - NAME_SEND_QUEUE={}
+      - ID_QUERY=1
     image: mean_duration_applier:latest
     networks:      
       - testing_net
@@ -258,6 +279,24 @@ APPLIER_QUERY3 = """
       - NAME_EM_QUEUE={}
       - NAME_SEND_QUEUE={}
     image: mean_distance_applier:latest
+    networks:      
+      - testing_net
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+"""
+
+APPLIER_QUERY4 = """
+  mean_duration_applier_4_{}:
+    container_name: mean_duration_applier_4_{}
+    entrypoint: python3 /main.py
+    environment:
+      - PYTHONUNBUFFERED=1
+      - NAME_RECV_QUEUE={}
+      - NAME_EM_QUEUE={}
+      - NAME_SEND_QUEUE={}
+      - ID_QUERY=4
+    image: mean_duration_applier:latest
     networks:      
       - testing_net
     depends_on:
@@ -351,7 +390,7 @@ EM_RESULTS = """
       - NAME_RECV_QUEUE={}
       - NAME_VERIFIER_QUEUE={}
       - NAME_STATUS_QUEUE={}
-      - SIZE_QUERIES=3
+      - SIZE_QUERIES=4
     image: eof_manager_query_results:latest
     networks:      
       - testing_net
@@ -370,7 +409,7 @@ RESULTS_VERIFIER = """
       - PORT=12346
       - NAME_RECV_QUEUE={}
       - NAME_EM_QUEUE={}
-      - AMOUNT_QUERIES=3
+      - AMOUNT_QUERIES=4
     ports:
       - 12346:12346
     image: results_verifier:latest

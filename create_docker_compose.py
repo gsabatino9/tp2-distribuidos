@@ -17,6 +17,7 @@ def main():
         [
             queues["joiners"]["join_trip_stations"],
             queues["joiners"]["join_trip_weather"],
+            queues["groupby_query4"],
         ],
         em_queues["joiners"],
         status_queues["new_clients"],
@@ -48,11 +49,15 @@ def main():
         queues, em_queues, status_queues, amount_nodes
     )
 
-    appliers_query1, appliers_query2, appliers_query3, em_appliers = init_appliers(
-        queues, em_queues, status_queues, amount_nodes
-    )
+    (
+        appliers_query1,
+        appliers_query2,
+        appliers_query3,
+        appliers_query4,
+        em_appliers,
+    ) = init_appliers(queues, em_queues, status_queues, amount_nodes)
 
-    groupby1, groupby2, groupby3, em_groupby = init_groupby(
+    groupby1, groupby2, groupby3, groupby4, em_groupby = init_groupby(
         queues, em_queues, status_queues
     )
 
@@ -74,9 +79,11 @@ def main():
         .replace("<GROUPBY_QUERY1>", groupby1)
         .replace("<GROUPBY_QUERY2>", groupby2)
         .replace("<GROUPBY_QUERY3>", groupby3)
+        .replace("<GROUPBY_QUERY4>", groupby4)
         .replace("<APPLIER_QUERY1>", appliers_query1)
         .replace("<APPLIER_QUERY2>", appliers_query2)
         .replace("<APPLIER_QUERY3>", appliers_query3)
+        .replace("<APPLIER_QUERY4>", appliers_query4)
         .replace("<EM_APPLIERS>", em_appliers)
         .replace("<RESULTS_VERIFIER>", results_verifier)
         .replace("<EM_RESULTS>", em_results)
@@ -168,15 +175,36 @@ def init_appliers(queues, em_queues, status_queues, amount_nodes):
             queues["results_verifier"],
         )
 
+    appliers_query4 = ""
+    for i in range(1, amount_nodes["applier_query4"] + 1):
+        appliers_query4 += APPLIER_QUERY4.format(
+            i,
+            i,
+            queues["applier_query4"],
+            em_queues["appliers"],
+            queues["results_verifier"],
+        )
+
     em_appliers = EM_APPLIERS.format(
         em_queues["appliers"],
-        [queues["applier_query1"], queues["applier_query2"], queues["applier_query3"]],
+        [
+            queues["applier_query1"],
+            queues["applier_query2"],
+            queues["applier_query3"],
+            queues["applier_query4"],
+        ],
         em_queues["results_verifier"],
         status_queues["new_clients"],
         [amount_nodes[k] for k in amount_nodes if "applier" in k],
     )
 
-    return appliers_query1, appliers_query2, appliers_query3, em_appliers
+    return (
+        appliers_query1,
+        appliers_query2,
+        appliers_query3,
+        appliers_query4,
+        em_appliers,
+    )
 
 
 def init_groupby(queues, em_queues, status_queues):
@@ -189,15 +217,23 @@ def init_groupby(queues, em_queues, status_queues):
     groupby3 = GROUPBY_QUERY3.format(
         queues["groupby_query3"], em_queues["groupby"], queues["applier_query3"]
     )
+    groupby4 = GROUPBY_QUERY4.format(
+        queues["groupby_query4"], em_queues["groupby"], queues["applier_query4"]
+    )
 
     em_groupby = EM_GROUPBY.format(
         em_queues["groupby"],
-        [queues["groupby_query1"], queues["groupby_query2"], queues["groupby_query3"]],
+        [
+            queues["groupby_query1"],
+            queues["groupby_query2"],
+            queues["groupby_query3"],
+            queues["groupby_query4"],
+        ],
         em_queues["appliers"],
         status_queues["new_clients"],
     )
 
-    return groupby1, groupby2, groupby3, em_groupby
+    return groupby1, groupby2, groupby3, groupby4, em_groupby
 
 
 def init_results_verifier(queues, em_queues, status_queues):

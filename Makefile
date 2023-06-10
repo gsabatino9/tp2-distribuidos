@@ -23,6 +23,7 @@ server-image:
 	docker build -f ./server/groupby/start_date/Dockerfile -t "groupby_start_date:latest" .
 	docker build -f ./server/groupby/start_station/Dockerfile -t "groupby_start_station:latest" .
 	docker build -f ./server/groupby/end_station/Dockerfile -t "groupby_end_station:latest" .
+	docker build -f ./server/groupby/all_elements/Dockerfile -t "groupby_all_elements:latest" .
 	
 	docker build -f ./server/appliers/mean_duration_applier/Dockerfile -t "mean_duration_applier:latest" .
 	docker build -f ./server/appliers/double_year_applier/Dockerfile -t "double_year_applier:latest" .

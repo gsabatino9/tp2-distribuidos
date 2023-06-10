@@ -71,7 +71,7 @@ class GroupbyController:
 
     def __eof_arrived(self, body):
         id_client = get_id_client(body)
-        
+
         self.__send_to_apply(id_client)
         self.__delete_client(id_client)
         self.em_queue.send(ack_msg(body))
@@ -80,7 +80,6 @@ class GroupbyController:
     def __delete_client(self, id_client):
         self.groupby.delete_client(id_client)
         print(f"action: delete_client | result: success | id_client: {id_client}")
-
 
     def __send_to_apply(self, id_client):
         """
