@@ -1,0 +1,34 @@
+version: '3.9'
+name: tp1
+services:
+  docker-in-docker:
+    container_name: docker-in-docker
+    image: docker-in-docker:latest
+    entrypoint: python3 /main.py
+    environment:
+      - PYTHONUNBUFFERED=1
+      - LOGGING_LEVEL=INFO
+      - ID_ELECTION=1
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - testing_net
+
+  keep-alive:
+    container_name: keep-alive
+    image: keep-alive:latest
+    entrypoint: python3 /main.py
+    environment:
+      - PYTHONUNBUFFERED=1
+      - LOGGING_LEVEL=INFO
+    networks:
+      - testing_net
+
+
+networks:
+  testing_net:
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.25.125.0/24
+
