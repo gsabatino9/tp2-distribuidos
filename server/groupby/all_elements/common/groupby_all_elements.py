@@ -23,7 +23,7 @@ class GroupbyAllElements:
 
     def gen_key_value(self, trip):
         # trip[4] := duration_sec
-        return 1, float(trip[4])
+        return "mean_duration_trips", float(trip[4])
 
     def stop(self):
         self.groupby_controller.stop()
