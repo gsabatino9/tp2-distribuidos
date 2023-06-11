@@ -13,7 +13,7 @@ from common.leader_dependent import LeaderDependent
 from common.keep_alive.keep_alive import KeepAlive
 
 class HealthyChecker(LeaderDependent):
-    def __init__(self, network_name, my_id, n_processes):
+    def __init__(self, my_id, n_processes, containers_keep_alive, container_restarter_name):
         super().__init__()
         # inaccesible containers.
         self.restart_containers_q = queue.Queue()
@@ -24,11 +24,10 @@ class HealthyChecker(LeaderDependent):
 
         self.docker_restarter = DockerRestarter(self.restart_containers_q, 
                                                 self.create_connections_q,
-                                                network_name)
+                                                containers_keep_alive)
 
         self.connection_maker = ConnectionMaker(self.create_connections_q,
-                                                self.connected_processes_q,
-                                                network_name)
+                                                self.connected_processes_q)
         self.leader_election = LeaderElection(my_id, n_processes, 
                                               self.stop_being_leader_callback, 
                                               self.new_leader_callback)
@@ -43,12 +42,12 @@ class HealthyChecker(LeaderDependent):
             self.connection_maker.start()
             self.docker_restarter.start()
             logging.info("action: healthy_checker_init | result: success")
-            
+
             while self.active:
                 self.wait_until_leader()
                 self.__execute_healthcheck_operations()
                 self.__free_leader_resources()
-            
+
             self.connection_maker.join()
             self.docker_restarter.join()
             self.keep_alive.join()

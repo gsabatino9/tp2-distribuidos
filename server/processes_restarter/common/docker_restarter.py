@@ -7,15 +7,13 @@ from common.leader_dependent import LeaderDependent
 
 
 class DockerRestarter(threading.Thread, LeaderDependent):
-    def __init__(self, restart_containers_q, create_connections_q, network_name):
+    def __init__(self, restart_containers_q, create_connections_q, containers_keep_alive):
         threading.Thread.__init__(self)
         LeaderDependent.__init__(self)
-        self.network_name = network_name
         self.restart_containers_q = restart_containers_q
         self.create_connections_q = create_connections_q
         self.docker_client = docker.from_env()
-        self.containers_in_network = []
-        self.__add_containers_in_network()
+        self.containers_keep_alive = containers_keep_alive
 
     def run(self):
         try:
@@ -57,15 +55,8 @@ class DockerRestarter(threading.Thread, LeaderDependent):
         self.restart_containers_q.put(None)
 
 
-    def __add_containers_in_network(self):
-        for container in self.docker_client.containers.list():
-            networks = container.attrs['NetworkSettings']['Networks']
-            if self.network_name in networks:
-                self.containers_in_network.append(container.name)
-
-
     def __put_containers_create_connections(self):
-        for container_name in self.containers_in_network:
+        for container_name in self.containers_keep_alive:
             self.create_connections_q.put(container_name)
 
 

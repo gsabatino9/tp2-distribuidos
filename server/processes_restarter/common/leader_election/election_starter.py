@@ -51,7 +51,7 @@ class ElectionStarter(threading.Thread):
             logging.error(f"action: election_starter_error | error: already_stopped")
             return
         self.active = False
-        self.send_queue.put((None, None))
+        self.start_election_q.put((None, None))
 
     def start_election(self):
         self.start_election_q.put((Message.ELECTION, None))

@@ -1,6 +1,5 @@
 import time
 import socket
-import docker
 import threading
 import queue
 import logging
@@ -8,13 +7,11 @@ from common.leader_dependent import LeaderDependent
 from common.utils import ARE_YOU_ALIVE_MESSAGE, CONNECTION_PORT, INIT_TIME_SLEEP, MAX_TIME_SLEEP
 
 class ConnectionMaker(threading.Thread, LeaderDependent):
-    def __init__(self, create_connections_q, connected_processes_q, network_name):
+    def __init__(self, create_connections_q, connected_processes_q):
         threading.Thread.__init__(self)
         LeaderDependent.__init__(self)
         self.create_connections_q = create_connections_q
         self.connected_processes_q = connected_processes_q
-        self.network_name = network_name
-        self.docker_client = docker.from_env()
 
     def run(self):
         try:
@@ -35,22 +32,19 @@ class ConnectionMaker(threading.Thread, LeaderDependent):
                 if self.i_am_leader:
                     logging.error(f"action: connection_maker_error | error: container_is_none")
                 continue
-            container = self.docker_client.containers.get(container_name)
-            self.__create_connection(container)
+            self.__create_connection(container_name)
 
 
-    def __create_connection(self, container):
+    def __create_connection(self, container_addr):
         sleep_time = INIT_TIME_SLEEP
         while self.active and self.i_am_leader:
             try:
                 # avoid busy waiting. Restart 
                 time.sleep(sleep_time)
-                container.reload()
-                ip_addr = container.attrs['NetworkSettings']['Networks'][self.network_name]['IPAddress']
                 skt = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                skt.connect((ip_addr, CONNECTION_PORT))
+                skt.connect((container_addr, CONNECTION_PORT))
                 skt.sendall(ARE_YOU_ALIVE_MESSAGE)
-                self.connected_processes_q.put((container.name, skt, time.time()))
+                self.connected_processes_q.put((container_addr, skt, time.time()))
                 return
             except Exception as e:
                 print(f"Error: {str(e)}")

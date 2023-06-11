@@ -20,10 +20,12 @@ socket_logger.setLevel(logging.INFO)
 
 my_id = int(os.environ.get("ID_ELECTION"))
 n_processes = int(os.environ.get("N_PROCESS_ELECTION"))
-
+containers_keep_alive = os.environ.get("CONTAINERS_KEEP_ALIVE")
+container_restarter_name = os.environ.get("CONTAINER_RESTARTER_NAME")
 
 def main():
-    healthy_checker = HealthyChecker("tp1_testing_net", my_id, n_processes)
+    healthy_checker = HealthyChecker(my_id, n_processes,containers_keep_alive.split(","),
+                                     container_restarter_name)
     healthy_checker.run()
 
 

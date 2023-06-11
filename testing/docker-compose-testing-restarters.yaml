@@ -10,6 +10,8 @@ services:
       - LOGGING_LEVEL=INFO
       - ID_ELECTION=0
       - N_PROCESS_ELECTION=3
+      - CONTAINERS_KEEP_ALIVE=processes-restarter-0,processes-restarter-1,processes-restarter-2
+      - CONTAINER_RESTARTER_NAME=processes-restarter-
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     networks:
@@ -26,6 +28,8 @@ services:
       - LOGGING_LEVEL=INFO
       - ID_ELECTION=1
       - N_PROCESS_ELECTION=3
+      - CONTAINERS_KEEP_ALIVE=processes-restarter-0,processes-restarter-1,processes-restarter-2
+      - CONTAINER_RESTARTER_NAME=processes-restarter-
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     networks:
@@ -42,6 +46,8 @@ services:
       - LOGGING_LEVEL=INFO
       - ID_ELECTION=2
       - N_PROCESS_ELECTION=3
+      - CONTAINERS_KEEP_ALIVE=processes-restarter-0,processes-restarter-1,processes-restarter-2
+      - CONTAINER_RESTARTER_NAME=processes-restarter-
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     networks:
