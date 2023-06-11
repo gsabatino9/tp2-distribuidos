@@ -1,9 +1,9 @@
 version: '3.9'
 name: tp1
 services:
-  docker-in-docker-0:
-    container_name: docker-in-docker-0
-    image: docker-in-docker:latest
+  processes-restarter-0:
+    container_name: processes-restarter-0
+    image: processes-restarter:latest
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
@@ -17,9 +17,9 @@ services:
         ipv4_address: 172.25.125.4
 
 
-  docker-in-docker-1:
-    container_name: docker-in-docker-1
-    image: docker-in-docker:latest
+  processes-restarter-1:
+    container_name: processes-restarter-1
+    image: processes-restarter:latest
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
@@ -33,9 +33,9 @@ services:
         ipv4_address: 172.25.125.5
 
 
-  docker-in-docker-2:
-    container_name: docker-in-docker-2
-    image: docker-in-docker:latest
+  processes-restarter-2:
+    container_name: processes-restarter-2
+    image: processes-restarter:latest
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
