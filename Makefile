@@ -12,7 +12,7 @@ client-image:
 .PHONY: client-image
 
 testing-image:
-	docker build -f ./server/processes-restarter/Dockerfile -t "processes-restarter:latest" .
+	docker build -f ./server/processes_restarter/Dockerfile -t "processes_restarter:latest" .
 .PHONY: testing-image
 
 server-image:

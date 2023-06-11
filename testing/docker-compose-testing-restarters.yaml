@@ -3,7 +3,7 @@ name: tp1
 services:
   processes-restarter-0:
     container_name: processes-restarter-0
-    image: processes-restarter:latest
+    image: processes_restarter:latest
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
@@ -19,7 +19,7 @@ services:
 
   processes-restarter-1:
     container_name: processes-restarter-1
-    image: processes-restarter:latest
+    image: processes_restarter:latest
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
@@ -35,7 +35,7 @@ services:
 
   processes-restarter-2:
     container_name: processes-restarter-2
-    image: processes-restarter:latest
+    image: processes_restarter:latest
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1

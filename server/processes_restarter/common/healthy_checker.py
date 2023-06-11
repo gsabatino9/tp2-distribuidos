@@ -3,13 +3,14 @@ import queue
 import time
 import logging
 import socket
+import signal
 from common.utils import ARE_YOU_ALIVE_MESSAGE, HEALTHCHECK_TIMEOUT,\
                          MINIMUM_TIMEOUT_TIME
 from common.docker_restarter import DockerRestarter
 from common.connection_maker import ConnectionMaker
 from common.leader_election.leader_election import LeaderElection
 from common.leader_dependent import LeaderDependent
-
+from common.keep_alive.keep_alive import KeepAlive
 
 class HealthyChecker(LeaderDependent):
     def __init__(self, network_name, my_id, n_processes):
@@ -31,10 +32,14 @@ class HealthyChecker(LeaderDependent):
         self.leader_election = LeaderElection(my_id, n_processes, 
                                               self.stop_being_leader_callback, 
                                               self.new_leader_callback)
+        self.keep_alive = KeepAlive()
+        signal.signal(signal.SIGTERM, self.stop)
+
 
     def run(self):
         try:
             self.leader_election.run()
+            self.keep_alive.start()
             self.connection_maker.start()
             self.docker_restarter.start()
             logging.info("action: healthy_checker_init | result: success")
@@ -46,6 +51,7 @@ class HealthyChecker(LeaderDependent):
             
             self.connection_maker.join()
             self.docker_restarter.join()
+            self.keep_alive.join()
         except Exception as e:
             logging.error(f"action: healthy_checker_error | error: {str(e)}")
         except:
@@ -104,7 +110,7 @@ class HealthyChecker(LeaderDependent):
             pass
 
 
-    def stop(self):
+    def stop(self, *args):
         self.leader_election.stop()
         # If it's blocked in leader waiting.
         self.stop_waiting()
@@ -113,3 +119,5 @@ class HealthyChecker(LeaderDependent):
 
         self.docker_restarter.stop()
         self.connection_maker.stop()
+
+        self.keep_alive.stop()
