@@ -1,7 +1,6 @@
 import threading
 import logging
-
-SELF_PROCLAIMER_TIMEOUT = 1
+from common.leader_election.utils import SELF_PROCLAIMER_TIMEOUT
 
 class SelfProclaimer:
     def __init__(self, control_sender):
@@ -9,7 +8,8 @@ class SelfProclaimer:
         self.timer = None
 
     def start(self):
-        logging.info("action: self_proclaimer | result: started")
+        logging.debug("action: self_proclaimer | result: started")
+        self.stop()
         self.timer = threading.Timer(SELF_PROCLAIMER_TIMEOUT, self.__proclaim_leader)
         self.timer.start()
 
@@ -17,9 +17,10 @@ class SelfProclaimer:
         if self.timer:
             self.timer.cancel()
             self.timer = None
-            logging.info("action: self_proclaimer | result: canceled")
+            logging.debug("action: self_proclaimer | result: canceled")
 
     def __proclaim_leader(self):
-        logging.info("action: self_proclaimer | result: coordintor_called")
+        logging.debug("action: self_proclaimer | result: self_proclaim_leader_called")
         self.control_sender.send_coordinator()
+        self.timer = None
 

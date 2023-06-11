@@ -9,7 +9,7 @@ services:
       - PYTHONUNBUFFERED=1
       - LOGGING_LEVEL=INFO
       - ID_ELECTION=0
-      - N_PROCESS_ELECTION=2
+      - N_PROCESS_ELECTION=3
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     networks:
@@ -25,12 +25,29 @@ services:
       - PYTHONUNBUFFERED=1
       - LOGGING_LEVEL=INFO
       - ID_ELECTION=1
-      - N_PROCESS_ELECTION=2
+      - N_PROCESS_ELECTION=3
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     networks:
       testing_net:
         ipv4_address: 172.25.125.5
+
+
+  docker-in-docker-2:
+    container_name: docker-in-docker-2
+    image: docker-in-docker:latest
+    entrypoint: python3 /main.py
+    environment:
+      - PYTHONUNBUFFERED=1
+      - LOGGING_LEVEL=INFO
+      - ID_ELECTION=2
+      - N_PROCESS_ELECTION=3
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      testing_net:
+        ipv4_address: 172.25.125.6
+
 
 
 networks:
