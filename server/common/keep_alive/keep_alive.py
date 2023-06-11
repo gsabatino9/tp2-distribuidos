@@ -20,7 +20,7 @@ class KeepAlive(threading.Thread):
             while self.active:
                 logging.debug("action: keep_alive_accept | result: in_progress")
                 self.skt, addr = self.server_socket.accept()
-                logging.debug("action: keep_alive_accept | result: finished")
+                logging.debug("action: keep_alive_accept | result: success")
                 self.__run_keep_alive_loop()
         except Exception as e:
             if self.active:
@@ -34,7 +34,6 @@ class KeepAlive(threading.Thread):
             while self.active:
                 self.skt.recv(1)
                 self.skt.sendall(ALIVE)
-                logging.debug(f"action: keep_alive_loop | result: success")
         except socket.error as e:
             logging.error(f"action: keep_alive_error | error: {str(e)}")
         finally:

@@ -30,9 +30,11 @@ class LeaderElection:
         self.election_starter.stop()
         self.leader_alive.stop()
         self.control_receiver.stop()
-        logging.debug(f"action: stop_leader_election_processes | result: success")
+        logging.debug(f"action: stop_leader_election_processes | result: in_progress")
 
         self.control_sender.join()
         self.election_starter.join()
         self.leader_alive.join()
         self.control_receiver.join()
+        
+        logging.debug(f"action: stop_leader_election_processes | result: success")

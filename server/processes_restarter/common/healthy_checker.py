@@ -70,6 +70,8 @@ class HealthyChecker(LeaderDependent):
                 a = skt.recv(1)
                 if not a:
                     raise Exception("No message received")
+                logging.debug(f"action: keep_alive_loop | result: success"
+                              f" | container: {container}")
             except Exception as e:
                 logging.error(f"action: healthy_checker_timeout | container: {container}")
                 skt.close()
