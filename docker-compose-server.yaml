@@ -85,6 +85,7 @@ services:
       - NAME_RECV_QUEUE=filter_pretoc_q
       - NAME_EM_QUEUE=eof_manager_filters_q
       - NAME_SEND_QUEUE=groupby_start_date_q
+      - ID_QUERY=1
     image: filter_pretoc:latest
     networks:      
       - testing_net
@@ -102,6 +103,7 @@ services:
       - NAME_RECV_QUEUE=filter_year_q
       - NAME_EM_QUEUE=eof_manager_filters_q
       - NAME_SEND_QUEUE=groupby_start_station_q
+      - ID_QUERY=2
     image: filter_year:latest
     networks:      
       - testing_net
@@ -118,6 +120,7 @@ services:
       - NAME_RECV_QUEUE=filter_distance_q
       - NAME_EM_QUEUE=eof_manager_filters_q
       - NAME_SEND_QUEUE=groupby_end_station_q
+      - ID_QUERY=3
     image: filter_distance:latest
     networks:      
       - testing_net
@@ -187,6 +190,7 @@ services:
       - NAME_RECV_QUEUE=groupby_all_elements_q
       - NAME_EM_QUEUE=eof_manager_groupby_q
       - NAME_SEND_QUEUE=mean_duration_applier_4_q
+      - ID_QUERY=4
       - CHUNK_SIZE=100
     image: groupby_all_elements:latest
     networks:      

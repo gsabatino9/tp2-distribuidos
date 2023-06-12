@@ -8,6 +8,7 @@ from server.common.utils_messages_eof import ack_msg
 class FilterController:
     def __init__(
         self,
+        id_query,
         name_recv_exchange,
         name_recv_queue,
         name_em_queue,
@@ -16,16 +17,17 @@ class FilterController:
         reduced_columns,
         func_filter,
     ):
-        self.__init_filter(columns_names, reduced_columns, func_filter)
+        self.__init_filter(id_query, columns_names, reduced_columns, func_filter)
         self.__connect(
             name_recv_exchange, name_recv_queue, name_em_queue, name_send_queue
         )
         self.__run()
 
-    def __init_filter(self, columns_names, reduced_columns, func_filter):
+    def __init_filter(self, id_query, columns_names, reduced_columns, func_filter):
         self.running = True
         signal.signal(signal.SIGTERM, self.stop)
 
+        self.id_query = id_query
         self.not_filtered = 0
         self.filter = Filter(columns_names, reduced_columns, func_filter)
 
@@ -62,6 +64,7 @@ class FilterController:
     def __trips_arrived(self, body):
         header, joined_trips = decode(body)
 
+        # if id_query in suscriptions(header):
         trips_to_next_stage = self.__filter_trips(joined_trips)
         self.__send_to_next_stage(header, trips_to_next_stage)
 
