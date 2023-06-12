@@ -1,5 +1,5 @@
 from protocol.message_client import MessageClient
-
+from protocol.utils import number_to_suscriptions
 
 def decode(body):
     header, trips_array = MessageClient.decode(body)
@@ -30,3 +30,7 @@ def construct_msg(header, trips_array):
     msg_client = MessageClient(header.id_client, header.queries_suscriptions)
 
     return msg_client.new_message(header.data_type, header.msg_type, trips_array)
+
+def customer_subscribed_to_query(header, id_query):
+    list_suscriptions = number_to_suscriptions(header.queries_suscriptions)
+    return (id_query in list_suscriptions)

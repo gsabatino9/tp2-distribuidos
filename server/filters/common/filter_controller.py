@@ -1,7 +1,7 @@
 import signal, sys
 from server.common.queue.connection import Connection
 from server.filters.common.filter import Filter
-from server.common.utils_messages_client import decode, is_eof, construct_msg
+from server.common.utils_messages_client import decode, is_eof, construct_msg, customer_subscribed_to_query
 from server.common.utils_messages_eof import ack_msg
 
 
@@ -64,9 +64,9 @@ class FilterController:
     def __trips_arrived(self, body):
         header, joined_trips = decode(body)
 
-        # if id_query in suscriptions(header):
-        trips_to_next_stage = self.__filter_trips(joined_trips)
-        self.__send_to_next_stage(header, trips_to_next_stage)
+        if customer_subscribed_to_query(header, self.id_query):
+            trips_to_next_stage = self.__filter_trips(joined_trips)
+            self.__send_to_next_stage(header, trips_to_next_stage)
 
     def __filter_trips(self, trips):
         """
