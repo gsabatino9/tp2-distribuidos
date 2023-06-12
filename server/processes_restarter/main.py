@@ -1,4 +1,4 @@
-from common.healthy_checker import HealthyChecker
+from common.processes_restarter import ProcessesRestarter
 import os
 import logging
 import docker
@@ -24,9 +24,10 @@ containers_keep_alive = os.environ.get("CONTAINERS_KEEP_ALIVE")
 container_restarter_name = os.environ.get("CONTAINER_RESTARTER_NAME")
 
 def main():
-    healthy_checker = HealthyChecker(my_id, n_processes,containers_keep_alive.split(","),
-                                     container_restarter_name)
-    healthy_checker.run()
+    processes_restarter = ProcessesRestarter(my_id, n_processes,
+                                             containers_keep_alive.split(","),
+                                             container_restarter_name)
+    processes_restarter.run()
 
 
 if __name__ == "__main__":
