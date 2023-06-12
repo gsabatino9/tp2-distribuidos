@@ -9,7 +9,9 @@ NAME_SEND_QUEUE = os.environ.get("NAME_SEND_QUEUE")
 
 
 def main():
-    f = FilterYear(ID_QUERY, NAME_RECV_EXCHANGE, NAME_RECV_QUEUE, NAME_EM_QUEUE, NAME_SEND_QUEUE)
+    f = FilterYear(
+        ID_QUERY, NAME_RECV_EXCHANGE, NAME_RECV_QUEUE, NAME_EM_QUEUE, NAME_SEND_QUEUE
+    )
     f.stop()
 
 
