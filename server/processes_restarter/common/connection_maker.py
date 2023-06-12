@@ -23,6 +23,8 @@ class ConnectionMaker(threading.Thread, LeaderDependent):
             logging.error(f"action: connection_maker_error | error: {str(e)}")
         except:
             logging.error(f"action: connection_maker_error | error: unknown")
+        finally:
+            self.__free_leader_resources()
 
 
     def __execute_create_connections_operations(self):
@@ -59,6 +61,7 @@ class ConnectionMaker(threading.Thread, LeaderDependent):
     def stop_being_leader(self):
         self.i_am_leader = False
         self.create_connections_q.put(None)
+        self.wait_until_stop_confirmation()
 
 
     def __free_leader_resources(self):
@@ -68,6 +71,7 @@ class ConnectionMaker(threading.Thread, LeaderDependent):
         except queue.Empty:
             # all items in create_connections_q removed (i am no longer leader)
             pass
+        self.send_stop_confirmation()
 
     def stop(self):
         # If it's blocked in leader waiting.

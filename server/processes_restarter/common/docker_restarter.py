@@ -25,6 +25,8 @@ class DockerRestarter(threading.Thread, LeaderDependent):
             logging.error(f"action: docker_restarter_error | error: {str(e)}")
         except:
             logging.error(f"action: docker_restarter_error | error: unknown")
+        finally:
+            self.__free_leader_resources()
 
     def __execute_docker_restarter_operations(self):
         if self.active and self.i_am_leader:
@@ -48,11 +50,13 @@ class DockerRestarter(threading.Thread, LeaderDependent):
         except queue.Empty:
             # all items in restart_containers_q removed (i am no longer leader)
             pass
+        self.send_stop_confirmation()
 
 
     def stop_being_leader(self):
         self.i_am_leader = False
         self.restart_containers_q.put(None)
+        self.wait_until_stop_confirmation()
 
 
     def __put_containers_create_connections(self):

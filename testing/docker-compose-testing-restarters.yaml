@@ -10,7 +10,7 @@ services:
       - LOGGING_LEVEL=INFO
       - ID_ELECTION=0
       - N_PROCESS_ELECTION=3
-      - CONTAINERS_KEEP_ALIVE=processes-restarter-0,processes-restarter-1,processes-restarter-2
+      - CONTAINERS_KEEP_ALIVE=processes-restarter-0,processes-restarter-1
       - CONTAINER_RESTARTER_NAME=processes-restarter-
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
@@ -28,7 +28,7 @@ services:
       - LOGGING_LEVEL=INFO
       - ID_ELECTION=1
       - N_PROCESS_ELECTION=3
-      - CONTAINERS_KEEP_ALIVE=processes-restarter-0,processes-restarter-1,processes-restarter-2
+      - CONTAINERS_KEEP_ALIVE=processes-restarter-0,processes-restarter-1
       - CONTAINER_RESTARTER_NAME=processes-restarter-
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
@@ -37,22 +37,22 @@ services:
         ipv4_address: 172.25.125.5
 
 
-  processes-restarter-2:
-    container_name: processes-restarter-2
-    image: processes_restarter:latest
-    entrypoint: python3 /main.py
-    environment:
-      - PYTHONUNBUFFERED=1
-      - LOGGING_LEVEL=INFO
-      - ID_ELECTION=2
-      - N_PROCESS_ELECTION=3
-      - CONTAINERS_KEEP_ALIVE=processes-restarter-0,processes-restarter-1,processes-restarter-2
-      - CONTAINER_RESTARTER_NAME=processes-restarter-
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-    networks:
-      testing_net:
-        ipv4_address: 172.25.125.6
+  # processes-restarter-2:
+  #   container_name: processes-restarter-2
+  #   image: processes_restarter:latest
+  #   entrypoint: python3 /main.py
+  #   environment:
+  #     - PYTHONUNBUFFERED=1
+  #     - LOGGING_LEVEL=INFO
+  #     - ID_ELECTION=2
+  #     - N_PROCESS_ELECTION=3
+  #     - CONTAINERS_KEEP_ALIVE=processes-restarter-0,processes-restarter-1,processes-restarter-2
+  #     - CONTAINER_RESTARTER_NAME=processes-restarter-
+  #   volumes:
+  #     - /var/run/docker.sock:/var/run/docker.sock
+  #   networks:
+  #     testing_net:
+  #       ipv4_address: 172.25.125.6
 
 
 

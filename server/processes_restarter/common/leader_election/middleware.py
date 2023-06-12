@@ -4,7 +4,7 @@ import logging
 IP_ADDR_START = "172.25.125."
 IP_ADDR_END_BASE = 4
 CONNECTION_PORT = 6767
-
+MSG_TO_WAKE_RECVFROM = b'W'
 """
 TODO:
 Agregar modo TESTING:
@@ -17,7 +17,8 @@ paquetes en esa queue. Y luego de cada send, vaciar la queue haciendo sends.
 class Middleware:
     def __init__(self, my_id, n_processes):
         self.skt = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.skt.bind((self.__id_to_ip(my_id), CONNECTION_PORT))
+        self.my_hostname = self.__id_to_ip(my_id)
+        self.skt.bind((self.my_hostname, CONNECTION_PORT))
         self.my_id = my_id
         self.n_processes = n_processes
         self.active = True
@@ -28,9 +29,11 @@ class Middleware:
         if len(msg) == 0:
             self.stop()
             raise Exception("No message received in recvfrom.")
+        if not self.active:
+            raise Exception("Middleware was stopped.")
         process_id = self.__ip_to_id(addr[0])
         return msg, process_id
-    
+
     def send(self, msg, id_to):
         self.__validate_active()
         sent = self.skt.sendto(msg, (self.__id_to_ip(id_to), CONNECTION_PORT))
@@ -49,7 +52,10 @@ class Middleware:
     def stop(self):
         if self.active:
             self.active = False
-            self.skt.close()
+            self.skt.sendto(MSG_TO_WAKE_RECVFROM, (self.my_hostname, CONNECTION_PORT))
+
+    def close(self):
+        self.skt.close()
 
     def __validate_active(self):
         if not self.active:

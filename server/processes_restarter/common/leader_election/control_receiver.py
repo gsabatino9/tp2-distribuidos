@@ -26,6 +26,7 @@ class ControlReceiver(threading.Thread):
             if not self.active:
                 return
             logging.error(f"action: control_receiver_error | error: unknown")
+            
 
     def __run_loop(self):
         while (self.active):

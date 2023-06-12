@@ -23,18 +23,17 @@ class LeaderElection:
         self.election_starter.start()
         self.leader_alive.start()
         self.control_receiver.start()
-        logging.info(f"action: init_leader_election_processes | result: success")
 
     def stop(self):
+        logging.debug(f"action: stop_leader_election_processes | result: in_progress")
         self.control_sender.stop()
         self.election_starter.stop()
         self.leader_alive.stop()
         self.control_receiver.stop()
-        logging.debug(f"action: stop_leader_election_processes | result: in_progress")
 
         self.control_sender.join()
         self.election_starter.join()
         self.leader_alive.join()
         self.control_receiver.join()
-        
+        self.middleware.close()
         logging.debug(f"action: stop_leader_election_processes | result: success")

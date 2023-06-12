@@ -80,7 +80,7 @@ class LeaderAlive(threading.Thread):
     def __wait_for_alive_reply(self):
         time_sent = time.time()
         timeout_time = HEALTHCHECK_TIMEOUT
-        while (timeout_time > 0):
+        while (timeout_time > 0 and self.active):
             msg, id_from = self.leader_alive_q.get(timeout=timeout_time)
             now = time.time()
             if msg == Message.COORDINATOR:
@@ -94,8 +94,9 @@ class LeaderAlive(threading.Thread):
                 time.sleep(sleep_time)
                 return
             timeout_time = HEALTHCHECK_TIMEOUT - (now - time_sent)
-        # timeout reached -> leader is not responding.
-        raise queue.Empty("Timeout reached")
+        if self.active:
+            # timeout reached -> leader is not responding.
+            raise queue.Empty("Timeout reached")
 
     def __execute_waiting_election(self):
         msg, id_from = self.leader_alive_q.get()

@@ -4,6 +4,7 @@ class LeaderDependent:
     def __init__(self):
         self.active = True
         self.new_leader_queue = queue.Queue()
+        self.stop_confirmation = queue.Queue()
         self.i_am_leader = False
 
     def wait_until_leader(self):
@@ -18,3 +19,9 @@ class LeaderDependent:
         self.active = False
         self.i_am_leader = False
         self.new_leader_queue.put(None)
+
+    def send_stop_confirmation(self):
+        self.stop_confirmation.put(None)
+
+    def wait_until_stop_confirmation(self):
+        msg = self.stop_confirmation.get()

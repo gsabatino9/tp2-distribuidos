@@ -28,6 +28,8 @@ class KeepAlive(threading.Thread):
         except:
             if self.active:
                 logging.error(f"action: keep_alive_error | error: unknown")
+        finally:
+            self.server_socket.close()
 
     def __run_keep_alive_loop(self):
         try:
@@ -35,12 +37,15 @@ class KeepAlive(threading.Thread):
                 self.skt.recv(1)
                 self.skt.sendall(ALIVE)
         except socket.error as e:
-            logging.error(f"action: keep_alive_error | error: {str(e)}")
+            if self.active:
+                logging.error(f"action: keep_alive_error | error: {str(e)}"
+                              f" | possible_cause: check_if_leader_was_stopped")
         finally:
             self.skt.close()
             self.skt = None
 
     def stop(self):
         self.active = False
+        self.server_socket.shutdown(socket.SHUT_RDWR)
         if self.skt:
             self.skt.shutdown(socket.SHUT_RDWR)

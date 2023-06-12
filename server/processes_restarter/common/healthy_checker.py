@@ -41,7 +41,6 @@ class HealthyChecker(LeaderDependent):
             self.keep_alive.start()
             self.connection_maker.start()
             self.docker_restarter.start()
-            logging.info("action: healthy_checker_init | result: success")
 
             while self.active:
                 self.wait_until_leader()
@@ -55,7 +54,8 @@ class HealthyChecker(LeaderDependent):
             logging.error(f"action: healthy_checker_error | error: {str(e)}")
         except:
             logging.error(f"action: healthy_checker_error | error: unknown")
-
+        finally:
+            self.__free_leader_resources()
 
     def __execute_healthcheck_operations(self):
         while self.active and self.i_am_leader:
@@ -65,7 +65,8 @@ class HealthyChecker(LeaderDependent):
                     logging.error(f"action: healthy_checker_error | error: container_is_none")
                 continue
             waited_time = time.time() - send_time
-            skt.settimeout(max(HEALTHCHECK_TIMEOUT - waited_time, MINIMUM_TIMEOUT_TIME))
+            timeout_time = max(HEALTHCHECK_TIMEOUT - waited_time, MINIMUM_TIMEOUT_TIME)
+            skt.settimeout(timeout_time)
             try:
                 a = skt.recv(1)
                 if not a:
@@ -73,7 +74,9 @@ class HealthyChecker(LeaderDependent):
                 logging.debug(f"action: keep_alive_loop | result: success"
                               f" | container: {container}")
             except Exception as e:
-                logging.error(f"action: healthy_checker_timeout | container: {container}")
+                logging.error(f"action: healthy_checker_timeout | container: {container}"
+                              f" | last_timeout: {timeout_time}")
+                skt.shutdown(socket.SHUT_RDWR)
                 skt.close()
                 self.restart_containers_q.put(container)
                 continue
@@ -83,15 +86,16 @@ class HealthyChecker(LeaderDependent):
             self.connected_processes_q.put((container, skt, time.time()))
 
     def stop_being_leader_callback(self):
-        logging.debug("Callback de que deje de ser el leader.")
         if self.i_am_leader:
-            self.stop_being_leader()
+            logging.debug("Callback de que deje de ser el leader.")
             self.docker_restarter.stop_being_leader()
             self.connection_maker.stop_being_leader()
+            self.stop_being_leader()
 
     def stop_being_leader(self):
         self.i_am_leader = False
         self.connected_processes_q.put((None, None, None))
+        self.wait_until_stop_confirmation()
 
     def new_leader_callback(self):
         logging.debug("Callback de que empece a ser el leader.")
@@ -109,6 +113,7 @@ class HealthyChecker(LeaderDependent):
         except queue.Empty:
             # all items in connected_q removed
             pass
+        self.send_stop_confirmation()
 
 
     def stop(self, *args):
