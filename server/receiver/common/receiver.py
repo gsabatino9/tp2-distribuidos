@@ -77,7 +77,6 @@ class Receiver:
         while self.running:
             self.__connect_client(self.host, self.port)
             self.__handle_client()
-        
 
     def __handle_client(self):
         types_ended = set()
@@ -130,9 +129,8 @@ class Receiver:
 
     def __send_ack_client(self, id_batch):
         """
-        informs the client that all files arrived successfully.
+        informs the client that bach with id_batch arrived successfully.
         """
-        #print("action: all_files_arrived | result: success")
         self.client_connection.send_ack_batch(id_batch)
 
     def stop(self, *args):
