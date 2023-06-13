@@ -14,6 +14,8 @@ STOP_LEADER_QUEUE = 2
 class ProcessesRestarter:
     def __init__(self, my_id, n_processes, containers_keep_alive, container_restarter_name):
         self.containers_keep_alive = containers_keep_alive
+        my_container_name = container_restarter_name + str(my_id)
+        self.containers_keep_alive.remove(my_container_name)
         self.container_restarter_name = container_restarter_name
         self.new_leader_queue = queue.Queue()
         self.leader_election = LeaderElection(my_id, n_processes, 
@@ -34,7 +36,7 @@ class ProcessesRestarter:
             self.__init_restarter()
             self.__wait_while(LEADER)
             self.__join_restarter()
-        
+
         self.keep_alive.stop()
         self.keep_alive.join()
 
@@ -81,9 +83,11 @@ class ProcessesRestarter:
             value = self.new_leader_queue.get()
 
     def stop_being_leader_callback(self):
+        logging.info("no soy mas leader")
         self.new_leader_queue.put(NO_LEADER)
 
     def i_am_leader_callback(self):
+        logging.info("soy leader")
         self.new_leader_queue.put(LEADER)
 
     def __put_containers_create_connections(self):
