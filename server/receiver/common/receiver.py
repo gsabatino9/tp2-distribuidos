@@ -20,18 +20,19 @@ class Receiver:
         name_status_queue,
         amount_queries,
     ):
-        self.__init_receiver(amount_queries)
+        self.__init_receiver(amount_queries, host, port)
 
         self.__connect_queue(name_stations_queue, name_weather_queue, name_trips_queues)
         self.__connect_eof_manager_queue(name_em_queue)
         self.__connect_status_queue(name_status_queue)
-        self.__connect_client(host, port)
 
-    def __init_receiver(self, amount_queries):
+    def __init_receiver(self, amount_queries, host, port):
         self.running = True
         signal.signal(signal.SIGTERM, self.stop)
 
         self.amount_queries = amount_queries
+        self.host = host
+        self.port = port
 
         print("action: receiver_started | result: success")
 
@@ -73,21 +74,25 @@ class Receiver:
             self.stop()
 
     def run(self):
-        """
-        runs a loop until the eof of all data types arrives.
-        """
         while self.running:
+            self.__connect_client(self.host, self.port)
+            self.__handle_client()
+        
+
+    def __handle_client(self):
+        types_ended = set()
+
+        while len(types_ended) < self.amount_queries:
             header, payload_bytes = self.client_connection.recv_data(
                 decode_payload=False
             )
             self.__send_ack_client(header.id_batch)
-            self.__handle_request(header, payload_bytes)
-            
-    def __handle_request(self, header, payload_bytes):
-        if is_eof(header):
-            self.__send_eof(header)
-        else:
-            self.__route_message(header, payload_bytes)
+
+            if is_eof(header):
+                types_ended.add(header.data_type)
+                self.__send_eof(header)
+            else:
+                self.__route_message(header, payload_bytes)
 
     def __asign_id_to_client(self):
         id_client = self.__get_id_client()
