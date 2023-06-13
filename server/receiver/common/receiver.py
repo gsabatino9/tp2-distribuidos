@@ -76,19 +76,18 @@ class Receiver:
         """
         runs a loop until the eof of all data types arrives.
         """
-        types_ended = set()
-
-        while len(types_ended) < self.amount_queries:
+        while self.running:
             header, payload_bytes = self.client_connection.recv_data(
                 decode_payload=False
             )
             self.__send_ack_client(header.id_batch)
-
-            if is_eof(header):
-                types_ended.add(header.data_type)
-                self.__send_eof(header)
-            else:
-                self.__route_message(header, payload_bytes)
+            self.__handle_request(header, payload_bytes)
+            
+    def __handle_request(self, header, payload_bytes):
+        if is_eof(header):
+            self.__send_eof(header)
+        else:
+            self.__route_message(header, payload_bytes)
 
     def __asign_id_to_client(self):
         id_client = self.__get_id_client()
