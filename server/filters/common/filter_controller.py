@@ -93,7 +93,7 @@ class FilterController:
             self.send_queue.send(msg)
 
     def __eof_arrived(self, ch, body):
-        ch.stop_consuming()
+        #ch.stop_consuming()
         self.em_queue.send(ack_msg(body))
         print(f"action: eof_trips_arrived | not_filtered_trips: {self.not_filtered}")
 
