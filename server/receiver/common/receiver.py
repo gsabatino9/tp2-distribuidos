@@ -86,13 +86,15 @@ class Receiver:
             header, payload_bytes = self.client_connection.recv_data(
                 decode_payload=False
             )
-            self.__send_ack_client(header.id_batch)
 
             if is_eof(header):
                 types_ended.add(header.data_type)
                 self.__send_eof(header)
             else:
                 self.__route_message(header, payload_bytes)
+
+            # después de poner el msg en la cola, le mando ack
+            self.__send_ack_client(header.id_batch)
 
     def __asign_id_to_client(self):
         id_client = self.__get_id_client()
