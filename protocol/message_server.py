@@ -4,7 +4,7 @@ from struct import pack, unpack, calcsize
 
 class MessageServer:
     # Constants for message types
-    FILES_RECEIVED = 0
+    BATCH_RECEIVED = 0
     SEND_RESULT = 1
     SEND_LAST_RESULT = 2
     SEND_ID_CLIENT = 3
@@ -110,8 +110,8 @@ class MessageServer:
         return MessageServer.Payload(payload)
 
     @classmethod
-    def files_received_message(cls):
-        return cls(cls.FILES_RECEIVED, 0, list("")).encode()
+    def batch_received_message(cls, id_batch):
+        return cls(cls.BATCH_RECEIVED, id_batch, list("")).encode()
 
     @classmethod
     def results_message(cls, id_query, results):

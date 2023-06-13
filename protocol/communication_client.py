@@ -51,7 +51,7 @@ class CommunicationClient:
 
         return header.id_query
 
-    def recv_files_received(self):
+    def recv_ack(self):
         return self.__recv_message()
 
     def recv_results(self):

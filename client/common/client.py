@@ -46,8 +46,6 @@ class Client:
         for file in types_files:
             self.__send_type_file(filepath, file)
 
-        print(f"action: waiting_ack_files")
-        self.conn.recv_files_received()
         print(f"action: ack_files | result: success | msg: all files sent to server")
         self.conn.stop()
 
@@ -90,6 +88,11 @@ class Client:
     def __send_chunk(self, data_type, chunk, last_chunk):
         payload = construct_payload(chunk)
         self.conn.send(data_type, payload, last_chunk)
+
+        self.__recv_ack_chunk()
+
+    def __recv_ack_chunk(self):
+        self.conn.recv_ack()
 
     def __preprocess_chunk(self, type_file, chunk):
         if type_file == "trips":
