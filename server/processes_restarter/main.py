@@ -7,7 +7,7 @@ import socket
 
 logging.basicConfig(
     format='%(asctime)s %(levelname)-8s %(message)s',
-    level="DEBUG",
+    level="INFO",
     datefmt='%Y-%m-%d %H:%M:%S',
 )
 

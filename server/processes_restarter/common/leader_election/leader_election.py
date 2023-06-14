@@ -12,7 +12,7 @@ class LeaderElection:
         self.leader_id = None
         self.middleware = Middleware(my_id, n_process)
         self.control_sender = ControlSender(self.middleware)
-        self.election_starter = ElectionStarter(self.control_sender)
+        self.election_starter = ElectionStarter(self.control_sender, my_id)
         self.leader_alive = LeaderAlive(self.my_id, self.control_sender, self.election_starter)
         self.control_receiver = ControlReceiver(my_id, self.middleware, self.election_starter,
                                                 self.control_sender, self.leader_alive, 
@@ -35,13 +35,13 @@ class LeaderElection:
         self.leader_alive.stop()
         self.leader_alive.join()
         
-        # El control_receiver tiene que ser stoppeado luego de que se haya joineado
-        # control_sender, porque hace un sendto a su mismo socket para despertarlo
-        # del recvfrom.
+        # control_receiver stop method calls sendto to it's socket in order to wake
+        # control_receiver from being blocked in it's socket recvfrom.
+        # In order to avoid a race condition in socket sendto, control_receiver stop method
+        # must is called after the control_sender was joined.
         self.control_receiver.stop()
         self.control_receiver.join()
-        
-        # el socket UDP del middleware se cierra una vez que el receiver 
-        # y el sender dejan de usarlo.
+
+        # closes UDP socket file descriptor.
         self.middleware.close()
         logging.debug(f"action: stop_leader_election_processes | result: success")

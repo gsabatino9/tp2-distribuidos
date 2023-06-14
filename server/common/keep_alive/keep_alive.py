@@ -6,9 +6,13 @@ CONNECTION_PORT = 12345
 
 ALIVE = b'1'
 
+def default_connection_accepted_callback():
+    pass
+
 class KeepAlive(threading.Thread):
-    def __init__(self):
+    def __init__(self, conn_accepted_callback=default_connection_accepted_callback):
         super().__init__()
+        self.conn_accepted_callback = conn_accepted_callback
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.server_socket.bind(('', CONNECTION_PORT))
         self.server_socket.listen(5)
@@ -20,6 +24,7 @@ class KeepAlive(threading.Thread):
             while self.active:
                 logging.debug("action: keep_alive_accept | result: in_progress")
                 self.skt, addr = self.server_socket.accept()
+                self.conn_accepted_callback()
                 logging.debug("action: keep_alive_accept | result: success")
                 self.__run_keep_alive_loop()
         except Exception as e:

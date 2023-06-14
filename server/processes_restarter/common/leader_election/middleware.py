@@ -1,18 +1,10 @@
 import socket
 import logging
+from common.leader_election.utils import IP_ADDR_START, IP_ADDR_END_BASE,\
+                                         CONNECTION_PORT
 
-IP_ADDR_START = "172.25.125."
-IP_ADDR_END_BASE = 4
-CONNECTION_PORT = 6767
 MSG_TO_WAKE_RECVFROM = b'W'
-"""
-TODO:
-Agregar modo TESTING:
-1. sleep antes de send (simular el tiempo de red)
-2. random antes de send y tirar paquetes (simular perdida de paquetes)
-3. Para simular paquetes desordenados se podria agregar una queue y en modo random poner
-paquetes en esa queue. Y luego de cada send, vaciar la queue haciendo sends.
-"""
+
 
 class Middleware:
     def __init__(self, my_id, n_processes):
@@ -39,10 +31,6 @@ class Middleware:
         if sent != len(msg):
             self.stop()
             raise Exception(f"action: sento_failed | bytes_sent: {sent} | len_msg: {len(msg)}.")
-
-    def broadcast_bigger(self, msg):
-        for id_process in range(self.my_id+1, self.n_processes):
-            self.send(msg, id_process)
 
     def broadcast(self, msg):
         for id_process in range(self.n_processes):

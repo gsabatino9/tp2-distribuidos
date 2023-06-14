@@ -2,8 +2,8 @@ import time
 import socket
 import threading
 import logging
-from common.utils import ARE_YOU_ALIVE_MESSAGE, CONNECTION_PORT,\
-                         INIT_TIME_SLEEP, MAX_TIME_SLEEP
+from common.utils import ARE_YOU_ALIVE_MESSAGE, INIT_TIME_SLEEP, MAX_TIME_SLEEP
+from common.keep_alive.keep_alive import CONNECTION_PORT
 
 class ConnectionMaker(threading.Thread):
     def __init__(self, create_connections_q, connected_processes_q, restart_containers_q):
@@ -29,30 +29,36 @@ class ConnectionMaker(threading.Thread):
                 if self.active:
                     logging.error(f"action: connection_maker_error | error: container_is_none")
                 continue
-            self.__create_connection(container_name)
+            self.__create_connection_timeout(container_name)
 
 
-    def __create_connection(self, container_addr):
+    def __create_connection_timeout(self, container_addr):
+        """
+        Tries to connect with the container. It's possible that, if the container
+        was restarted recently, it won't be available inmediatly. That's why there are 
+        retries to connect until a max time is reached. If the connection doesn't 
+        success, then the container will be restarted.
+        """
         sleep_time = INIT_TIME_SLEEP
         while self.active:
             try:
-                # avoid busy waiting. Restart 
-                time.sleep(sleep_time)
-                skt = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                skt.connect((container_addr, CONNECTION_PORT))
-                skt.sendall(ARE_YOU_ALIVE_MESSAGE)
-                self.connected_processes_q.put((container_addr, skt, time.time()))
+                self.__create_connection(container_addr)
                 return
             except Exception as e:
-                logging.error(f"Error: {str(e)} | container: {container_addr}")
-                # Always try again until max time is waited.
-                if sleep_time == MAX_TIME_SLEEP:
-                    logging.error(f"ERRORRRR | container: {container_addr}")
+                if sleep_time >= MAX_TIME_SLEEP:
+                    logging.error(f"action: unable_to_connect | container: {container_addr}")
                     self.restart_containers_q.put(container_addr)
                     return
-                sleep_time = min(sleep_time * 2, MAX_TIME_SLEEP)
+                time.sleep(sleep_time)
+                sleep_time = sleep_time * 2
                 pass
 
+
+    def __create_connection(self, container_addr):
+        skt = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        skt.connect((container_addr, CONNECTION_PORT))
+        skt.sendall(ARE_YOU_ALIVE_MESSAGE)
+        self.connected_processes_q.put((container_addr, skt, time.time()))
 
     def stop(self):
         self.active = False

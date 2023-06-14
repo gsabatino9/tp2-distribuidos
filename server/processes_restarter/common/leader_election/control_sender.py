@@ -25,13 +25,12 @@ class ControlSender(threading.Thread):
     def __run_loop(self):
         while self.active:
             msg, id_to = self.send_queue.get()
-            if msg == Message.ELECTION.value:
-                self.middleware.broadcast_bigger(msg)
-            elif msg == Message.COORDINATOR.value:
+            if msg in [Message.ELECTION.value,
+                       Message.COORDINATOR.value]:
                 self.middleware.broadcast(msg)
             elif msg in [Message.ELECTION_ACK.value, 
                          Message.LEADER_ALIVE.value, 
-                        Message.LEADER_ALIVE_REPLY.value]:
+                         Message.LEADER_ALIVE_REPLY.value]:
                 self.middleware.send(msg, id_to)
             else:
                 if self.active:

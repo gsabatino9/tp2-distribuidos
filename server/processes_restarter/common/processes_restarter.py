@@ -10,6 +10,7 @@ from common.keep_alive.keep_alive import KeepAlive
 NO_LEADER = 0
 LEADER = 1
 STOP_LEADER_QUEUE = 2
+KEEP_ALIVE_ACCEPTED = 3
 
 class ProcessesRestarter:
     def __init__(self, my_id, n_processes, containers_keep_alive, container_restarter_name):
@@ -30,15 +31,13 @@ class ProcessesRestarter:
         self.keep_alive.start()
         self.leader_election.run()
         while self.active:
-            self.__wait_while(NO_LEADER)
+            self.__wait_to_become_leader()
             if not self.active:
                 break
             self.__init_restarter()
             logging.debug("action: start_restarter | result: success")
-            self.__wait_while(LEADER)
-            logging.debug("action: stop_restarter | result: in_progress")
+            self.__wait_while_leader()
             self.__join_restarter()
-            logging.debug("action: stop_restarter | result: success")
 
         self.leader_election.stop()
         self.keep_alive.stop()
@@ -46,7 +45,7 @@ class ProcessesRestarter:
 
 
     def __init_restarter(self):
-        # inaccesible containers.
+        # inaccesible containers that must be restarted.
         self.restart_containers_q = queue.Queue()
 
         # processes with a TCP connection open
@@ -71,28 +70,45 @@ class ProcessesRestarter:
         self.healthy_checker.start()
 
     def __join_restarter(self):
+        logging.debug("action: stop_restarter | result: in_progress")
         self.docker_restarter.stop()
         self.docker_restarter.join()
-        logging.debug("action: stop_restarter | result: docker_restarter_stopped")
+
         self.connection_maker.stop()
         self.connection_maker.join()
-        logging.debug("action: stop_restarter | result: connection_maker_stopped")
 
         self.healthy_checker.stop()
         self.healthy_checker.join()
-        logging.debug("action: stop_restarter | result: healthy_checker_stopped")
+        logging.debug("action: stop_restarter | result: success")
 
 
-    def __wait_while(self, while_clause):
-        value = while_clause
-        while value == while_clause:
-            value = self.new_leader_queue.get()
+    def __wait_while_leader(self):
+        current_state = LEADER
+        while current_state == LEADER:
+            current_state = self.new_leader_queue.get()
+        if current_state == KEEP_ALIVE_ACCEPTED:
+            # This could only happen if there are two leaders.
+            # It's only possible when there's a new leader and 
+            # both packages ELECTION and later COORDINATOR were lost.
+            # This is the only possible case (very very unlikely)
+            # of two leaders at the same time.
+            logging.error("action: processes_restarter_error"
+                          "| error: keep_alive_accepted_while_being_leader")
+            self.active = False
+
+    def __wait_to_become_leader(self):
+        current_state = NO_LEADER
+        while current_state == NO_LEADER:
+            current_state = self.new_leader_queue.get()
 
     def stop_being_leader_callback(self):
         self.new_leader_queue.put(NO_LEADER)
 
     def i_am_leader_callback(self):
         self.new_leader_queue.put(LEADER)
+
+    def keep_alive_accepted_callback(self):
+        self.new_leader_queue.put(KEEP_ALIVE_ACCEPTED)
 
     def __put_containers_create_connections(self):
         for container_name in self.containers_keep_alive:

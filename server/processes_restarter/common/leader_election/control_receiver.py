@@ -51,12 +51,9 @@ class ControlReceiver(threading.Thread):
 
     def __handle_election(self, id_from):
         self.stop_being_leader_callback()
-        if id_from >= self.my_id:
-            logging.error(f"action: control_receiver_error | error: "
-                          f"election_from_bigger_received | from: {id_from}")
-            return    
-        self.control_sender.send_election_ack(id_from)
-        self.election_starter.start_election()
+        if id_from < self.my_id:      
+            self.control_sender.send_election_ack(id_from)
+        self.election_starter.start_election(id_from)
 
     def __handle_coordinator(self, id_from):
         if id_from == self.my_id:

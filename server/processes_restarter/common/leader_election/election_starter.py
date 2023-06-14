@@ -5,8 +5,9 @@ from common.leader_election.self_proclaimer import SelfProclaimer
 import logging
 
 class ElectionStarter(threading.Thread):
-    def __init__(self, control_sender):
+    def __init__(self, control_sender, my_id):
         super().__init__()
+        self.my_id = my_id
         self.leader_id = NO_LEADER
         self.start_election_q = queue.Queue()
         self.control_sender = control_sender
@@ -29,12 +30,12 @@ class ElectionStarter(threading.Thread):
 
 
     def __run_loop(self):
-        self.__execute_election()
+        self.__execute_election(self.my_id)
         while self.active:
             msg, id_from = self.start_election_q.get()
             if msg == Message.ELECTION:
                 if self.leader_id != NO_LEADER:
-                    self.__execute_election()
+                    self.__execute_election(id_from)
             elif msg == Message.ELECTION_ACK:
                 self.self_proclaimer.stop()
             elif msg == Message.COORDINATOR:
@@ -53,8 +54,8 @@ class ElectionStarter(threading.Thread):
         self.active = False
         self.start_election_q.put((None, None))
 
-    def start_election(self):
-        self.start_election_q.put((Message.ELECTION, None))
+    def start_election(self, id_from):
+        self.start_election_q.put((Message.ELECTION, id_from))
 
     def coordinator_received(self, id_from):
         self.start_election_q.put((Message.COORDINATOR, id_from))
@@ -62,8 +63,9 @@ class ElectionStarter(threading.Thread):
     def election_ack(self):
         self.start_election_q.put((Message.ELECTION_ACK, None))
 
-    def __execute_election(self):
+    def __execute_election(self, election_starter):
         self.leader_id = NO_LEADER
-        self.control_sender.send_election()
-        self.self_proclaimer.start()
+        if election_starter <= self.my_id:
+            self.control_sender.send_election()
+            self.self_proclaimer.start()
         logging.info("action: leader_election | result: started")

@@ -1,31 +1,38 @@
 import docker
 import random
 import time
+import logging
+import os
 
-MIN_TIME_SLEEP = 1.0
-MAX_TIME_SLEEP = 10.0
+MIN_TIME_SLEEP = 20.0
+MAX_TIME_SLEEP = 40.0
 
 class DockerStopper:
-    def __init__(self, network_name):
-        self.network_name = network_name
+    def __init__(self, containers_to_stop):
+        self.containers_to_stop = containers_to_stop
         self.docker_client = docker.from_env()
-
 
     def run(self):
         while True:
             sleep_time = random.uniform(MIN_TIME_SLEEP, MAX_TIME_SLEEP)
-            print(f"Por dormir {sleep_time}")
             time.sleep(sleep_time)
-            self.docker_client.reload()
-            containers = self.__get_containers_in_network()
-            container_to_stop = containers[random.randrange(len(containers))]
-            print(f"Por stoppear al contenedor {container_to_stop.name}")
-            container_to_stop.stop()
+            container_name = random.choice(self.containers_to_stop)
+            container = self.docker_client.containers.get(container_name)
+            logging.info(f"action: stop_container | container: {container_name}")
+            container.stop()
 
-    def __get_containers_in_network(self):
-        containers = []
-        for container in self.docker_client.containers.list():
-            networks = container.attrs['NetworkSettings']['Networks']
-            if self.network_name in networks:
-                containers.append(container)
-        return containers
+
+logging.basicConfig(
+    format='%(asctime)s %(levelname)-8s %(message)s',
+    level="INFO",
+    datefmt='%Y-%m-%d %H:%M:%S',
+)
+
+docker_logger = logging.getLogger('docker')
+docker_logger.setLevel(logging.INFO)
+
+containers_to_stop = os.environ.get("CONTAINERS_TO_STOP")
+
+stopper = DockerStopper(containers_to_stop.split(","))
+stopper.run()
+

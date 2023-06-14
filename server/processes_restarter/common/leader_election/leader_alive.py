@@ -2,8 +2,9 @@ import threading
 import queue
 from enum import Enum
 import logging
-from common.leader_election.utils import Message, HEALTHCHECK_TIMEOUT, N_RETRIES_CONTACT_LEADER,\
-                                        MINIMUM_TIME_SLEEP, NO_LEADER
+from common.leader_election.utils import Message, HEALTHCHECK_TIMEOUT,\
+                                         N_RETRIES_CONTACT_LEADER,\
+                                         TIME_BETWEEN_HEALTHCHECKS, NO_LEADER
                                         
 import time
 
@@ -73,7 +74,7 @@ class LeaderAlive(threading.Thread):
             if self.follower_retries > 0:
                 return
             logging.debug(f"action: timeout_leader_alive_healthcheck")
-            self.election_starter.start_election()
+            self.election_starter.start_election(self.my_id)
             self.leader = NO_LEADER
             self.state = LeaderAliveState.WAITING_ELECTION
 
@@ -89,9 +90,8 @@ class LeaderAlive(threading.Thread):
                     self.state = LeaderAliveState.LEADER
                 return
             elif msg == Message.LEADER_ALIVE_REPLY and id_from == self.leader:
-                sleep_time = max(MINIMUM_TIME_SLEEP, HEALTHCHECK_TIMEOUT - (now - time_sent))
-                # constant time healthcheck loop.
-                time.sleep(sleep_time)
+                # avoid flooding the network.
+                time.sleep(TIME_BETWEEN_HEALTHCHECKS)
                 return
             timeout_time = HEALTHCHECK_TIMEOUT - (now - time_sent)
         if self.active:
