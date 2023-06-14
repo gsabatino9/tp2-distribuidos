@@ -14,8 +14,10 @@ KEEP_ALIVE_ACCEPTED = 3
 
 class ProcessesRestarter:
     def __init__(self, my_id, n_processes, containers_keep_alive, container_restarter_name):
-        self.containers_keep_alive = containers_keep_alive
         my_container_name = container_restarter_name + str(my_id)
+        restarters_names = [container_restarter_name + str(restarter_id) 
+                            for restarter_id in range(n_processes)]
+        self.containers_keep_alive = restarters_names[::-1] + containers_keep_alive
         self.containers_keep_alive.remove(my_container_name)
         self.container_restarter_name = container_restarter_name
         self.new_leader_queue = queue.Queue()

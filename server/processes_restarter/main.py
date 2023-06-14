@@ -23,9 +23,15 @@ n_processes = int(os.environ.get("N_PROCESS_ELECTION"))
 containers_keep_alive = os.environ.get("CONTAINERS_KEEP_ALIVE")
 container_restarter_name = os.environ.get("CONTAINER_RESTARTER_NAME")
 
+
+if containers_keep_alive == "":
+    containers_keep_alive = []
+else:
+    containers_keep_alive = containers_keep_alive.split(",")
+
 def main():
     processes_restarter = ProcessesRestarter(my_id, n_processes,
-                                             containers_keep_alive.split(","),
+                                             containers_keep_alive,
                                              container_restarter_name)
     processes_restarter.run()
 

@@ -34,8 +34,7 @@ class HealthyChecker(threading.Thread):
                 self.__wait_for_healthcheck_reply(container, skt, send_time)
             except Exception as e:
                 logging.error(f"action: healthy_checker_timeout | container: {container}")
-                skt.shutdown(socket.SHUT_RDWR)
-                skt.close()
+                self.__free_socket(skt)
                 self.restart_containers_q.put(container)
 
 
@@ -57,16 +56,19 @@ class HealthyChecker(threading.Thread):
         try:
             while True:
                 container, skt, send_time = self.connected_processes_q.get_nowait()
-                if skt:
-                    try:
-                        skt.shutdown(socket.SHUT_RDWR)
-                    except OSError:
-                        # shutdown fails if connection is already shutdown.
-                        pass
-                    skt.close()
+                self.__free_socket(skt)
         except queue.Empty:
             # all items in connected_q removed
             pass
+
+    def __free_socket(self, skt):
+        if skt:
+            try:
+                skt.shutdown(socket.SHUT_RDWR)
+            except OSError:
+                # shutdown fails if connection is already shutdown.
+                pass
+            skt.close()
 
 
     def stop(self):
