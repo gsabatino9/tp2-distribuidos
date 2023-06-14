@@ -27,7 +27,6 @@ class Middleware:
         self.__validate_active()
         msg, addr = self.skt.recvfrom(1)
         if len(msg) == 0:
-            self.stop()
             raise Exception("No message received in recvfrom.")
         if not self.active:
             raise Exception("Middleware was stopped.")

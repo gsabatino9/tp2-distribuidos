@@ -24,7 +24,7 @@ class ProcessesRestarter:
         self.keep_alive = KeepAlive()
         self.active = True
         signal.signal(signal.SIGTERM, self.stop)
-    
+
 
     def run(self):
         self.keep_alive.start()
@@ -34,9 +34,13 @@ class ProcessesRestarter:
             if not self.active:
                 break
             self.__init_restarter()
+            logging.debug("action: start_restarter | result: success")
             self.__wait_while(LEADER)
+            logging.debug("action: stop_restarter | result: in_progress")
             self.__join_restarter()
+            logging.debug("action: stop_restarter | result: success")
 
+        self.leader_election.stop()
         self.keep_alive.stop()
         self.keep_alive.join()
 
@@ -69,12 +73,14 @@ class ProcessesRestarter:
     def __join_restarter(self):
         self.docker_restarter.stop()
         self.docker_restarter.join()
-
+        logging.debug("action: stop_restarter | result: docker_restarter_stopped")
         self.connection_maker.stop()
         self.connection_maker.join()
+        logging.debug("action: stop_restarter | result: connection_maker_stopped")
 
         self.healthy_checker.stop()
         self.healthy_checker.join()
+        logging.debug("action: stop_restarter | result: healthy_checker_stopped")
 
 
     def __wait_while(self, while_clause):
@@ -83,11 +89,9 @@ class ProcessesRestarter:
             value = self.new_leader_queue.get()
 
     def stop_being_leader_callback(self):
-        logging.info("no soy mas leader")
         self.new_leader_queue.put(NO_LEADER)
 
     def i_am_leader_callback(self):
-        logging.info("soy leader")
         self.new_leader_queue.put(LEADER)
 
     def __put_containers_create_connections(self):
@@ -95,6 +99,5 @@ class ProcessesRestarter:
             self.create_connections_q.put(container_name)
 
     def stop(self, *args):
-        self.leader_election.stop()
         self.active = False
         self.new_leader_queue.put(STOP_LEADER_QUEUE)

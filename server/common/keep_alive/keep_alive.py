@@ -46,6 +46,11 @@ class KeepAlive(threading.Thread):
 
     def stop(self):
         self.active = False
-        self.server_socket.shutdown(socket.SHUT_RDWR)
-        if self.skt:
-            self.skt.shutdown(socket.SHUT_RDWR)
+        try:
+            self.server_socket.shutdown(socket.SHUT_RDWR)
+            if self.skt:
+                self.skt.shutdown(socket.SHUT_RDWR)
+        except Exception as e:
+            logging.error(f"action: stop_keep_alive | result: fail | error: {str(e)}")
+        except:
+            logging.error(f"action: stop_keep_alive | result: fail | error: unknown")

@@ -27,13 +27,21 @@ class LeaderElection:
     def stop(self):
         logging.debug(f"action: stop_leader_election_processes | result: in_progress")
         self.control_sender.stop()
-        self.election_starter.stop()
-        self.leader_alive.stop()
-        self.control_receiver.stop()
-
         self.control_sender.join()
+        
+        self.election_starter.stop()
         self.election_starter.join()
+        
+        self.leader_alive.stop()
         self.leader_alive.join()
+        
+        # El control_receiver tiene que ser stoppeado luego de que se haya joineado
+        # control_sender, porque hace un sendto a su mismo socket para despertarlo
+        # del recvfrom.
+        self.control_receiver.stop()
         self.control_receiver.join()
+        
+        # el socket UDP del middleware se cierra una vez que el receiver 
+        # y el sender dejan de usarlo.
         self.middleware.close()
         logging.debug(f"action: stop_leader_election_processes | result: success")

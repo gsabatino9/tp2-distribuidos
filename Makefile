@@ -78,6 +78,6 @@ testing-run: testing-image
 .PHONY: testing-run
 
 testing-down:
-	docker compose -f ./testing/docker-compose-testing-restarters.yaml stop -t 1
+	docker compose -f ./testing/docker-compose-testing-restarters.yaml stop -t 15
 	docker compose -f ./testing/docker-compose-testing-restarters.yaml down
 .PHONY: testing-down
