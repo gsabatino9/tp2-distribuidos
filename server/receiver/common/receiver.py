@@ -91,7 +91,6 @@ class Receiver:
 
     def __handle_client(self, client_connection):
         types_ended = set()
-        print("esperando que cliente envíe datos")
 
         while len(types_ended) < self.amount_queries:
             header, payload_bytes = client_connection.recv_data(decode_payload=False)
