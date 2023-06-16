@@ -7,10 +7,11 @@ from common.leader_election.leader_alive import LeaderAlive
 
 
 class LeaderElection:
-    def __init__(self, my_id, n_process, stop_leader_actions_callback, i_am_leader_callback):
+    def __init__(self, my_id, n_process, stop_leader_actions_callback,
+                 i_am_leader_callback, network_problems):
         self.my_id = my_id
         self.leader_id = None
-        self.middleware = Middleware(my_id, n_process)
+        self.middleware = Middleware(my_id, n_process, network_problems)
         self.control_sender = ControlSender(self.middleware)
         self.election_starter = ElectionStarter(self.control_sender, my_id)
         self.leader_alive = LeaderAlive(self.my_id, self.control_sender, self.election_starter)
@@ -34,7 +35,7 @@ class LeaderElection:
         
         self.leader_alive.stop()
         self.leader_alive.join()
-        
+
         # control_receiver stop method calls sendto to it's socket in order to wake
         # control_receiver from being blocked in it's socket recvfrom.
         # In order to avoid a race condition in socket sendto, control_receiver stop method

@@ -22,7 +22,7 @@ my_id = int(os.environ.get("ID_ELECTION"))
 n_processes = int(os.environ.get("N_PROCESS_ELECTION"))
 containers_keep_alive = os.environ.get("CONTAINERS_KEEP_ALIVE")
 container_restarter_name = os.environ.get("CONTAINER_RESTARTER_NAME")
-
+network_problems = bool(int(os.environ.get("NETWORK_PROBLEMS")))
 
 if containers_keep_alive == "":
     containers_keep_alive = []
@@ -32,7 +32,8 @@ else:
 def main():
     processes_restarter = ProcessesRestarter(my_id, n_processes,
                                              containers_keep_alive,
-                                             container_restarter_name)
+                                             container_restarter_name,
+                                             network_problems)
     processes_restarter.run()
 
 

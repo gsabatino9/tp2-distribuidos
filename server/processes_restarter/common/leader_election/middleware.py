@@ -4,16 +4,17 @@ from common.leader_election.utils import IP_ADDR_START, IP_ADDR_END_BASE,\
                                          CONNECTION_PORT
 
 MSG_TO_WAKE_RECVFROM = b'W'
-
+import random
 
 class Middleware:
-    def __init__(self, my_id, n_processes):
+    def __init__(self, my_id, n_processes, network_problems=False):
         self.skt = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.my_hostname = self.__id_to_ip(my_id)
         self.skt.bind((self.my_hostname, CONNECTION_PORT))
         self.my_id = my_id
         self.n_processes = n_processes
         self.active = True
+        self.network_problems = network_problems
 
     def recv_message(self):
         self.__validate_active()
@@ -27,6 +28,9 @@ class Middleware:
 
     def send(self, msg, id_to):
         self.__validate_active()
+        if random.random() > 0.9 and id_to != self.my_id:
+            logging.info(f"se pierde el mensaje {msg} a {id_to}")
+            return
         sent = self.skt.sendto(msg, (self.__id_to_ip(id_to), CONNECTION_PORT))
         if sent != len(msg):
             self.stop()

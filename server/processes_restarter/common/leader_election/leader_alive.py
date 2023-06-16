@@ -4,8 +4,9 @@ from enum import Enum
 import logging
 from common.leader_election.utils import Message, HEALTHCHECK_TIMEOUT,\
                                          N_RETRIES_CONTACT_LEADER,\
-                                         TIME_BETWEEN_HEALTHCHECKS, NO_LEADER
-                                        
+                                         TIME_BETWEEN_HEALTHCHECKS, NO_LEADER,\
+                                         MAX_TIME_WAITING_FOR_ELECTION
+
 import time
 
 class LeaderAliveState(Enum):
@@ -99,14 +100,19 @@ class LeaderAlive(threading.Thread):
             raise queue.Empty("Timeout reached")
 
     def __execute_waiting_election(self):
-        msg, id_from = self.leader_alive_q.get()
-        if msg == Message.COORDINATOR:
-            self.leader = id_from
-            if self.leader == self.my_id:
-                self.state = LeaderAliveState.LEADER
-            else:
-                self.state = LeaderAliveState.FOLLOWER
-                self.follower_retries = N_RETRIES_CONTACT_LEADER
+        try:
+            msg, id_from = self.leader_alive_q.get(timeout=MAX_TIME_WAITING_FOR_ELECTION)
+            if msg == Message.COORDINATOR:
+                self.leader = id_from
+                if self.leader == self.my_id:
+                    self.state = LeaderAliveState.LEADER
+                else:
+                    self.state = LeaderAliveState.FOLLOWER
+                    self.follower_retries = N_RETRIES_CONTACT_LEADER
+        except queue.Empty:
+           # If the election isn't finished in MAX_TIME_WAITING_FOR_ELECTION, probably
+           # there were network issues -> restart election.
+           self.election_starter.restart_election() 
 
     def coordinator_received(self, id_from):
         self.leader_alive_q.put((Message.COORDINATOR, id_from))

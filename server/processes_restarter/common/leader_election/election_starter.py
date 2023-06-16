@@ -4,6 +4,8 @@ from common.leader_election.utils import Message, NO_LEADER
 from common.leader_election.self_proclaimer import SelfProclaimer
 import logging
 
+MUST_RESTART = -1
+
 class ElectionStarter(threading.Thread):
     def __init__(self, control_sender, my_id):
         super().__init__()
@@ -34,7 +36,8 @@ class ElectionStarter(threading.Thread):
         while self.active:
             msg, id_from = self.start_election_q.get()
             if msg == Message.ELECTION:
-                if self.leader_id != NO_LEADER:
+                # if leader_id == NO_LEADER, then election has already started.
+                if self.leader_id != NO_LEADER or id_from == MUST_RESTART:
                     self.__execute_election(id_from)
             elif msg == Message.ELECTION_ACK:
                 self.self_proclaimer.stop()
@@ -62,6 +65,9 @@ class ElectionStarter(threading.Thread):
 
     def election_ack(self):
         self.start_election_q.put((Message.ELECTION_ACK, None))
+
+    def restart_election(self):
+        self.start_election_q.put((Message.ELECTION, MUST_RESTART))
 
     def __execute_election(self, election_starter):
         self.leader_id = NO_LEADER

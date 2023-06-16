@@ -51,7 +51,7 @@ class ControlReceiver(threading.Thread):
 
     def __handle_election(self, id_from):
         self.stop_being_leader_callback()
-        if id_from < self.my_id:      
+        if id_from < self.my_id:
             self.control_sender.send_election_ack(id_from)
         self.election_starter.start_election(id_from)
 

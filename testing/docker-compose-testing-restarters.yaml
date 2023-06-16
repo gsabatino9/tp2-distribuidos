@@ -12,6 +12,7 @@ services:
       - N_PROCESS_ELECTION=4
       - CONTAINERS_KEEP_ALIVE=
       - CONTAINER_RESTARTER_NAME=processes-restarter-
+      - NETWORK_PROBLEMS=1
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     networks:
@@ -30,6 +31,7 @@ services:
       - N_PROCESS_ELECTION=4
       - CONTAINERS_KEEP_ALIVE=
       - CONTAINER_RESTARTER_NAME=processes-restarter-
+      - NETWORK_PROBLEMS=1
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     networks:
@@ -48,6 +50,7 @@ services:
       - N_PROCESS_ELECTION=4
       - CONTAINERS_KEEP_ALIVE=
       - CONTAINER_RESTARTER_NAME=processes-restarter-
+      - NETWORK_PROBLEMS=1
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     networks:
@@ -66,6 +69,7 @@ services:
       - N_PROCESS_ELECTION=4
       - CONTAINERS_KEEP_ALIVE=
       - CONTAINER_RESTARTER_NAME=processes-restarter-
+      - NETWORK_PROBLEMS=1
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
     networks:

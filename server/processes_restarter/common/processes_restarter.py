@@ -13,7 +13,8 @@ STOP_LEADER_QUEUE = 2
 KEEP_ALIVE_ACCEPTED = 3
 
 class ProcessesRestarter:
-    def __init__(self, my_id, n_processes, containers_keep_alive, container_restarter_name):
+    def __init__(self, my_id, n_processes, containers_keep_alive, 
+                 container_restarter_name, network_problems):
         my_container_name = container_restarter_name + str(my_id)
         restarters_names = [container_restarter_name + str(restarter_id) 
                             for restarter_id in range(n_processes)]
@@ -23,7 +24,8 @@ class ProcessesRestarter:
         self.new_leader_queue = queue.Queue()
         self.leader_election = LeaderElection(my_id, n_processes, 
                                               self.stop_being_leader_callback, 
-                                              self.i_am_leader_callback)
+                                              self.i_am_leader_callback,
+                                              network_problems)
         self.keep_alive = KeepAlive()
         self.active = True
         signal.signal(signal.SIGTERM, self.stop)
