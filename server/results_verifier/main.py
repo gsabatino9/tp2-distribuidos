@@ -9,8 +9,9 @@ AMOUNT_QUERIES = int(os.environ.get("AMOUNT_QUERIES"))
 
 
 def main():
-    f = ResultsVerifier(NAME_RECV_QUEUE, NAME_EM_QUEUE, HOST, PORT, AMOUNT_QUERIES)
-    f.stop()
+    results_verifier = ResultsVerifier(NAME_RECV_QUEUE, NAME_EM_QUEUE, HOST, PORT, AMOUNT_QUERIES)
+    results_verifier.run()
+    results_verifier.stop()
 
 
 if __name__ == "__main__":

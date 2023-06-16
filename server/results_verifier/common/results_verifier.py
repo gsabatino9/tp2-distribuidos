@@ -9,7 +9,6 @@ class ResultsVerifier:
     def __init__(self, name_recv_queue, name_em_queue, host, port, amount_queries):
         self.__init_results_verifier(host, port, amount_queries)
         self.__connect(name_recv_queue, name_em_queue, amount_queries)
-        self.__run()
 
     def __init_results_verifier(self, host, port, amount_queries):
         self.running = True
@@ -36,7 +35,7 @@ class ResultsVerifier:
             print(f"error: creating_queue_connection | log: {e}")
             self.stop()
 
-    def __run(self):
+    def run(self):
         """
         start receiving messages.
         """
