@@ -8,6 +8,7 @@ class MessageServer:
     SEND_RESULT = 1
     SEND_LAST_RESULT = 2
     SEND_ID_CLIENT = 3
+    ERROR_MESSAGE = 4
 
     # Struct format for message header
     HEADER_CODE = "!BBI"
@@ -40,9 +41,7 @@ class MessageServer:
 
     @staticmethod
     def encode_header(header):
-        return pack(
-            MessageServer.HEADER_CODE, header.msg_type, header.id_query, header.len
-        )
+        return pack(MessageServer.HEADER_CODE, *header)
 
     @staticmethod
     def encode_payload(len_payload, payload):
@@ -124,3 +123,7 @@ class MessageServer:
     @classmethod
     def id_client_message(cls, id_client):
         return cls(cls.SEND_ID_CLIENT, id_client, list("")).encode()
+
+    @classmethod
+    def error_message(cls, id_client):
+        return cls(cls.ERROR_MESSAGE, id_client, list("")).encode()

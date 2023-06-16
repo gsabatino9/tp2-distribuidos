@@ -40,6 +40,10 @@ class CommunicationServer:
         msg = MessageServer.last_chunk_message()
         self.comm.send_message(msg)
 
+    def send_error_message(self, id_client):
+        msg = MessageServer.error_message(id_client)
+        self.comm.send_message(msg)
+
     def __results_msg(self, id_query, partial_results):
         msg = MessageServer.results_message(id_query, partial_results)
         self.comm.send_message(msg)

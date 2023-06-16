@@ -1,5 +1,5 @@
 from protocol.communication_client import CommunicationClient
-from common.utils import construct_payload, is_eof
+from common.utils import construct_payload, is_eof, is_error
 import csv, socket, time, signal, sys
 from itertools import islice
 from datetime import datetime, timedelta
@@ -126,7 +126,10 @@ class Client:
 
         while not ended:
             header, payload = self.conn.recv_results()
-            if is_eof(header):
+            if is_error(header):
+                print(f"action: results_obtained | result: fail | msg: retry in 1sec")
+                time.sleep(1)
+            elif is_eof(header):
                 ended = True
             else:
                 results[header.id_query].append(payload.data)
@@ -135,28 +138,8 @@ class Client:
         self.__save_results(results)
 
     def __connect_with_consults_server(self, host, port):
-        connected = False
-        retries = 0
-
-        while (not connected) and (retries < self.max_retries):
-            connected = self.__try_connect(host, port)
-            if not connected:
-                retries += 1
-
-        if not connected:
-            print(f"error: connection_server | msg: retries={max_retries}")
-            self.stop()
-
-    def __try_connect(self, host, port):
-        try:
-            self.__connect(host, port)
-            self.conn.set_id_client(self.id_client)
-            return True
-        except:
-            print(f"action: client_connected | result: failure | msg: retry in 1 sec")
-            time.sleep(1)
-
-            return False
+        self.__connect(host, port)
+        self.conn.set_id_client(self.id_client)
 
     def __save_results(self, results):
         """
