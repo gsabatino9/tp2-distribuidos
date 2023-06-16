@@ -1,0 +1,99 @@
+version: '3.9'
+name: tp1
+services:
+  processes-restarter-0:
+    container_name: processes-restarter-0
+    image: processes_restarter:latest
+    entrypoint: python3 /main.py
+    environment:
+      - PYTHONUNBUFFERED=1
+      - LOGGING_LEVEL=INFO
+      - ID_ELECTION=0
+      - N_PROCESS_ELECTION=4
+      - CONTAINERS_KEEP_ALIVE=
+      - CONTAINER_RESTARTER_NAME=processes-restarter-
+      - NETWORK_PROBLEMS=1
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      testing_net:
+        ipv4_address: 172.25.125.4
+
+
+  processes-restarter-1:
+    container_name: processes-restarter-1
+    image: processes_restarter:latest
+    entrypoint: python3 /main.py
+    environment:
+      - PYTHONUNBUFFERED=1
+      - LOGGING_LEVEL=INFO
+      - ID_ELECTION=1
+      - N_PROCESS_ELECTION=4
+      - CONTAINERS_KEEP_ALIVE=
+      - CONTAINER_RESTARTER_NAME=processes-restarter-
+      - NETWORK_PROBLEMS=1
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      testing_net:
+        ipv4_address: 172.25.125.5
+
+
+  processes-restarter-2:
+    container_name: processes-restarter-2
+    image: processes_restarter:latest
+    entrypoint: python3 /main.py
+    environment:
+      - PYTHONUNBUFFERED=1
+      - LOGGING_LEVEL=INFO
+      - ID_ELECTION=2
+      - N_PROCESS_ELECTION=4
+      - CONTAINERS_KEEP_ALIVE=
+      - CONTAINER_RESTARTER_NAME=processes-restarter-
+      - NETWORK_PROBLEMS=1
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      testing_net:
+        ipv4_address: 172.25.125.6
+
+
+  processes-restarter-3:
+    container_name: processes-restarter-3
+    image: processes_restarter:latest
+    entrypoint: python3 /main.py
+    environment:
+      - PYTHONUNBUFFERED=1
+      - LOGGING_LEVEL=INFO
+      - ID_ELECTION=3
+      - N_PROCESS_ELECTION=4
+      - CONTAINERS_KEEP_ALIVE=
+      - CONTAINER_RESTARTER_NAME=processes-restarter-
+      - NETWORK_PROBLEMS=1
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      testing_net:
+        ipv4_address: 172.25.125.7
+
+
+  processes-stopper:
+    container_name: processes-stopper
+    image: processes_stopper:latest
+    entrypoint: python3 /main.py
+    environment:
+      - PYTHONUNBUFFERED=1
+      - LOGGING_LEVEL=INFO
+      - CONTAINERS_TO_STOP=processes-restarter-0,processes-restarter-1,processes-restarter-2,processes-restarter-3
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - testing_net
+
+networks:
+  testing_net:
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.25.125.0/24
+
