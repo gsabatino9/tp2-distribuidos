@@ -10,8 +10,6 @@ SELF_PROCLAIMER_TIMEOUT = 1.0
 
 
 # MIDDLEWARE
-IP_ADDR_START = "172.25.125."
-IP_ADDR_END_BASE = 4
 CONNECTION_PORT = 6767
 
 # Si una eleccion no se completa en este tiempo, el contenedor decidira volver a empezarla.

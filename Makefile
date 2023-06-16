@@ -74,6 +74,7 @@ client-down:
 
 
 testing-run: testing-image
+	python3 testing/create_docker_compose.py
 	docker compose -f ./testing/docker-compose-testing-restarters.yaml up -d --build
 	docker compose -f ./testing/docker-compose-testing-restarters.yaml logs -f
 .PHONY: testing-run

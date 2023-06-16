@@ -1,14 +1,15 @@
 import socket
 import logging
-from common.leader_election.utils import IP_ADDR_START, IP_ADDR_END_BASE,\
-                                         CONNECTION_PORT
+from common.leader_election.utils import CONNECTION_PORT
 
 MSG_TO_WAKE_RECVFROM = b'W'
 import random
 
 class Middleware:
-    def __init__(self, my_id, n_processes, network_problems=False):
+    def __init__(self, my_id, n_processes, network_problems, ip_base):
         self.skt = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.ip_base_start = ip_base.split('.')[0:-1]
+        self.ip_base_end = int(ip_base.split('.')[-1])
         self.my_hostname = self.__id_to_ip(my_id)
         self.skt.bind((self.my_hostname, CONNECTION_PORT))
         self.my_id = my_id
@@ -53,12 +54,12 @@ class Middleware:
             raise Exception("Middleware was stopped.")
 
     def __ip_to_id(self, ip_addr):
-        start_splited = IP_ADDR_START.split(".")
+        start_splited = self.ip_base_start
         addr = ip_addr.split(".")
         if addr[0] != start_splited[0] or addr[1] != start_splited[1] or \
            addr[2] != start_splited[2]:
             raise Exception("Invalid IP Address.")
-        return int(addr[3]) - IP_ADDR_END_BASE
+        return int(addr[3]) - self.ip_base_end
 
     def __id_to_ip(self, id_process):
-        return IP_ADDR_START + str(IP_ADDR_END_BASE+id_process)
+        return '.'.join(self.ip_base_start) + '.' + str(self.ip_base_end+id_process)
