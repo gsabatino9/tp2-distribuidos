@@ -125,6 +125,7 @@ class Client:
         ended = False
 
         while not ended:
+            self.__send_request_results()
             header, payload = self.conn.recv_results()
             if is_error(header):
                 print(f"action: results_obtained | result: fail | msg: retry in 1sec")
@@ -137,9 +138,13 @@ class Client:
         print(f"action: results_obtained | result: success | results: {results}")
         self.__save_results(results)
 
+    def __send_request_results(self):
+        self.conn.send_get_results()
+
     def __connect_with_consults_server(self, host, port):
         self.__connect(host, port)
         self.conn.set_id_client(self.id_client)
+        print("action: connection_consult_server | result: success")
 
     def __save_results(self, results):
         """

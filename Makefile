@@ -52,6 +52,7 @@ server-logs:
 .PHONY: server-logs
 
 server-run: server-image
+	python3 create_docker_compose.py
 	docker compose -f docker-compose-server.yaml up -d --build
 	docker compose -f docker-compose-server.yaml logs -f
 .PHONY: server-run

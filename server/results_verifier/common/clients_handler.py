@@ -59,25 +59,30 @@ class ClientsHandler:
 
     def __verify_results(self, id_client):
         client_results_ready = True
+        client_in_queries = False
         
         self.lock.acquire()
         for query, result_ready in self.queries_ended.items():
-            if query[0] == id_client and not result_ready:
-                client_results_ready = False
+            if query[0] == id_client:
+                client_in_queries = True
+                if result_ready:
+                    client_results_ready = False
         self.lock.release()
 
-        return client_results_ready
+        return client_results_ready and client_in_queries
 
-    def __send_not_ready(client_connection, id_client):
+    def __send_not_ready(self, client_connection, id_client):
         client_connection.send_error_message(id_client)
 
     def __send_results(self, client_connection, id_client):
+        print("enviando resultados")
         self.lock.acquire()
         for query, results in self.queries_results.items():
             if query[0] == id_client:
                 if len(results) > 0:
                     client_connection.send_results(query[1], results)
         self.lock.release()
+        print("resultados enviados")
 
     def stop(self, *args):
         if self.running:
