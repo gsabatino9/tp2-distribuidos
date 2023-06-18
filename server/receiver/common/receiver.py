@@ -76,20 +76,18 @@ class Receiver:
         """
         runs a loop until the eof of all data types arrives.
         """
-        types_ended = set()
-
-        while len(types_ended) < self.amount_queries:
+        while self.running:
             header, payload_bytes = self.client_connection.recv_data(
                 decode_payload=False
             )
-
-            if is_eof(header):
-                types_ended.add(header.data_type)
-                self.__send_eof(header)
-            else:
-                self.__route_message(header, payload_bytes)
-
-        self.__send_ack_client()
+            self.__send_ack_client(header.id_batch)
+            self.__handle_request(header, payload_bytes)
+            
+    def __handle_request(self, header, payload_bytes):
+        if is_eof(header):
+            self.__send_eof(header)
+        else:
+            self.__route_message(header, payload_bytes)
 
     def __asign_id_to_client(self):
         id_client = self.__get_id_client()
@@ -123,12 +121,12 @@ class Receiver:
     def __send_msg_to_trips(self, msg):
         [trips_queue.send(msg) for trips_queue in self.trips_queues]
 
-    def __send_ack_client(self):
+    def __send_ack_client(self, id_batch):
         """
         informs the client that all files arrived successfully.
         """
-        print("action: all_files_arrived | result: success")
-        self.client_connection.send_files_received()
+        #print("action: all_files_arrived | result: success")
+        self.client_connection.send_ack_batch(id_batch)
 
     def stop(self, *args):
         if self.running:

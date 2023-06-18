@@ -25,8 +25,8 @@ class CommunicationServer:
         msg = MessageServer.id_client_message(id_client)
         self.comm.send_message(msg)
 
-    def send_files_received(self):
-        msg = MessageServer.files_received_message()
+    def send_ack_batch(self, id_batch):
+        msg = MessageServer.batch_received_message(id_batch)
         self.comm.send_message(msg)
 
     def send_results(self, id_query, results):
