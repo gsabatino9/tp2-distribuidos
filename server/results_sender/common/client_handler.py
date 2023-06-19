@@ -1,6 +1,7 @@
 from threading import Thread
 from server.common.queue.connection import Connection
 from server.common.utils_messages_client import is_eof
+import time
 
 class ClientHandler(Thread):
     def __init__(self, name_recv_exchange, name_recv_queue, client_connection):
@@ -14,7 +15,8 @@ class ClientHandler(Thread):
         # recv request for info
         print("esperando request")
         header, _ = self.client_connection.recv_data(decode_payload=False)
-        print("request recibido")
+        print("request recibido: id =", header.id_client)
+        time.sleep(5)
         self.__connect_client(header.id_client)
         
         # start receving batches
