@@ -20,13 +20,8 @@ def is_weather(header):
     return header.data_type == MessageClient.WEATHER_DATA
 
 
-def results_message(id_client, id_batch, batch_results):
-    payload = construct_payload(batch_results)
-    return MessageServer.results_message(id_client, id_batch, payload)
-
-
-def construct_payload(rows):
-    return [",".join(e) for e in rows]
+def results_message(id_query, id_batch, batch_results):
+    return MessageServer.results_message(id_query, id_batch, batch_results)
 
 def is_eof(body):
     try:

@@ -12,10 +12,13 @@ class ClientHandler(Thread):
 
     def run(self):
         # recv request for info
+        print("esperando request")
         header, _ = self.client_connection.recv_data(decode_payload=False)
+        print("request recibido")
         self.__connect_client(header.id_client)
         
         # start receving batches
+        print("empezando a recibir batches")
         self.results_queue.receive(self.__process_batch)
         self.queue_connection.start_receiving()
 
@@ -26,14 +29,15 @@ class ClientHandler(Thread):
             self.name_recv_exchange, self.name_recv_queue, routing_keys=[str(id_client)]
         )
 
+        print("cliente conectado con colas")
+
     def __process_batch(self, ch, method, properties, body):
+        print("procesando batch")
         if is_eof(body):
             self.client_connection.send_results(body, is_last=True)
             self.__stop_connections()
         else:
             self.client_connection.send_results(body, is_last=False)
-
-        print(f"resultados enviados: last=={is_eof(body)}")
 
     def __stop_connections(self):
         self.queue_connection.delete_queue(self.name_recv_queue)

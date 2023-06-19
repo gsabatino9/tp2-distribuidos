@@ -148,7 +148,7 @@ class ResultsVerifier:
         por si se cae justo cuando iba a eliminar esa cola => cuando se levanta,
         la elimina y listo.
         """
-        batches_to_send = self.__partition_into_batches(id_client)
+        batches_to_send = self.__get_batches_to_send(id_client)
         for batch in batches_to_send:
             self.results_queue.send(batch, str(id_client))
         
@@ -156,26 +156,36 @@ class ResultsVerifier:
 
         print(f"action: inform_results | result: success | id_client: {id_client}")
 
-    def __partition_into_batches(self, id_client):
+    def __get_batches_to_send(self, id_client):
         results_client = self.__get_results_client(id_client)
-        batches = []
-
+        batches_to_send = []
         id_batch = 0
-        for i, elem in enumerate(results_client):
-            if (i + 1) % self.CHUNK_SIZE == 0 or i + 1 == len(results_client):
-                batch = results_message(id_client, id_batch, results_client[id_batch : i + 1])
-                batches.append(batch)
-                id_batch = i + 1
 
-        return batches
+        for id_query, results_query in enumerate(results_client, start=1):
+            for result in results_query:
+                batch = results_message(id_query, id_batch, result)
+                batches_to_send.append(batch)
+                id_batch += 1
+
+        return batches_to_send
 
     def __get_results_client(self, id_client):
         results_client = []
-        for key, result in self.queries_results.items():
+        for key, results_query in self.queries_results.items():
             if id_client == key[0]:
-                results_client.append(result)
+                results_client.append(self.__partition_into_batches(results_query))
 
         return results_client
+
+    def __partition_into_batches(self, list_batch):
+        batches = []
+        last = 0
+        for i, elem in enumerate(list_batch):
+            if (i + 1) % self.CHUNK_SIZE == 0 or i + 1 == len(list_batch):
+                batches.append(list_batch[last : i + 1])
+                last = i + 1
+        
+        return batches
 
     def __delete_client(self, id_client):
         self.__delete_from_dict(self.queries_ended, id_client)
