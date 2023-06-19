@@ -36,6 +36,7 @@ services:
   <APPLIER_QUERY4>
 
   <RESULTS_VERIFIER>
+  <RESULTS_SENDER>
     
   <EM_JOINERS>
   <EM_FILTERS>
@@ -409,14 +410,28 @@ RESULTS_VERIFIER = """
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
-      - HOST=results_verifier
-      - PORT=12346
       - NAME_RECV_QUEUE={}
       - NAME_EM_QUEUE={}
       - AMOUNT_QUERIES=4
+    image: results_verifier:latest
+    networks:      
+      - testing_net
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+"""
+
+RESULTS_SENDER = """
+  results_sender:
+    container_name: results_sender
+    entrypoint: python3 /main.py
+    environment:
+      - PYTHONUNBUFFERED=1
+      - HOST=results_sender
+      - PORT=12346
     ports:
       - 12346:12346
-    image: results_verifier:latest
+    image: results_sender:latest
     networks:      
       - testing_net
     depends_on:

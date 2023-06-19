@@ -29,23 +29,13 @@ class CommunicationServer:
         msg = MessageServer.batch_received_message(id_batch)
         self.comm.send_message(msg)
 
-    def send_results(self, id_query, results):
-        last = 0
-        for i, elem in enumerate(results):
-            if (i + 1) % self.CHUNK_SIZE == 0 or i + 1 == len(results):
-                self.__results_msg(id_query, results[last : i + 1])
-                last = i + 1
-
-    def send_last(self):
-        msg = MessageServer.last_chunk_message()
+    def send_results(self, msg, last=False):
+        if last:
+            msg = MessageServer.last_chunk_message()
         self.comm.send_message(msg)
 
     def send_error_message(self, id_client):
         msg = MessageServer.error_message(id_client)
-        self.comm.send_message(msg)
-
-    def __results_msg(self, id_query, partial_results):
-        msg = MessageServer.results_message(id_query, partial_results)
         self.comm.send_message(msg)
 
     def recv_data(self, decode_payload=True):

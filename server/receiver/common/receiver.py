@@ -68,13 +68,11 @@ class Receiver:
     def run(self):
         self.accepter_socket.listen(self.max_clients)
         print(f"action: waiting_clients | result: success")
-        #with Pool(processes=5) as pool:
+        # with Pool(processes=5) as pool:
         while self.running:
             client_connection = self.__accept_client()
             # pool.apply_async(self.__handle_client, (client_connection,))
-            process = Process(
-                target=self.__handle_client, args=(client_connection,)
-            )
+            process = Process(target=self.__handle_client, args=(client_connection,))
             process.start()
 
     def __accept_client(self):
