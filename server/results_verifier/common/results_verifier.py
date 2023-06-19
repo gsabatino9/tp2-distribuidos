@@ -154,18 +154,28 @@ class ResultsVerifier:
         
         self.results_queue.send(last_message(), str(id_client))
 
+        print(f"action: inform_results | result: success | id_client: {id_client}")
+
     def __partition_into_batches(self, id_client):
-        results_client = self.queries_results[id_client]
+        results_client = self.__get_results_client(id_client)
         batches = []
 
         id_batch = 0
         for i, elem in enumerate(results_client):
-            if (i + 1) % self.CHUNK_SIZE == 0 or i + 1 == len(results):
-                batch = results_message(id_batch, results[id_batch : i + 1])
+            if (i + 1) % self.CHUNK_SIZE == 0 or i + 1 == len(results_client):
+                batch = results_message(id_client, id_batch, results_client[id_batch : i + 1])
                 batches.append(batch)
                 id_batch = i + 1
 
         return batches
+
+    def __get_results_client(self, id_client):
+        results_client = []
+        for key, result in self.queries_results.items():
+            if id_client == key[0]:
+                results_client.append(result)
+
+        return results_client
 
     def __delete_client(self, id_client):
         self.__delete_from_dict(self.queries_ended, id_client)

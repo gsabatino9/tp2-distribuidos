@@ -127,10 +127,7 @@ class Client:
         while not ended:
             self.__send_request_results()
             header, payload = self.conn.recv_results()
-            if is_error(header):
-                print(f"action: results_obtained | result: fail | msg: retry in 1sec")
-                time.sleep(1)
-            elif is_eof(header):
+            if is_eof(header):
                 ended = True
             else:
                 results[header.id_query].append(payload.data)

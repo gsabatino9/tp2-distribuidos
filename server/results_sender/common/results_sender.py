@@ -32,7 +32,7 @@ class ResultsSender:
 
         while self.running:
             client_connection = self.__accept_client()
-            client_handler = ClientHandler(client_connection)
+            client_handler = ClientHandler(self.name_recv_exchange, self.name_recv_exchange, client_connection)
             client_handler.start()
             self.clients_handlers.append(client_handler)
 

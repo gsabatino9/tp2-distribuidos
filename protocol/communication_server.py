@@ -29,8 +29,8 @@ class CommunicationServer:
         msg = MessageServer.batch_received_message(id_batch)
         self.comm.send_message(msg)
 
-    def send_results(self, msg, last=False):
-        if last:
+    def send_results(self, msg, is_last=False):
+        if is_last:
             msg = MessageServer.last_chunk_message()
         self.comm.send_message(msg)
 

@@ -8,7 +8,7 @@ services:
       - PYTHONUNBUFFERED=1
       - HOST=receiver
       - PORT=12345
-      - HOST_CONSULT=results_verifier
+      - HOST_CONSULT=results_sender
       - PORT_CONSULT=12346
       - CHUNK_SIZE=100
       - MAX_RETRIES=50

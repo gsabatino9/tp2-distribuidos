@@ -22,8 +22,8 @@ class ClientHandler(Thread):
     def __connect_client(self, id_client):
         # TODO: try-catch
         self.queue_connection = Connection()
-        self.results_queue = queue_connection.routing_build_queue(
-            name_recv_exchange, name_recv_queue, sender=False
+        self.results_queue = self.queue_connection.routing_build_queue(
+            self.name_recv_exchange, self.name_recv_queue, routing_keys=[str(id_client)]
         )
 
     def __process_batch(self, ch, method, properties, body):
@@ -32,6 +32,8 @@ class ClientHandler(Thread):
             self.__stop_connections()
         else:
             self.client_connection.send_results(body, is_last=False)
+
+        print(f"resultados enviados: last=={is_eof(body)}")
 
     def __stop_connections(self):
         self.queue_connection.delete_queue(self.name_recv_queue)
