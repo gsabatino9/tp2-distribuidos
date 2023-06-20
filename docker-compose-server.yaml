@@ -276,24 +276,11 @@ services:
       - NAME_RECV_QUEUE=query_results_q
       - NAME_EM_QUEUE=eof_manager_query_result_q
       - AMOUNT_QUERIES=4
-    image: results_verifier:latest
-    networks:      
-      - testing_net
-    depends_on:
-      rabbitmq:
-        condition: service_healthy
-
-  
-  results_sender:
-    container_name: results_sender
-    entrypoint: python3 /main.py
-    environment:
-      - PYTHONUNBUFFERED=1
-      - HOST=results_sender
+      - HOST=results_verifier
       - PORT=12346
     ports:
       - 12346:12346
-    image: results_sender:latest
+    image: results_verifier:latest
     networks:      
       - testing_net
     depends_on:

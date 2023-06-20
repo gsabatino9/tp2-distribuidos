@@ -146,6 +146,5 @@ class RoutingBuildQueue:
 
     def send(self, message, routing_key):
         self.channel.basic_publish(
-            exchange=self.exchange_name, routing_key=routing_key, body=message,
-            properties=pika.BasicProperties(delivery_mode = pika.spec.PERSISTENT_DELIVERY_MODE)
+            exchange=self.exchange_name, routing_key=routing_key, body=message
         )

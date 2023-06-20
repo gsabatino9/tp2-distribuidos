@@ -1,21 +1,23 @@
 import socket, signal, sys
+from threading import Thread
 from protocol.communication_server import CommunicationServer
 from common.client_handler import ClientHandler
 
 
-class ResultsSender:
-    def __init__(self, host, port, name_recv_exchange, name_recv_queue, max_clients=5):
-        self.__init_results_sender(host, port, name_recv_exchange, name_recv_queue, max_clients)
+class ResultsSender(Thread):
+    def __init__(self, address, clients_queues, lock_clients_queues, max_clients=5):
+        super().__init__()
+        self.__init_results_sender(address, clients_queues, lock_clients_queues, max_clients)
 
-    def __init_results_sender(self, host, port, name_recv_exchange, name_recv_queue, max_clients):
+    def __init_results_sender(self, address, clients_queues, lock_clients_queues, max_clients):
         self.running = True
         signal.signal(signal.SIGTERM, self.stop)
 
-        self.accepter_socket = self.__create_socket((host, port))
+        self.accepter_socket = self.__create_socket(address)
         self.max_clients = max_clients
-        self.name_recv_exchange = name_recv_exchange
-        self.name_recv_queue = name_recv_queue
         self.clients_handlers = []
+        self.clients_queues = clients_queues
+        self.lock_clients_queues = lock_clients_queues
 
         print("action: results_sender_started | result: success")
 
@@ -32,7 +34,7 @@ class ResultsSender:
 
         while self.running:
             client_connection = self.__accept_client()
-            client_handler = ClientHandler(self.name_recv_exchange, self.name_recv_exchange, client_connection)
+            client_handler = ClientHandler(self.clients_queues, self.lock_clients_queues, client_connection)
             client_handler.start()
             self.clients_handlers.append(client_handler)
 

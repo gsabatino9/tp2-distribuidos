@@ -125,7 +125,6 @@ class Client:
         ended = False
 
         while not ended:
-            self.__send_request_results()
             header, payload = self.conn.recv_results()
             if is_eof(header):
                 ended = True
@@ -142,6 +141,7 @@ class Client:
         self.__connect(host, port)
         self.conn.set_id_client(self.id_client)
         print("action: connection_consult_server | result: success")
+        self.__send_request_results()
 
     def __save_results(self, results):
         """

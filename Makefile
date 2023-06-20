@@ -30,7 +30,6 @@ server-image:
 	docker build -f ./server/appliers/mean_distance_applier/Dockerfile -t "mean_distance_applier:latest" .
 	
 	docker build -f ./server/results_verifier/Dockerfile -t "results_verifier:latest" .
-	docker build -f ./server/results_sender/Dockerfile -t "results_sender:latest" .
 	
 	docker build -f ./server/eof_manager/joiners/Dockerfile -t "eof_manager_joiners:latest" .
 	docker build -f ./server/eof_manager/filters/Dockerfile -t "eof_manager_filters:latest" .
@@ -44,7 +43,7 @@ server-up: server-image
 .PHONY: server-up
 
 server-down:
-	docker compose -f docker-compose-server.yaml stop -t 30
+	docker compose -f docker-compose-server.yaml stop -t 1
 	docker compose -f docker-compose-server.yaml down
 .PHONY: server-down
 

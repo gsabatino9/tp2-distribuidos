@@ -86,7 +86,6 @@ def main():
         .replace("<APPLIER_QUERY4>", appliers_query4)
         .replace("<EM_APPLIERS>", em_appliers)
         .replace("<RESULTS_VERIFIER>", results_verifier)
-        .replace("<RESULTS_SENDER>", RESULTS_SENDER)
         .replace("<EM_RESULTS>", em_results)
     )
 

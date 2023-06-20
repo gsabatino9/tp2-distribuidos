@@ -1,8 +1,21 @@
-import socket, signal, sys
+import socket, signal, sys, threading, queue
+from common.results_sender import ResultsSender
 from server.common.queue.connection import Connection
 from server.common.utils_messages_client import results_message, last_message
 from server.common.utils_messages_eof import ack_msg, get_id_client
 from server.common.utils_messages_group import decode, is_eof
+
+"""
+TODO:
+- poner results_sender acá corriendo en otro hilo (que spawnee más hilos).
+    - igual la idea está media en beta porque tengo que tener un diccionario de
+    colas con (key: id_client) y (value: queue.Queue() # thread safe).
+    - el problema de spawnear de una en otro hilo es que para apendear en esa entidad
+    tengo que tener un lock quizás.
+    - otra que puedo hacer es que el results_verifier sea el único que cree las colas
+    y el results_sender si no tiene la cola directamente le devuelve error al cliente.
+        - si la tiene, lo deja esperando porque le va a ir dando las respuestas.
+"""
 
 
 class ResultsVerifier:
@@ -20,22 +33,19 @@ class ResultsVerifier:
 
     def __init__(
         self,
+        address_consult_clients,
         name_recv_queue,
         name_em_queue,
-        name_results_exchange,
-        name_results_queue,
         amount_queries,
     ):
-        self.__init_results_verifier(amount_queries)
+        self.__init_results_verifier(address_consult_clients, amount_queries)
         self.__connect(
             name_recv_queue,
             name_em_queue,
-            name_results_exchange,
-            name_results_queue,
             amount_queries,
         )
 
-    def __init_results_verifier(self, amount_queries):
+    def __init_results_verifier(self, address_consult_clients, amount_queries):
         self.running = True
         signal.signal(signal.SIGTERM, self.stop)
 
@@ -43,6 +53,14 @@ class ResultsVerifier:
         self.queries_results = {}
         self.queries_ended = {}
         self.amount_queries = amount_queries
+        self.clients_queues = {}
+        self.lock_clients_queues = threading.Lock()
+
+        self.sender = ResultsSender(
+            address_consult_clients, 
+            self.clients_queues, 
+            self.lock_clients_queues
+        )
 
         print("action: results_verifier_started | result: success")
 
@@ -50,8 +68,6 @@ class ResultsVerifier:
         self,
         name_recv_queue,
         name_em_queue,
-        name_results_exchange,
-        name_results_queue,
         amount_queries,
     ):
         try:
@@ -62,9 +78,6 @@ class ResultsVerifier:
             )
 
             self.em_queue = self.queue_connection.pubsub_queue(name_em_queue)
-            self.results_queue = self.queue_connection.routing_build_queue(
-                name_results_exchange, name_results_queue
-            )
         except OSError as e:
             print(f"error: creating_queue_connection | log: {e}")
             self.stop()
@@ -73,8 +86,11 @@ class ResultsVerifier:
         """
         start receiving messages.
         """
+        self.sender.start()
         self.recv_queue.receive(self.process_messages)
         self.queue_connection.start_receiving()
+
+        self.sender.join()
 
     def process_messages(self, ch, method, properties, body):
         id_query = int(method.routing_key)
@@ -117,6 +133,10 @@ class ResultsVerifier:
         if id_client not in self.ids_clients:
             self.__add_client(id_client)
 
+        with self.lock_clients_queues:
+            if id_client not in self.clients_queues:
+                self.clients_queues[id_client] = queue.Queue()
+
     def __verify_last_result(self, id_client):
         """
         check if all the queries have ended or if it needs to continue waiting for the EOF, otherwise.
@@ -150,9 +170,8 @@ class ResultsVerifier:
         """
         batches_to_send = self.__get_batches_to_send(id_client)
         for batch in batches_to_send:
-            self.results_queue.send(batch, str(id_client))
-        
-        self.results_queue.send(last_message(), str(id_client))
+            self.clients_queues[id_client].put(batch)        
+        self.clients_queues[id_client].put(last_message())
 
         print(f"action: inform_results | result: success | id_client: {id_client}")
 
