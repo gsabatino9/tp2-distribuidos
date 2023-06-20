@@ -10,6 +10,7 @@ def main():
     em_queues = json_config["config"]["eof_manager_queues"]
     status_queues = json_config["config"]["status_queues"]
     amount_nodes = json_config["config"]["amount_nodes"]
+    max_clients = json_config["config"]["max_clients"]
 
     receiver = RECEIVER.format(
         queues["joiners"]["stations"],
@@ -65,6 +66,8 @@ def main():
         queues, em_queues, status_queues
     )
 
+    session_manager = init_session_manager(queues, max_clients)
+
     compose = (
         INIT_DOCKER.format()
         .replace("<RECEIVER>", receiver)
@@ -87,6 +90,7 @@ def main():
         .replace("<EM_APPLIERS>", em_appliers)
         .replace("<RESULTS_VERIFIER>", results_verifier)
         .replace("<EM_RESULTS>", em_results)
+        .replace("<SESSION_MANAGER>", session_manager)
     )
 
     with open("docker-compose-server.yaml", "w") as compose_file:
@@ -249,6 +253,13 @@ def init_results_verifier(queues, em_queues, status_queues):
 
     return results_verifier, em_results
 
+
+def init_session_manager(queues, max_clients):
+    return SESSION_MANAGER.format(
+        max_clients,
+        queues["session_manager"],
+        queues["receiver"]
+    )
 
 if __name__ == "__main__":
     main()

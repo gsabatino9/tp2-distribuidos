@@ -43,6 +43,8 @@ services:
   <EM_APPLIERS>
   <EM_RESULTS>
 
+  <SESSION_MANAGER>
+
 networks:
   testing_net:
     driver: bridge
@@ -417,6 +419,24 @@ RESULTS_VERIFIER = """
     ports:
       - 12346:12346
     image: results_verifier:latest
+    networks:      
+      - testing_net
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+"""
+
+
+SESSION_MANAGER = """
+  session_manager:
+    container_name: session_manager
+    entrypoint: python3 /main.py
+    environment:
+      - PYTHONUNBUFFERED=1
+      - MAX_CLIENTS={}
+      - NAME_RECV_QUEUE={}
+      - NAME_SEND_QUEUE={}
+    image: session_manager:latest
     networks:      
       - testing_net
     depends_on:

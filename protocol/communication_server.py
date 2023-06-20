@@ -21,7 +21,7 @@ class CommunicationServer:
     def getpeername(self):
         return self.comm.getpeername()
 
-    def send_id_client(self, id_client):
+    def send_id_client(self, msg_id_client):
         msg = MessageServer.id_client_message(id_client)
         self.comm.send_message(msg)
 
@@ -34,8 +34,8 @@ class CommunicationServer:
             msg = MessageServer.last_chunk_message()
         self.comm.send_message(msg)
 
-    def send_error_message(self, id_client):
-        msg = MessageServer.error_message(id_client)
+    def send_error_message(self):
+        msg = MessageServer.error_message()
         self.comm.send_message(msg)
 
     def recv_data(self, decode_payload=True):

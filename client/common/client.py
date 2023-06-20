@@ -7,17 +7,14 @@ from datetime import datetime, timedelta
 
 class Client:
     def __init__(self, host, port, chunk_size, max_retries, suscriptions):
-        self.__init_client(chunk_size, max_retries, suscriptions)
-        try:
-            self.__connect(host, port)
-        except OSError as e:
-            print(f"error: creating_queue_connection | log: {e}")
-            self.stop()
+        self.__init_client(host, port, chunk_size, max_retries, suscriptions)
 
-    def __init_client(self, chunk_size, max_retries, suscriptions):
+    def __init_client(self, host, port, chunk_size, max_retries, suscriptions):
         self.running = True
         signal.signal(signal.SIGTERM, self.stop)
 
+        self.host = host
+        self.port = port
         self.chunk_size = chunk_size
         self.max_retries = max_retries
         self.suscriptions = suscriptions
@@ -37,10 +34,19 @@ class Client:
         self.__get_results(addr_consult)
 
     def __recv_id(self):
-        self.id_client = self.conn.recv_id_client()
-        print(
-            f"action: id_client_received | result: success | id_client: {self.id_client}"
-        )
+        id_not_assigned = True
+        while id_not_assigned:
+            try:
+                self.__connect(self.host, self.port)
+                self.id_client = self.conn.recv_id_client()
+                id_not_assigned = False
+                
+                print(
+                    f"action: id_client_received | result: success | id_client: {self.id_client}"
+                )
+            except OSError as e:
+                print(f"error: creating_queue_connection | log: {e}")
+                self.stop()
 
     def __send_files(self, filepath, types_files):
         for file in types_files:

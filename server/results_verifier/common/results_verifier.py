@@ -5,30 +5,8 @@ from server.common.utils_messages_client import results_message, last_message
 from server.common.utils_messages_eof import ack_msg, get_id_client
 from server.common.utils_messages_group import decode, is_eof
 
-"""
-TODO:
-- poner results_sender acá corriendo en otro hilo (que spawnee más hilos).
-    - igual la idea está media en beta porque tengo que tener un diccionario de
-    colas con (key: id_client) y (value: queue.Queue() # thread safe).
-    - el problema de spawnear de una en otro hilo es que para apendear en esa entidad
-    tengo que tener un lock quizás.
-    - otra que puedo hacer es que el results_verifier sea el único que cree las colas
-    y el results_sender si no tiene la cola directamente le devuelve error al cliente.
-        - si la tiene, lo deja esperando porque le va a ir dando las respuestas.
-"""
-
 
 class ResultsVerifier:
-    """
-    recibe los resultados de los aplicadores, cuando está disponible
-    el resultado para un cliente con id=id_client, los particiona en batches
-    y los manda por una cola a la entidad encargada de enviarle los resultados
-    al cliente.
-    Lo separo porque así aprovecho la persistencia de rabbit si se cae algo,
-    y de esta manera el cliente no necesita indicar en qué batch se cayó algo.
-    Solo será necesario persistir el batch actual
-    """
-
     CHUNK_SIZE = 100
 
     def __init__(
