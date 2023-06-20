@@ -31,7 +31,7 @@ class EOFManager:
         self.running = True
         signal.signal(signal.SIGTERM, self.stop)
 
-        self.acks = 0
+        self.clients_acks = {}
 
         print("action: eof_manager_started | result: success")
 
@@ -79,11 +79,16 @@ class EOFManager:
 
     def receive_msg(self, ch, method, properties, body):
         header = decode(body)
+        self.__verify_client(header.id_client)
 
         if is_eof(header):
             self.__send_eof(header, body)
         else:
             self.__recv_ack_trips(header, body)
+
+    def __verify_client(self, id_client):
+        if id_client not in self.clients_acks:
+            self.clients_acks[id_client] = 0
 
     def __send_eof(self, header, msg):
         """
@@ -102,11 +107,11 @@ class EOFManager:
         """
         if the number of workers (for that type of data) that returned ack reaches the maximum count, it sends EOF to the next stage.
         """
-        self.acks += 1
+        self.clients_acks[header.id_client] += 1
 
-        if self.acks == 2:
+        if self.clients_acks[header.id_client] == 2:
             print(
-                f"action: close_stage | result: success | msg: all the sent EOFs have received ACK"
+                f"action: close_stage | result: success | id_client: {header.id_client}"
             )
             self.send_queue.send(eof_msg(header))
 

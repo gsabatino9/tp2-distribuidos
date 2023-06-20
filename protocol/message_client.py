@@ -11,6 +11,8 @@ class MessageClient:
     # Constants for message types
     SEND_DATA = 0
     SEND_LAST = 1
+    GET_ID = 2
+    GET_RESULTS = 3
 
     # Struct format for message header
     DATA_TYPE_LEN = "B"
@@ -168,3 +170,11 @@ class MessageClient:
         data_type = self.TRIP_DATA
         msg_type = self.SEND_LAST if is_last else self.SEND_DATA
         return self.new_message(data_type, msg_type, payload)
+
+    def get_id_message(self):
+        msg_type = self.GET_ID
+        return self.new_message(self.TRIP_DATA, msg_type, list(""))
+
+    def get_results_message(self):
+        msg_type = self.GET_RESULTS
+        return self.new_message(self.TRIP_DATA, msg_type, list(""))

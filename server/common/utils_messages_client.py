@@ -1,4 +1,5 @@
 from protocol.message_client import MessageClient
+from protocol.message_server import MessageServer
 from protocol.utils import number_to_suscriptions
 
 
@@ -19,6 +20,9 @@ def is_weather(header):
     return header.data_type == MessageClient.WEATHER_DATA
 
 
+def results_message(id_query, id_batch, batch_results):
+    return MessageServer.results_message(id_query, id_batch, batch_results)
+
 def is_eof(body):
     try:
         decode(body)
@@ -36,3 +40,7 @@ def construct_msg(header, trips_array):
 def customer_subscribed_to_query(header, id_query):
     list_suscriptions = number_to_suscriptions(header.queries_suscriptions)
     return id_query in list_suscriptions
+
+
+def last_message():
+    return MessageServer.last_chunk_message()

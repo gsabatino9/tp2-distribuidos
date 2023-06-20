@@ -33,6 +33,10 @@ class CommunicationClient:
         else:
             self.__send_trips(data, is_last)
 
+    def send_get_results(self):
+        msg = self.msg.get_results_message()
+        self.comm.send_message(msg)
+
     def __send_stations(self, stations, is_last=False):
         msg = self.msg.station_message(stations, is_last)
         self.comm.send_message(msg)

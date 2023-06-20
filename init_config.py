@@ -409,11 +409,11 @@ RESULTS_VERIFIER = """
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
-      - HOST=results_verifier
-      - PORT=12346
       - NAME_RECV_QUEUE={}
       - NAME_EM_QUEUE={}
       - AMOUNT_QUERIES=4
+      - HOST=results_verifier
+      - PORT=12346
     ports:
       - 12346:12346
     image: results_verifier:latest
