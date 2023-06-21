@@ -155,7 +155,7 @@ class Client:
         """
         it persists the results of the queries in a file.
         """
-        with open("results/output.csv", "w", newline="") as f:
+        with open(f"results/output-client-{self.id_client}.csv", "w", newline="") as f:
             writer = csv.writer(f)
             for key, values in results.items():
                 for row in values:
