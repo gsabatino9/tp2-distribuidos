@@ -1,8 +1,8 @@
-from protocol.communication_client import CommunicationClient
-from common.utils import construct_payload, is_eof, is_error
-import csv, socket, time, signal, sys
+import csv, socket, time, signal, sys, struct
 from itertools import islice
 from datetime import datetime, timedelta
+from protocol.communication_client import CommunicationClient
+from common.utils import construct_payload, is_eof, is_error
 
 
 class Client:
@@ -44,9 +44,11 @@ class Client:
                 print(
                     f"action: id_client_received | result: success | id_client: {self.id_client}"
                 )
-            except OSError as e:
-                print(f"error: creating_queue_connection | log: {e}")
-                self.stop()
+            except struct.error as e:
+                print(
+                    f"action: id_client_received | result: failure | msg: retrying in 1sec"
+                )
+                time.sleep(1)
 
     def __send_files(self, filepath, types_files):
         for file in types_files:

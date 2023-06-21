@@ -122,6 +122,7 @@ class Receiver:
     def __handle_client(self, client_address):
         not_assigned = self.__assign_id_to_client(client_address)
         if not_assigned:
+            print(f"action: close_client | msg: max clients in system")
             self.__close_client(client_address)
         else:
             self.__run_loop_client(client_address)

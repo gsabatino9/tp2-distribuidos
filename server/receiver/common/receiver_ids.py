@@ -42,10 +42,8 @@ class ReceiverIds(Thread):
                 ]
                 queue_client.put(id_client)
                 print(
-                    f"action: id_assigned_client | result: success | id_client: {id_client}"
+                    f"action: id_arrived_client | result: success | id_client: {id_client}"
                 )
-            else:
-                print("no está: ", client_address)
 
     def stop(self, *args):
         if self.running:

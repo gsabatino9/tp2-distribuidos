@@ -3,7 +3,7 @@ from struct import pack, unpack
 
 
 def error_message(client_address):
-    return MessageNewClient(MessageNewClient.Error, 0, client_address).encode()
+    return MessageNewClient(MessageNewClient.ERROR, 0, client_address).encode()
 
 
 def assigned_id_message(id_client, client_address):
