@@ -89,6 +89,7 @@ class EOFManager:
                 f"action: close_stage | result: success | id_client: {header.id_client}"
             )
             self.send_queue.send(eof_msg(header))
+            del self.clients_acks[header.id_client]
 
     def stop(self, *args):
         if self.running:
