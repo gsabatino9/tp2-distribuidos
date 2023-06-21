@@ -44,16 +44,17 @@ class MessageClient:
         self.queries_suscriptions = queries_suscriptions
         self.id_batch = 0
 
-    def new_message(self, data_type, msg_type, payload):
+    def new_message(self, data_type, msg_type, payload, id_batch=None):
         if payload is None:
             payload = []
         payload_bytes = self._pack_payload(payload)
+        id_batch = self.id_batch if id_batch is None else id_batch
 
         header = self.Header(
             data_type,
             msg_type,
             self.id_client,
-            self.id_batch,
+            id_batch,
             self.queries_suscriptions,
             len(payload_bytes),
         )

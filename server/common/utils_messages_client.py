@@ -35,7 +35,7 @@ def is_eof(body):
 def construct_msg(header, trips_array):
     msg_client = MessageClient(header.id_client, header.queries_suscriptions)
 
-    return msg_client.new_message(header.data_type, header.msg_type, trips_array)
+    return msg_client.new_message(header.data_type, header.msg_type, trips_array, header.id_batch)
 
 
 def customer_subscribed_to_query(header, id_query):
