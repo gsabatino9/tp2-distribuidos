@@ -12,39 +12,9 @@ def main():
     amount_nodes = json_config["config"]["amount_nodes"]
     max_clients = json_config["config"]["max_clients"]
 
-    receiver = RECEIVER.format(
-        queues["joiners"]["stations"],
-        queues["joiners"]["weather"],
-        [
-            queues["joiners"]["join_trip_stations"],
-            queues["joiners"]["join_trip_weather"],
-            queues["groupby_query4"],
-        ],
-        em_queues["joiners"],
-        status_queues["new_clients"],
-    )
-    joiner_stations = JOINER_STATIONS.format(
-        queues["joiners"]["stations"],
-        queues["joiners"]["join_trip_stations"],
-        em_queues["joiners"],
-        queues["filters"]["filter_trip_stations"],
-    )
-    joiner_weather = JOINER_WEATHER.format(
-        queues["joiners"]["weather"],
-        queues["joiners"]["join_trip_weather"],
-        em_queues["joiners"],
-        queues["filters"]["filter_trip_weather"],
-    )
-
-    em_joiners = EM_JOINERS.format(
-        em_queues["joiners"],
-        em_queues["filters"],
-        queues["joiners"]["stations"],
-        queues["joiners"]["weather"],
-        queues["joiners"]["join_trip_stations"],
-        queues["joiners"]["join_trip_weather"],
-        status_queues["new_clients"],
-    )
+    receiver = init_receiver(queues, em_queues, status_queues)
+    
+    joiner_stations, joiner_weather, em_joiners = init_joiners(queues, em_queues, status_queues)
 
     filters_pretoc, filters_year, filters_distance, em_filters = init_filters(
         queues, em_queues, status_queues, amount_nodes
@@ -95,6 +65,47 @@ def main():
 
     with open("docker-compose-server.yaml", "w") as compose_file:
         compose_file.write(compose)
+
+def init_receiver(queues, em_queues, status_queues):
+    return RECEIVER.format(
+        queues["joiners"]["stations"],
+        queues["joiners"]["weather"],
+        [
+            queues["joiners"]["join_trip_stations"],
+            queues["joiners"]["join_trip_weather"],
+            queues["groupby_query4"],
+        ],
+        em_queues["joiners"],
+        status_queues["new_clients"],
+        queues["session_manager"],
+        queues["receiver"],
+    )
+
+def init_joiners(queues, em_queues, status_queues):
+    joiner_stations = JOINER_STATIONS.format(
+        queues["joiners"]["stations"],
+        queues["joiners"]["join_trip_stations"],
+        em_queues["joiners"],
+        queues["filters"]["filter_trip_stations"],
+    )
+    joiner_weather = JOINER_WEATHER.format(
+        queues["joiners"]["weather"],
+        queues["joiners"]["join_trip_weather"],
+        em_queues["joiners"],
+        queues["filters"]["filter_trip_weather"],
+    )
+
+    em_joiners = EM_JOINERS.format(
+        em_queues["joiners"],
+        em_queues["filters"],
+        queues["joiners"]["stations"],
+        queues["joiners"]["weather"],
+        queues["joiners"]["join_trip_stations"],
+        queues["joiners"]["join_trip_weather"],
+        status_queues["new_clients"],
+    )
+
+    return joiner_stations, joiner_weather, em_joiners
 
 
 def init_filters(queues, em_queues, status_queues, amount_nodes):

@@ -63,6 +63,8 @@ RECEIVER = """
       - NAME_TRIPS_QUEUES={}
       - NAME_EM_QUEUE={}
       - NAME_STATUS_QUEUE={}
+      - NAME_SM_QUEUE={}
+      - NAME_RECV_QUEUE={}
       - AMOUNT_QUERIES=3
     image: receiver:latest
     ports:
