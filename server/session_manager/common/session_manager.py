@@ -5,9 +5,11 @@ from server.common.queue.connection import Connection
 
 
 class SessionManager:
-    def __init__(self, max_clients, name_recv_queue, name_send_queue):
+    def __init__(
+        self, max_clients, name_recv_queue, name_send_queue, name_end_session_queue
+    ):
         self.__init_session_manager(max_clients)
-        self.__connect_queue(name_recv_queue, name_send_queue)
+        self.__connect_queue(name_recv_queue, name_send_queue, name_end_session_queue)
 
     def __init_session_manager(self, max_clients):
         self.running = True
@@ -19,11 +21,14 @@ class SessionManager:
 
         print("action: session_manager_started | result: success")
 
-    def __connect_queue(self, name_recv_queue, name_send_queue):
+    def __connect_queue(self, name_recv_queue, name_send_queue, name_end_session_queue):
         try:
             self.queue_connection = Connection()
             self.recv_queue = self.queue_connection.pubsub_queue(name_recv_queue)
             self.send_queue = self.queue_connection.pubsub_queue(name_send_queue)
+            self.end_session_queue = self.queue_connection.pubsub_queue(
+                name_end_session_queue
+            )
         except OSError as e:
             print(f"error: creating_queue_connection | log: {e}")
             self.stop()
@@ -33,6 +38,7 @@ class SessionManager:
         start receiving messages.
         """
         self.recv_queue.receive(self.new_client_request)
+        self.end_session_queue.receive(self.end_session)
         self.queue_connection.start_receiving()
 
     def new_client_request(self, ch, method, properties, body):
@@ -64,6 +70,14 @@ class SessionManager:
         print(f"action: id_assigned | result: success | id: {id_client}")
 
         return id_client
+
+    def end_session(self, ch, method, properties, body):
+        client_address = body
+        if client_address in self.active_clients:
+            print(
+                f"action: end_session | result: success | id_client: {self.active_clients[client_address]}"
+            )
+            del self.active_clients[client_address]
 
     def stop(self, *args):
         if self.running:

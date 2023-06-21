@@ -45,6 +45,6 @@
   		"applier_query3": 1,
       "applier_query4": 1
   	},
-    "max_clients": 0
+    "max_clients": 1
   }
 }

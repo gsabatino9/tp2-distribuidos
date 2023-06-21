@@ -13,8 +13,10 @@ def main():
     max_clients = json_config["config"]["max_clients"]
 
     receiver = init_receiver(queues, em_queues, status_queues)
-    
-    joiner_stations, joiner_weather, em_joiners = init_joiners(queues, em_queues, status_queues)
+
+    joiner_stations, joiner_weather, em_joiners = init_joiners(
+        queues, em_queues, status_queues
+    )
 
     filters_pretoc, filters_year, filters_distance, em_filters = init_filters(
         queues, em_queues, status_queues, amount_nodes
@@ -66,6 +68,7 @@ def main():
     with open("docker-compose-server.yaml", "w") as compose_file:
         compose_file.write(compose)
 
+
 def init_receiver(queues, em_queues, status_queues):
     return RECEIVER.format(
         queues["joiners"]["stations"],
@@ -80,6 +83,7 @@ def init_receiver(queues, em_queues, status_queues):
         queues["session_manager"],
         queues["receiver"],
     )
+
 
 def init_joiners(queues, em_queues, status_queues):
     joiner_stations = JOINER_STATIONS.format(

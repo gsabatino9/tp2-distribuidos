@@ -15,7 +15,7 @@ def assigned_id_message(id_client, client_address):
 def decode(msg):
     msg = MessageNewClient.decode(msg)
     id_client = msg.id_client
-    client_address = msg.client_address.decode().split('\0')[0]
+    client_address = msg.client_address.decode().split("\0")[0]
 
     return id_client, client_address
 

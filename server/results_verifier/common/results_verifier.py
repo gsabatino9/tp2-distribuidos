@@ -14,16 +14,21 @@ class ResultsVerifier:
         address_consult_clients,
         name_recv_queue,
         name_em_queue,
+        name_session_manager_queue,
         amount_queries,
     ):
-        self.__init_results_verifier(address_consult_clients, amount_queries)
+        self.__init_results_verifier(
+            address_consult_clients, amount_queries, name_session_manager_queue
+        )
         self.__connect(
             name_recv_queue,
             name_em_queue,
             amount_queries,
         )
 
-    def __init_results_verifier(self, address_consult_clients, amount_queries):
+    def __init_results_verifier(
+        self, address_consult_clients, amount_queries, name_session_manager_queue
+    ):
         self.running = True
         signal.signal(signal.SIGTERM, self.stop)
 
@@ -35,7 +40,10 @@ class ResultsVerifier:
         self.lock_clients_queues = threading.Lock()
 
         self.sender = ResultsSender(
-            address_consult_clients, self.clients_queues, self.lock_clients_queues
+            address_consult_clients,
+            self.clients_queues,
+            self.lock_clients_queues,
+            name_session_manager_queue,
         )
 
         print("action: results_verifier_started | result: success")

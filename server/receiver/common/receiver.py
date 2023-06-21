@@ -48,7 +48,9 @@ class Receiver:
         self.clients_connections = {}
         self.lock_clients_connections = Lock()
         self.max_clients = max_clients
-        self.recv_ids = ReceiverIds(name_recv_ids_queue, self.clients_connections, self.lock_clients_connections)
+        self.recv_ids = ReceiverIds(
+            name_recv_ids_queue, self.clients_connections, self.lock_clients_connections
+        )
 
         print("action: receiver_started | result: success")
 
@@ -108,7 +110,10 @@ class Receiver:
         client_address = client_connection.getpeername()[0]
 
         with self.lock_clients_connections:
-            self.clients_connections[client_address] = (queue.Queue(), client_connection)
+            self.clients_connections[client_address] = (
+                queue.Queue(),
+                client_connection,
+            )
 
         print(
             f"action: client_connected | result: success | msg: starting to receive data | client_address: {client_address}"

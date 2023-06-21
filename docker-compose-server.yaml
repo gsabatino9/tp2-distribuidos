@@ -387,7 +387,7 @@ services:
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
-      - MAX_CLIENTS=0
+      - MAX_CLIENTS=1
       - NAME_RECV_QUEUE=session_manager_q
       - NAME_SEND_QUEUE=receiver_q
     image: session_manager:latest
