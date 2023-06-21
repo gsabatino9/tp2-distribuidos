@@ -76,6 +76,7 @@ class EOFManager:
             print(
                 f"action: close_stage | result: success | id_client: {header.id_client}"
             )
+            del self.clients_acks[header.id_client]
 
     def stop(self, *args):
         if self.running:

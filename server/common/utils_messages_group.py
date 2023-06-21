@@ -21,7 +21,7 @@ def is_eof(body):
 
 class MessageGroup:
     # Struct format for message header
-    HEADER_CODE = "!BI"
+    HEADER_CODE = "!QI"
     # Size of header in bytes
     SIZE_HEADER = calcsize(HEADER_CODE)
 

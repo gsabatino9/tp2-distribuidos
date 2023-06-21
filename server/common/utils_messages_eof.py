@@ -42,7 +42,7 @@ class MessageEOF:
     WEATHER = 1
     TRIP = 2
 
-    HEADER_CODE = "!BBB"
+    HEADER_CODE = "!BBQ"
     SIZE_HEADER = calcsize(HEADER_CODE)
 
     Header = namedtuple("Header", "msg_type data_type id_client")

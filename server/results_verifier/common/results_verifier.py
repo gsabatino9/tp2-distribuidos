@@ -5,30 +5,8 @@ from server.common.utils_messages_client import results_message, last_message
 from server.common.utils_messages_eof import ack_msg, get_id_client
 from server.common.utils_messages_group import decode, is_eof
 
-"""
-TODO:
-- poner results_sender acá corriendo en otro hilo (que spawnee más hilos).
-    - igual la idea está media en beta porque tengo que tener un diccionario de
-    colas con (key: id_client) y (value: queue.Queue() # thread safe).
-    - el problema de spawnear de una en otro hilo es que para apendear en esa entidad
-    tengo que tener un lock quizás.
-    - otra que puedo hacer es que el results_verifier sea el único que cree las colas
-    y el results_sender si no tiene la cola directamente le devuelve error al cliente.
-        - si la tiene, lo deja esperando porque le va a ir dando las respuestas.
-"""
-
 
 class ResultsVerifier:
-    """
-    recibe los resultados de los aplicadores, cuando está disponible
-    el resultado para un cliente con id=id_client, los particiona en batches
-    y los manda por una cola a la entidad encargada de enviarle los resultados
-    al cliente.
-    Lo separo porque así aprovecho la persistencia de rabbit si se cae algo,
-    y de esta manera el cliente no necesita indicar en qué batch se cayó algo.
-    Solo será necesario persistir el batch actual
-    """
-
     CHUNK_SIZE = 100
 
     def __init__(
@@ -36,16 +14,21 @@ class ResultsVerifier:
         address_consult_clients,
         name_recv_queue,
         name_em_queue,
+        name_session_manager_queue,
         amount_queries,
     ):
-        self.__init_results_verifier(address_consult_clients, amount_queries)
+        self.__init_results_verifier(
+            address_consult_clients, amount_queries, name_session_manager_queue
+        )
         self.__connect(
             name_recv_queue,
             name_em_queue,
             amount_queries,
         )
 
-    def __init_results_verifier(self, address_consult_clients, amount_queries):
+    def __init_results_verifier(
+        self, address_consult_clients, amount_queries, name_session_manager_queue
+    ):
         self.running = True
         signal.signal(signal.SIGTERM, self.stop)
 
@@ -57,9 +40,10 @@ class ResultsVerifier:
         self.lock_clients_queues = threading.Lock()
 
         self.sender = ResultsSender(
-            address_consult_clients, 
-            self.clients_queues, 
-            self.lock_clients_queues
+            address_consult_clients,
+            self.clients_queues,
+            self.lock_clients_queues,
+            name_session_manager_queue,
         )
 
         print("action: results_verifier_started | result: success")
@@ -170,7 +154,7 @@ class ResultsVerifier:
         """
         batches_to_send = self.__get_batches_to_send(id_client)
         for batch in batches_to_send:
-            self.clients_queues[id_client].put(batch)        
+            self.clients_queues[id_client].put(batch)
         self.clients_queues[id_client].put(last_message())
 
         print(f"action: inform_results | result: success | id_client: {id_client}")
@@ -203,7 +187,7 @@ class ResultsVerifier:
             if (i + 1) % self.CHUNK_SIZE == 0 or i + 1 == len(list_batch):
                 batches.append(list_batch[last : i + 1])
                 last = i + 1
-        
+
         return batches
 
     def __delete_client(self, id_client):

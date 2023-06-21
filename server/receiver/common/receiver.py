@@ -1,12 +1,12 @@
-import socket, signal, sys
-from multiprocessing import Pool, Process
+import socket, signal, sys, queue
+from threading import Thread, Lock
 from protocol.communication_server import CommunicationServer
 from server.common.queue.connection import Connection
 from common.utils import is_eof
+from common.receiver_ids import ReceiverIds
 from server.common.utils_messages_eof import eof_msg
 from server.common.utils_messages_client import is_station, is_weather, encode_header
 from server.common.utils_messages_status import id_client_msg
-from random import randint
 
 
 class Receiver:
@@ -19,28 +19,47 @@ class Receiver:
         name_trips_queues,
         name_em_queue,
         name_status_queue,
+        name_session_manager_queue,
+        name_recv_ids_queue,
         amount_queries,
         max_clients=5,
     ):
-        self.__init_receiver(amount_queries, host, port, max_clients)
+        self.__init_receiver(
+            amount_queries, host, port, max_clients, name_recv_ids_queue
+        )
 
-        self.__connect_queue(name_stations_queue, name_weather_queue, name_trips_queues)
+        self.__connect_queue(
+            name_stations_queue,
+            name_weather_queue,
+            name_trips_queues,
+            name_session_manager_queue,
+        )
         self.__connect_eof_manager_queue(name_em_queue)
         self.__connect_status_queue(name_status_queue)
 
-    def __init_receiver(self, amount_queries, host, port, max_clients):
+    def __init_receiver(
+        self, amount_queries, host, port, max_clients, name_recv_ids_queue
+    ):
         self.running = True
         signal.signal(signal.SIGTERM, self.stop)
 
         self.amount_queries = amount_queries
         self.accepter_socket = self.__create_socket(host, port)
         self.clients_connections = {}
+        self.lock_clients_connections = Lock()
         self.max_clients = max_clients
+        self.recv_ids = ReceiverIds(
+            name_recv_ids_queue, self.clients_connections, self.lock_clients_connections
+        )
 
         print("action: receiver_started | result: success")
 
     def __connect_queue(
-        self, name_stations_queue, name_weather_queue, name_trips_queues
+        self,
+        name_stations_queue,
+        name_weather_queue,
+        name_trips_queues,
+        name_session_manager_queue,
     ):
         try:
             self.queue_connection = Connection()
@@ -49,6 +68,9 @@ class Receiver:
             self.trips_queues = [
                 self.queue_connection.basic_queue(q) for q in name_trips_queues
             ]
+            self.session_manager_queue = self.queue_connection.pubsub_queue(
+                name_session_manager_queue
+            )
         except OSError as e:
             print(f"error: creating_queue_connection | log: {e}")
             self.stop()
@@ -66,29 +88,74 @@ class Receiver:
         return skt
 
     def run(self):
+        self.recv_ids.start()
         self.accepter_socket.listen(self.max_clients)
         print(f"action: waiting_clients | result: success")
-        # with Pool(processes=5) as pool:
+
+        self.clients_threads = []
         while self.running:
-            client_connection = self.__accept_client()
-            # pool.apply_async(self.__handle_client, (client_connection,))
-            process = Process(target=self.__handle_client, args=(client_connection,))
-            process.start()
+            client_address = self.__accept_client()
+            client_thread = Thread(target=self.__handle_client, args=(client_address,))
+            client_thread.start()
+            self.clients_threads.append(client_thread)
+
+        for client_thread in self.clients_threads:
+            client_thread.join()
+
+        self.recv_ids.join()
 
     def __accept_client(self):
-        client_socket, client_address = self.accepter_socket.accept()
+        client_socket, _ = self.accepter_socket.accept()
         client_connection = CommunicationServer(client_socket)
-        self.clients_connections[client_address] = client_connection
-        id_client = self.__asign_id_to_client(client_connection)
+        client_address = client_connection.getpeername()[0]
+
+        with self.lock_clients_connections:
+            self.clients_connections[client_address] = (
+                queue.Queue(),
+                client_connection,
+            )
 
         print(
-            f"action: client_connected | result: success | msg: starting to receive data | id_client: {id_client}"
+            f"action: client_connected | result: success | msg: starting to receive data | client_address: {client_address}"
         )
 
-        return client_connection
+        # TODO: ver si moverlo al hilo específico del cliente
+        self.session_manager_queue.send(client_address)
 
-    def __handle_client(self, client_connection):
+        return client_address
+
+    def __handle_client(self, client_address):
+        not_assigned = self.__assign_id_to_client(client_address)
+        if not_assigned:
+            print(f"action: close_client | msg: max clients in system")
+            self.__close_client(client_address)
+        else:
+            self.__run_loop_client(client_address)
+
+    def __assign_id_to_client(self, client_address):
+        self.lock_clients_connections.acquire()
+        queue_client, client_connection = self.clients_connections[client_address]
+        self.lock_clients_connections.release()
+
+        id_client = queue_client.get()
+        if id_client == 0:
+            return True
+        else:
+            client_connection.send_id_client(id_client)
+            return False
+
+    def __close_client(self, client_address):
+        # TODO: borrar cola y conexión del cliente acá.
+        # Por ahora no es necesario.
+        with self.lock_clients_connections:
+            _, client_connection = self.clients_connections[client_address]
+            client_connection.stop()
+
+    def __run_loop_client(self, client_address):
         types_ended = set()
+
+        with self.lock_clients_connections:
+            _, client_connection = self.clients_connections[client_address]
 
         while len(types_ended) < self.amount_queries:
             header, payload_bytes = client_connection.recv_data(decode_payload=False)
@@ -101,19 +168,6 @@ class Receiver:
 
             # después de poner el msg en la cola, le mando ack
             self.__send_ack_client(header.id_batch, client_connection)
-
-    def __asign_id_to_client(self, client_connection):
-        id_client = self.__get_id_client()
-        client_connection.send_id_client(id_client)
-        self.__inform_new_client(id_client)
-
-        return id_client
-
-    def __get_id_client(self):
-        return randint(0, 250)
-
-    def __inform_new_client(self, id_client):
-        self.status_queue.send(id_client_msg(id_client))
 
     def __send_eof(self, header):
         self.em_queue.send(eof_msg(header))
@@ -143,15 +197,21 @@ class Receiver:
     def stop(self, *args):
         if self.running:
             self.queue_connection.close()
+            self.recv_ids.stop()
             print(
                 "action: close_resource | result: success | resource: rabbit_connection"
             )
             if hasattr(self, "clients_connections"):
-                for client_connection in self.clients_connections.values():
-                    client_connection.stop()
-                    print(
-                        "action: close_resource | result: success | resource: client_connection"
-                    )
+                for _, client_connection in self.clients_connections.values():
+                    # TODO: try-catch
+                    try:
+                        client_connection.stop()
+                        print(
+                            "action: close_resource | result: success | resource: client_connection"
+                        )
+                    except:
+                        # ya fue cerrada antes la conexión
+                        pass
 
             self.running = False
 

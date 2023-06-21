@@ -5,11 +5,31 @@ from common.client_handler import ClientHandler
 
 
 class ResultsSender(Thread):
-    def __init__(self, address, clients_queues, lock_clients_queues, max_clients=5):
+    def __init__(
+        self,
+        address,
+        clients_queues,
+        lock_clients_queues,
+        name_session_manager_queue,
+        max_clients=5,
+    ):
         super().__init__()
-        self.__init_results_sender(address, clients_queues, lock_clients_queues, max_clients)
+        self.__init_results_sender(
+            address,
+            clients_queues,
+            lock_clients_queues,
+            name_session_manager_queue,
+            max_clients,
+        )
 
-    def __init_results_sender(self, address, clients_queues, lock_clients_queues, max_clients):
+    def __init_results_sender(
+        self,
+        address,
+        clients_queues,
+        lock_clients_queues,
+        name_session_manager_queue,
+        max_clients,
+    ):
         self.running = True
         signal.signal(signal.SIGTERM, self.stop)
 
@@ -18,6 +38,7 @@ class ResultsSender(Thread):
         self.clients_handlers = []
         self.clients_queues = clients_queues
         self.lock_clients_queues = lock_clients_queues
+        self.name_session_manager_queue = name_session_manager_queue
 
         print("action: results_sender_started | result: success")
 
@@ -28,16 +49,26 @@ class ResultsSender(Thread):
         return skt
 
     def run(self):
+        self.__run_accept_loop()
+        self.__join_clients()
+
+    def __run_accept_loop(self):
         self.accepter_socket.listen(self.max_clients)
         print(f"action: waiting_clients | result: success")
         self.clients = []
 
         while self.running:
             client_connection = self.__accept_client()
-            client_handler = ClientHandler(self.clients_queues, self.lock_clients_queues, client_connection)
+            client_handler = ClientHandler(
+                self.clients_queues,
+                self.lock_clients_queues,
+                client_connection,
+                self.name_session_manager_queue,
+            )
             client_handler.start()
             self.clients_handlers.append(client_handler)
 
+    def __join_clients(self):
         for client_handler in self.clients_handlers:
             client_handler.join()
 

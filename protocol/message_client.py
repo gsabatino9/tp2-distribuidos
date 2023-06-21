@@ -17,7 +17,7 @@ class MessageClient:
     # Struct format for message header
     DATA_TYPE_LEN = "B"
     MSG_TYPE_LEN = "B"
-    ID_CLIENT_LEN = "B"
+    ID_CLIENT_LEN = "Q"
     ID_BATCH_LEN = "I"
     QUERIES_SUSCRIPTIONS_LEN = "B"
     LEN_PAYLOAD_LEN = "I"
