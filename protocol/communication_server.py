@@ -21,7 +21,7 @@ class CommunicationServer:
     def getpeername(self):
         return self.comm.getpeername()
 
-    def send_id_client(self, msg_id_client):
+    def send_id_client(self, id_client):
         msg = MessageServer.id_client_message(id_client)
         self.comm.send_message(msg)
 

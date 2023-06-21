@@ -23,6 +23,7 @@ def is_weather(header):
 def results_message(id_query, id_batch, batch_results):
     return MessageServer.results_message(id_query, id_batch, batch_results)
 
+
 def is_eof(body):
     try:
         decode(body)

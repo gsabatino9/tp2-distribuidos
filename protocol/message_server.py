@@ -122,7 +122,8 @@ class MessageServer:
 
     @classmethod
     def id_client_message(cls, id_client):
-        return cls(cls.SEND_ID_CLIENT, id_client, id_client, list("")).encode()
+        payload = [str(id_client)]
+        return cls(cls.SEND_ID_CLIENT, 0, 0, payload).encode()
 
     @classmethod
     def error_message(cls):

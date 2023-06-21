@@ -2,6 +2,7 @@ import queue
 from threading import Thread
 from server.common.utils_messages_client import is_eof
 
+
 class ClientHandler(Thread):
     def __init__(self, clients_queues, lock_clients_queues, client_connection):
         super().__init__()
@@ -14,7 +15,7 @@ class ClientHandler(Thread):
         # recv request for info
         header, _ = self.client_connection.recv_data(decode_payload=False)
         self.__connect_client(header.id_client)
-        
+
         # start receving batches
         ended = False
         while not ended:

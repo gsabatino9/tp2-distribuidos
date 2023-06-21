@@ -35,9 +35,7 @@ class ResultsVerifier:
         self.lock_clients_queues = threading.Lock()
 
         self.sender = ResultsSender(
-            address_consult_clients, 
-            self.clients_queues, 
-            self.lock_clients_queues
+            address_consult_clients, self.clients_queues, self.lock_clients_queues
         )
 
         print("action: results_verifier_started | result: success")
@@ -148,7 +146,7 @@ class ResultsVerifier:
         """
         batches_to_send = self.__get_batches_to_send(id_client)
         for batch in batches_to_send:
-            self.clients_queues[id_client].put(batch)        
+            self.clients_queues[id_client].put(batch)
         self.clients_queues[id_client].put(last_message())
 
         print(f"action: inform_results | result: success | id_client: {id_client}")
@@ -181,7 +179,7 @@ class ResultsVerifier:
             if (i + 1) % self.CHUNK_SIZE == 0 or i + 1 == len(list_batch):
                 batches.append(list_batch[last : i + 1])
                 last = i + 1
-        
+
         return batches
 
     def __delete_client(self, id_client):

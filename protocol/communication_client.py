@@ -50,10 +50,13 @@ class CommunicationClient:
         self.comm.send_message(msg)
 
     def recv_id_client(self):
-        header, _ = self.__recv_message()
-        self.msg = MessageClient(header.id_query, self.queries_suscriptions)
+        _, payload = self.__recv_message(decode_payload=True)
+        print("id_client:", payload.data)
+        id_client = int(payload.data[0])
 
-        return header.id_query
+        self.msg = MessageClient(id_client, self.queries_suscriptions)
+
+        return id_client
 
     def recv_ack(self):
         return self.__recv_message()

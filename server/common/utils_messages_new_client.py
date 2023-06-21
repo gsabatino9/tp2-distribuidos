@@ -1,14 +1,24 @@
 from collections import namedtuple
 from struct import pack, unpack
 
+
 def error_message(client_address):
     return MessageNewClient(MessageNewClient.Error, 0, client_address).encode()
 
+
 def assigned_id_message(id_client, client_address):
-    return MessageNewClient(MessageNewClient.ASSIGNED_ID, id_client, client_address).encode()
+    return MessageNewClient(
+        MessageNewClient.ASSIGNED_ID, id_client, client_address
+    ).encode()
+
 
 def decode(msg):
-    return MessageNewClient.decode(msg)
+    msg = MessageNewClient.decode(msg)
+    id_client = msg.id_client
+    client_address = msg.client_address.decode().split('\0')[0]
+
+    return id_client, client_address
+
 
 class MessageNewClient:
     # msg types

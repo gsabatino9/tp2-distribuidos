@@ -3,6 +3,7 @@ from uuid import uuid4
 from server.common.utils_messages_new_client import error_message, assigned_id_message
 from server.common.queue.connection import Connection
 
+
 class SessionManager:
     def __init__(self, max_clients, name_recv_queue, name_send_queue):
         self.__init_session_manager(max_clients)
@@ -45,7 +46,9 @@ class SessionManager:
 
         print(f"action: new_client_request | client_address: {client_address}")
         if client_address in self.active_clients:
-            msg = assigned_id_message(self.active_clients[client_address], client_address)
+            msg = assigned_id_message(
+                self.active_clients[client_address], client_address
+            )
         elif len(self.active_clients) < self.max_clients:
             id_client = self.__assign_id_to_client(client_address)
             msg = assigned_id_message(id_client, client_address)

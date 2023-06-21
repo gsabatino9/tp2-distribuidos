@@ -108,8 +108,11 @@ class RoutingQueue:
             exchange=self.exchange_name, routing_key=routing_key, body=message
         )
 
+
 class RoutingBuildQueue:
-    def __init__(self, channel, exchange_name, queue_name, routing_keys=[], auto_ack=True):
+    def __init__(
+        self, channel, exchange_name, queue_name, routing_keys=[], auto_ack=True
+    ):
         self.channel = channel
         self.exchange_name = exchange_name
         self.auto_ack = auto_ack
@@ -123,7 +126,6 @@ class RoutingBuildQueue:
         )
 
         self.channel.queue_declare(queue=self.queue_name)
-            
 
     def __build_queues(self, routing_keys):
         if len(routing_keys) == 0:

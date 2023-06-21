@@ -256,10 +256,9 @@ def init_results_verifier(queues, em_queues, status_queues):
 
 def init_session_manager(queues, max_clients):
     return SESSION_MANAGER.format(
-        max_clients,
-        queues["session_manager"],
-        queues["receiver"]
+        max_clients, queues["session_manager"], queues["receiver"]
     )
+
 
 if __name__ == "__main__":
     main()

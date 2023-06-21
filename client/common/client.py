@@ -40,7 +40,7 @@ class Client:
                 self.__connect(self.host, self.port)
                 self.id_client = self.conn.recv_id_client()
                 id_not_assigned = False
-                
+
                 print(
                     f"action: id_client_received | result: success | id_client: {self.id_client}"
                 )

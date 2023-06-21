@@ -7,9 +7,13 @@ from common.client_handler import ClientHandler
 class ResultsSender(Thread):
     def __init__(self, address, clients_queues, lock_clients_queues, max_clients=5):
         super().__init__()
-        self.__init_results_sender(address, clients_queues, lock_clients_queues, max_clients)
+        self.__init_results_sender(
+            address, clients_queues, lock_clients_queues, max_clients
+        )
 
-    def __init_results_sender(self, address, clients_queues, lock_clients_queues, max_clients):
+    def __init_results_sender(
+        self, address, clients_queues, lock_clients_queues, max_clients
+    ):
         self.running = True
         signal.signal(signal.SIGTERM, self.stop)
 
@@ -34,7 +38,9 @@ class ResultsSender(Thread):
 
         while self.running:
             client_connection = self.__accept_client()
-            client_handler = ClientHandler(self.clients_queues, self.lock_clients_queues, client_connection)
+            client_handler = ClientHandler(
+                self.clients_queues, self.lock_clients_queues, client_connection
+            )
             client_handler.start()
             self.clients_handlers.append(client_handler)
 
