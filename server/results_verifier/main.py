@@ -6,7 +6,7 @@ PORT = int(os.environ.get("PORT"))
 NAME_RECV_QUEUE = os.environ.get("NAME_RECV_QUEUE")
 NAME_EM_QUEUE = os.environ.get("NAME_EM_QUEUE")
 AMOUNT_QUERIES = int(os.environ.get("AMOUNT_QUERIES"))
-NAME_SM_QUEUE = "end_session_q"
+NAME_SM_QUEUE = os.environ.get("NAME_SM_QUEUE")
 
 
 def main():

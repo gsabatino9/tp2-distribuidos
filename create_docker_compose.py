@@ -80,7 +80,7 @@ def init_receiver(queues, em_queues, status_queues):
         ],
         em_queues["joiners"],
         status_queues["new_clients"],
-        queues["session_manager"],
+        queues["session_manager"]["init_session"],
         queues["receiver"],
     )
 
@@ -257,7 +257,9 @@ def init_groupby(queues, em_queues, status_queues):
 
 def init_results_verifier(queues, em_queues, status_queues):
     results_verifier = RESULTS_VERIFIER.format(
-        queues["results_verifier"], em_queues["results_verifier"]
+        queues["results_verifier"],
+        em_queues["results_verifier"],
+        queues["session_manager"]["end_session"],
     )
 
     em_results = EM_RESULTS.format(
@@ -271,7 +273,10 @@ def init_results_verifier(queues, em_queues, status_queues):
 
 def init_session_manager(queues, max_clients):
     return SESSION_MANAGER.format(
-        max_clients, queues["session_manager"], queues["receiver"]
+        max_clients,
+        queues["session_manager"]["init_session"],
+        queues["receiver"],
+        queues["session_manager"]["end_session"],
     )
 
 

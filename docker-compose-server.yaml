@@ -277,6 +277,7 @@ services:
       - PYTHONUNBUFFERED=1
       - NAME_RECV_QUEUE=query_results_q
       - NAME_EM_QUEUE=eof_manager_query_result_q
+      - NAME_SM_QUEUE=end_session_q
       - AMOUNT_QUERIES=4
       - HOST=results_verifier
       - PORT=12346
@@ -390,6 +391,7 @@ services:
       - MAX_CLIENTS=1
       - NAME_RECV_QUEUE=session_manager_q
       - NAME_SEND_QUEUE=receiver_q
+      - NAME_END_SESSION_QUEUE=end_session_q
     image: session_manager:latest
     networks:      
       - testing_net

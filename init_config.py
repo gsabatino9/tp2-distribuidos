@@ -415,6 +415,7 @@ RESULTS_VERIFIER = """
       - PYTHONUNBUFFERED=1
       - NAME_RECV_QUEUE={}
       - NAME_EM_QUEUE={}
+      - NAME_SM_QUEUE={}
       - AMOUNT_QUERIES=4
       - HOST=results_verifier
       - PORT=12346
@@ -438,6 +439,7 @@ SESSION_MANAGER = """
       - MAX_CLIENTS={}
       - NAME_RECV_QUEUE={}
       - NAME_SEND_QUEUE={}
+      - NAME_END_SESSION_QUEUE={}
     image: session_manager:latest
     networks:      
       - testing_net

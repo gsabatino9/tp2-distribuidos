@@ -14,6 +14,10 @@
   			"filter_pretoc": "filter_pretoc_q",
   			"filter_distance": "filter_distance_q"
   		},
+      "session_manager": {
+        "init_session": "session_manager_q",
+        "end_session": "end_session_q"
+      },
   		"groupby_query1": "groupby_start_date_q",
   		"groupby_query2": "groupby_start_station_q",
   		"groupby_query3": "groupby_end_station_q",
@@ -23,7 +27,6 @@
   		"applier_query3": "mean_distance_applier_q",
       "applier_query4": "mean_duration_applier_4_q",
   		"results_verifier": "query_results_q",
-      "session_manager": "session_manager_q",
       "receiver": "receiver_q"
   	},
   	"eof_manager_queues": {
