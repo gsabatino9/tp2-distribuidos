@@ -12,17 +12,21 @@ class Connection:
         self.connection = pika.BlockingConnection(pika.ConnectionParameters("rabbitmq"))
         self.channel = self.connection.channel()
 
-    def basic_queue(self, name_queue):
-        return BasicQueue(self.channel, name_queue)
+    def basic_queue(self, name_queue, auto_ack=True):
+        return BasicQueue(self.channel, name_queue, auto_ack=auto_ack)
 
-    def pubsub_queue(self, name_exchange):
-        return PubsubQueue(self.channel, name_exchange)
+    def pubsub_queue(self, name_exchange, auto_ack=True):
+        return PubsubQueue(self.channel, name_exchange, auto_ack=auto_ack)
 
-    def pubsub_worker_queue(self, name_exchange, name_queue):
-        return PubsubWorkerQueue(self.channel, name_exchange, name_queue)
+    def pubsub_worker_queue(self, name_exchange, name_queue, auto_ack=True):
+        return PubsubWorkerQueue(
+            self.channel, name_exchange, name_queue, auto_ack=auto_ack
+        )
 
-    def routing_queue(self, exchange_name, routing_keys=[]):
-        return RoutingQueue(self.channel, exchange_name, routing_keys)
+    def routing_queue(self, exchange_name, routing_keys=[], auto_ack=True):
+        return RoutingQueue(
+            self.channel, exchange_name, routing_keys, auto_ack=auto_ack
+        )
 
     def start_receiving(self):
         self.channel.start_consuming()
