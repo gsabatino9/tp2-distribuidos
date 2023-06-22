@@ -11,11 +11,13 @@ class MessageClient:
     # Constants for message types
     SEND_DATA = 0
     SEND_LAST = 1
+    GET_ID = 2
+    GET_RESULTS = 3
 
     # Struct format for message header
     DATA_TYPE_LEN = "B"
     MSG_TYPE_LEN = "B"
-    ID_CLIENT_LEN = "B"
+    ID_CLIENT_LEN = "Q"
     ID_BATCH_LEN = "I"
     QUERIES_SUSCRIPTIONS_LEN = "B"
     LEN_PAYLOAD_LEN = "I"
@@ -42,16 +44,17 @@ class MessageClient:
         self.queries_suscriptions = queries_suscriptions
         self.id_batch = 0
 
-    def new_message(self, data_type, msg_type, payload):
+    def new_message(self, data_type, msg_type, payload, id_batch=None):
         if payload is None:
             payload = []
         payload_bytes = self._pack_payload(payload)
+        id_batch = self.id_batch if id_batch is None else id_batch
 
         header = self.Header(
             data_type,
             msg_type,
             self.id_client,
-            self.id_batch,
+            id_batch,
             self.queries_suscriptions,
             len(payload_bytes),
         )
@@ -168,3 +171,11 @@ class MessageClient:
         data_type = self.TRIP_DATA
         msg_type = self.SEND_LAST if is_last else self.SEND_DATA
         return self.new_message(data_type, msg_type, payload)
+
+    def get_id_message(self):
+        msg_type = self.GET_ID
+        return self.new_message(self.TRIP_DATA, msg_type, list(""))
+
+    def get_results_message(self):
+        msg_type = self.GET_RESULTS
+        return self.new_message(self.TRIP_DATA, msg_type, list(""))

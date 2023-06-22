@@ -4,26 +4,27 @@ from struct import pack, unpack, calcsize
 
 class MessageServer:
     # Constants for message types
-    FILES_RECEIVED = 0
+    BATCH_RECEIVED = 0
     SEND_RESULT = 1
     SEND_LAST_RESULT = 2
     SEND_ID_CLIENT = 3
+    ERROR_MESSAGE = 4
 
     # Struct format for message header
-    HEADER_CODE = "!BBI"
+    HEADER_CODE = "!BBBI"
     # Size of header in bytes
     SIZE_HEADER = calcsize(HEADER_CODE)
 
     # Define the named tuples used in the protocol
-    Header = namedtuple("Header", "msg_type id_query len")
+    Header = namedtuple("Header", "msg_type id_query id_batch len")
     Payload = namedtuple("Payload", "data")
 
-    def __init__(self, msg_type, id_query, payload):
+    def __init__(self, msg_type, id_query, id_batch, payload):
         if payload is None:
             payload = list("")
         payload_bytes = self._pack_payload(payload)
 
-        self.header = self.Header(msg_type, id_query, len(payload_bytes))
+        self.header = self.Header(msg_type, id_query, id_batch, len(payload_bytes))
         self.payload = self.Payload(payload_bytes)
 
     def encode(self):
@@ -40,9 +41,7 @@ class MessageServer:
 
     @staticmethod
     def encode_header(header):
-        return pack(
-            MessageServer.HEADER_CODE, header.msg_type, header.id_query, header.len
-        )
+        return pack(MessageServer.HEADER_CODE, *header)
 
     @staticmethod
     def encode_payload(len_payload, payload):
@@ -110,17 +109,22 @@ class MessageServer:
         return MessageServer.Payload(payload)
 
     @classmethod
-    def files_received_message(cls):
-        return cls(cls.FILES_RECEIVED, 0, list("")).encode()
+    def batch_received_message(cls, id_batch):
+        return cls(cls.BATCH_RECEIVED, id_batch, id_batch, list("")).encode()
 
     @classmethod
-    def results_message(cls, id_query, results):
-        return cls(cls.SEND_RESULT, id_query, results).encode()
+    def results_message(cls, id_query, id_batch, results):
+        return cls(cls.SEND_RESULT, id_query, id_batch, results).encode()
 
     @classmethod
     def last_chunk_message(cls):
-        return cls(cls.SEND_LAST_RESULT, 0, list("")).encode()
+        return cls(cls.SEND_LAST_RESULT, 0, 0, list("")).encode()
 
     @classmethod
     def id_client_message(cls, id_client):
-        return cls(cls.SEND_ID_CLIENT, id_client, list("")).encode()
+        payload = [str(id_client)]
+        return cls(cls.SEND_ID_CLIENT, 0, 0, payload).encode()
+
+    @classmethod
+    def error_message(cls):
+        return cls(cls.ERROR_MESSAGE, 0, 0, list("")).encode()

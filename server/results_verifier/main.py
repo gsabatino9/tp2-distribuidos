@@ -6,11 +6,19 @@ PORT = int(os.environ.get("PORT"))
 NAME_RECV_QUEUE = os.environ.get("NAME_RECV_QUEUE")
 NAME_EM_QUEUE = os.environ.get("NAME_EM_QUEUE")
 AMOUNT_QUERIES = int(os.environ.get("AMOUNT_QUERIES"))
+NAME_SM_QUEUE = os.environ.get("NAME_SM_QUEUE")
 
 
 def main():
-    f = ResultsVerifier(NAME_RECV_QUEUE, NAME_EM_QUEUE, HOST, PORT, AMOUNT_QUERIES)
-    f.stop()
+    results_verifier = ResultsVerifier(
+        (HOST, PORT),
+        NAME_RECV_QUEUE,
+        NAME_EM_QUEUE,
+        NAME_SM_QUEUE,
+        AMOUNT_QUERIES,
+    )
+    results_verifier.run()
+    results_verifier.stop()
 
 
 if __name__ == "__main__":
