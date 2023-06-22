@@ -56,6 +56,9 @@ class GroupbyController:
         self.queue_connection.start_receiving()
 
     def process_messages(self, ch, method, properties, body):
+        # TODO: evaluate if it's a good idea to use 80~90% of the prefetch limit.
+        # I (Lucho) added this because i was getting off-by-one errors and just
+        # wanted to get it working fast.
         if self.current_fetch_count * 10 // 8 > self.prefetch_limit:
             self.__ack_messages(ch)
 
@@ -68,9 +71,6 @@ class GroupbyController:
             self.__data_arrived(body)
 
     def __ack_messages(self, ch):
-        print(
-            f"action: ack_messages | result: success | delivery_tag: {self.last_delivery_tag}, fetch_count: {self.current_fetch_count}"
-        )
         self.state.write_checkpoints()
         ch.basic_ack(delivery_tag=self.last_delivery_tag, multiple=True)
         self.current_fetch_count = 0
