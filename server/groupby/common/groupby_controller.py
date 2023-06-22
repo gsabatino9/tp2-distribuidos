@@ -78,17 +78,16 @@ class GroupbyController:
     def __data_arrived(self, body):
         header, filtered_trips = decode(body)
 
-        # if self.state.is_batch_already_processed(header.id_client, header.id_batch):
-        #     print(f"action: data_arrived | result: batch_already_processed | batch_id: {header.id_batch}")
-        #     return
+        if self.state.is_batch_already_processed(header.id_client, header.id_batch):
+            print(
+                f"action: data_arrived | result: batch_already_processed | batch_id: {header.id_batch}"
+            )
+            return
 
         for trip in filtered_trips:
             trip = trip.split(",")
             self.__agroup_trip(header.id_client, trip)
 
-        print(
-            f"action: data_arrived | result: batch_processed | batch_id: {header.id_batch}"
-        )
         self.state.mark_batch_as_processed(header.id_client, header.id_batch)
 
     def __agroup_trip(self, id_client, trip):
