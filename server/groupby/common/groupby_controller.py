@@ -53,7 +53,7 @@ class GroupbyController:
             self.__eof_arrived(body)
         else:
             self.__data_arrived(body)
-    
+
     def __data_arrived(self, body):
         header, filtered_trips = decode(body)
 
@@ -64,9 +64,12 @@ class GroupbyController:
         for trip in filtered_trips:
             trip = trip.split(",")
             self.__agroup_trip(header.id_client, trip)
-        
-        print(f"action: data_arrived | result: batch_processed | batch_id: {header.id_batch}")
+
+        print(
+            f"action: data_arrived | result: batch_processed | batch_id: {header.id_batch}"
+        )
         self.state.mark_batch_as_processed(header.id_client, header.id_batch)
+        self.state.write_checkpoint(header.id_client)
 
     def __agroup_trip(self, id_client, trip):
         """
@@ -88,7 +91,9 @@ class GroupbyController:
         if self.state.delete_client(id_client):
             print(f"action: delete_client | result: success | id_client: {id_client}")
         else:
-            print(f"action: delete_client | result: warning | id_client: {id_client} was not found in groupby data")
+            print(
+                f"action: delete_client | result: warning | id_client: {id_client} was not found in groupby data"
+            )
 
     def __send_to_apply(self, id_client):
         """
