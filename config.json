@@ -40,6 +40,7 @@
       "new_clients": "new_clients_q"
     },
   	"amount_nodes": {
+      "receiver": 2,
   		"filter_year": 1,
   		"filter_pretoc": 1,
   		"filter_distance": 1,
