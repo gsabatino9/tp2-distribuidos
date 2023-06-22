@@ -51,13 +51,13 @@ networks:
 """
 
 RECEIVER = """
-  receiver:
-    container_name: receiver
+  receiver_{}:
+    container_name: receiver_{}
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
-      - HOST=receiver
-      - PORT=12345
+      - HOST=receiver_{}
+      - PORT={}
       - NAME_STATIONS_QUEUE={}
       - NAME_WEATHER_QUEUE={}
       - NAME_TRIPS_QUEUES={}
@@ -68,7 +68,7 @@ RECEIVER = """
       - AMOUNT_QUERIES=3
     image: receiver:latest
     ports:
-      - 12345:12345
+      - {}:{}
     networks:      
       - testing_net
     depends_on:
@@ -418,9 +418,9 @@ RESULTS_VERIFIER = """
       - NAME_SM_QUEUE={}
       - AMOUNT_QUERIES=4
       - HOST=results_verifier
-      - PORT=12346
+      - PORT=13000
     ports:
-      - 12346:12346
+      - 13000:13000
     image: results_verifier:latest
     networks:      
       - testing_net
@@ -446,4 +446,34 @@ SESSION_MANAGER = """
     depends_on:
       rabbitmq:
         condition: service_healthy
+"""
+
+INIT_CLIENT = """
+version: '3'
+services:
+  <CLIENT>
+networks:
+    testing_net:
+      external:
+        name: tp2_testing_net
+"""
+
+CLIENT = """
+  client_{}:
+    container_name: client_{}
+    entrypoint: python3 /main.py
+    environment:
+      - PYTHONUNBUFFERED=1
+      - ADDRESSES=[('receiver_1', 12345), ('receiver_2', 12346)]
+      - HOST_CONSULT=results_verifier
+      - PORT_CONSULT=13000
+      - CHUNK_SIZE=100
+      - MAX_RETRIES=50
+      - SUSCRIPTIONS=[1,2,3,4]
+      - FILE_PATH=data/client_{}/
+    image: client:latest
+    networks:      
+      - testing_net
+    volumes:
+    - ./client/results:/results
 """

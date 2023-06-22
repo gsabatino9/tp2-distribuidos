@@ -12,7 +12,7 @@ def main():
     amount_nodes = json_config["config"]["amount_nodes"]
     max_clients = json_config["config"]["max_clients"]
 
-    receiver = init_receiver(queues, em_queues, status_queues)
+    receivers = init_receivers(queues, em_queues, status_queues, amount_nodes)
 
     joiner_stations, joiner_weather, em_joiners = init_joiners(
         queues, em_queues, status_queues
@@ -42,7 +42,7 @@ def main():
 
     compose = (
         INIT_DOCKER.format()
-        .replace("<RECEIVER>", receiver)
+        .replace("<RECEIVER>", receivers)
         .replace("<JOINER_STATIONS>", joiner_stations)
         .replace("<JOINER_WEATHER>", joiner_weather)
         .replace("<EM_JOINERS>", em_joiners)
@@ -69,20 +69,34 @@ def main():
         compose_file.write(compose)
 
 
-def init_receiver(queues, em_queues, status_queues):
-    return RECEIVER.format(
-        queues["joiners"]["stations"],
-        queues["joiners"]["weather"],
-        [
-            queues["joiners"]["join_trip_stations"],
-            queues["joiners"]["join_trip_weather"],
-            queues["groupby_query4"],
-        ],
-        em_queues["joiners"],
-        status_queues["new_clients"],
-        queues["session_manager"]["init_session"],
-        queues["receiver"],
-    )
+def init_receivers(queues, em_queues, status_queues, amount_nodes):
+    receivers = ""
+    port = 12345
+
+    for i in range(1, amount_nodes["receiver"] + 1):
+        receivers += RECEIVER.format(
+            i,
+            i,
+            i,
+            port,
+            queues["joiners"]["stations"],
+            queues["joiners"]["weather"],
+            [
+                queues["joiners"]["join_trip_stations"],
+                queues["joiners"]["join_trip_weather"],
+                queues["groupby_query4"],
+            ],
+            em_queues["joiners"],
+            status_queues["new_clients"],
+            queues["session_manager"]["init_session"],
+            queues["receiver"],
+            port,
+            port
+        )
+
+        port += 1
+
+    return receivers
 
 
 def init_joiners(queues, em_queues, status_queues):

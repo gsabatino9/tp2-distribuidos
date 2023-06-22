@@ -3,21 +3,18 @@ from itertools import islice
 from datetime import datetime, timedelta
 from protocol.communication_client import CommunicationClient
 from common.utils import construct_payload, is_eof, is_error
+from common.middleware_communication import connect
 
 
 class Client:
-    def __init__(self, host, port, chunk_size, max_retries, suscriptions):
-        self.__init_client(host, port, chunk_size, max_retries, suscriptions)
-
-    def __init_client(self, host, port, chunk_size, max_retries, suscriptions):
+    def __init__(self, addresses, chunk_size, max_retries, suscriptions):
         self.running = True
         signal.signal(signal.SIGTERM, self.stop)
 
-        self.host = host
-        self.port = port
+        self.addresses = addresses
+        self.suscriptions = suscriptions
         self.chunk_size = chunk_size
         self.max_retries = max_retries
-        self.suscriptions = suscriptions
 
     def __connect(self, host, port):
         client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -37,7 +34,7 @@ class Client:
         id_not_assigned = True
         while id_not_assigned:
             try:
-                self.__connect(self.host, self.port)
+                self.conn = connect(self.addresses, self.suscriptions)
                 self.id_client = self.conn.recv_id_client()
                 id_not_assigned = False
 

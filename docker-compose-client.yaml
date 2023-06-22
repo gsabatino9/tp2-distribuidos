@@ -1,43 +1,43 @@
-# Cliente
+
 version: '3'
 services:
-  client1:
-    container_name: client1
+  
+  client_1:
+    container_name: client_1
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
-      - HOST=receiver
-      - PORT=12345
+      - ADDRESSES=[('receiver_1', 12345), ('receiver_2', 12346)]
       - HOST_CONSULT=results_verifier
-      - PORT_CONSULT=12346
+      - PORT_CONSULT=13000
       - CHUNK_SIZE=100
       - MAX_RETRIES=50
       - SUSCRIPTIONS=[1,2,3,4]
-      - FILE_PATH=data/client1/
+      - FILE_PATH=data/client_1/
     image: client:latest
     networks:      
       - testing_net
     volumes:
     - ./client/results:/results
 
-  client2:
-    container_name: client2
+  client_2:
+    container_name: client_2
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
-      - HOST=receiver
-      - PORT=12345
+      - ADDRESSES=[('receiver_1', 12345), ('receiver_2', 12346)]
       - HOST_CONSULT=results_verifier
-      - PORT_CONSULT=12346
+      - PORT_CONSULT=13000
       - CHUNK_SIZE=100
       - MAX_RETRIES=50
-      - SUSCRIPTIONS=[1,2,4]
-      - FILE_PATH=data/client2/
+      - SUSCRIPTIONS=[1,2,3,4]
+      - FILE_PATH=data/client_2/
     image: client:latest
     networks:      
       - testing_net
     volumes:
     - ./client/results:/results
+
 networks:
     testing_net:
       external:

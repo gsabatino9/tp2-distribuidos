@@ -17,12 +17,12 @@ services:
       driver: none
 
   
-  receiver:
-    container_name: receiver
+  receiver_1:
+    container_name: receiver_1
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
-      - HOST=receiver
+      - HOST=receiver_1
       - PORT=12345
       - NAME_STATIONS_QUEUE=joiner_stations_q
       - NAME_WEATHER_QUEUE=joiner_weather_q
@@ -35,6 +35,30 @@ services:
     image: receiver:latest
     ports:
       - 12345:12345
+    networks:      
+      - testing_net
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+  receiver_2:
+    container_name: receiver_2
+    entrypoint: python3 /main.py
+    environment:
+      - PYTHONUNBUFFERED=1
+      - HOST=receiver_2
+      - PORT=12346
+      - NAME_STATIONS_QUEUE=joiner_stations_q
+      - NAME_WEATHER_QUEUE=joiner_weather_q
+      - NAME_TRIPS_QUEUES=['join_trip_stations_q', 'join_trip_weather_q', 'groupby_all_elements_q']
+      - NAME_EM_QUEUE=eof_manager_joiners_q
+      - NAME_STATUS_QUEUE=new_clients_q
+      - NAME_SM_QUEUE=session_manager_q
+      - NAME_RECV_QUEUE=receiver_q
+      - AMOUNT_QUERIES=3
+    image: receiver:latest
+    ports:
+      - 12346:12346
     networks:      
       - testing_net
     depends_on:
@@ -280,9 +304,9 @@ services:
       - NAME_SM_QUEUE=end_session_q
       - AMOUNT_QUERIES=4
       - HOST=results_verifier
-      - PORT=12346
+      - PORT=13000
     ports:
-      - 12346:12346
+      - 13000:13000
     image: results_verifier:latest
     networks:      
       - testing_net
