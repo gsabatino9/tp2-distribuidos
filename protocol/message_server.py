@@ -41,11 +41,7 @@ class MessageServer:
 
     @staticmethod
     def encode_header(header):
-        try:
-            return pack(MessageServer.HEADER_CODE, *header)
-        except:
-            print(f"action: encode_header | result: failed | header: {header}")
-            raise
+        return pack(MessageServer.HEADER_CODE, *header)
 
     @staticmethod
     def encode_payload(len_payload, payload):
