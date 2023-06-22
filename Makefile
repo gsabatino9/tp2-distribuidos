@@ -17,6 +17,7 @@ testing-image:
 .PHONY: testing-image
 
 server-image:
+	docker build -f ./server/processes_restarter/Dockerfile -t "processes_restarter:latest" .
 	docker build -f ./server/receiver/Dockerfile -t "receiver:latest" .
 	docker build -f ./server/session_manager/Dockerfile -t "session_manager:latest" .
 	

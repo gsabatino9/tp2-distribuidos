@@ -11,34 +11,36 @@ services:
       - HOST_CONSULT=results_verifier
       - PORT_CONSULT=13000
       - CHUNK_SIZE=100
-      - MAX_RETRIES=50
+      - MAX_RETRIES=99999999999
       - SUSCRIPTIONS=[1,2,3,4]
       - FILE_PATH=data/client_1/
     image: client:latest
     networks:      
       - testing_net
     volumes:
-    - ./client/results:/results
+      - ./client/results:/results
+      - ./.data/montreal:/data/client1
 
-  client_2:
-    container_name: client_2
-    entrypoint: python3 /main.py
-    environment:
-      - PYTHONUNBUFFERED=1
-      - ADDRESSES=[('receiver_1', 12345), ('receiver_2', 12346)]
-      - HOST_CONSULT=results_verifier
-      - PORT_CONSULT=13000
-      - CHUNK_SIZE=100
-      - MAX_RETRIES=50
-      - SUSCRIPTIONS=[1,2,3,4]
-      - FILE_PATH=data/client_2/
-    image: client:latest
-    networks:      
-      - testing_net
-    volumes:
-    - ./client/results:/results
-
+  # client2:
+  #   container_name: client2
+  #   entrypoint: python3 /main.py
+  #   environment:
+  #     - PYTHONUNBUFFERED=1
+  #     - HOST=receiver
+  #     - PORT=12345
+  #     - HOST_CONSULT=results_verifier
+  #     - PORT_CONSULT=12346
+  #     - CHUNK_SIZE=100
+  #     - MAX_RETRIES=50
+  #     - SUSCRIPTIONS=[1,2,4]
+  #     - FILE_PATH=data/client2/
+  #   image: client:latest
+  #   networks:      
+  #     - testing_net
+  #   volumes:
+  #     - ./.data/montreal:/data:ro
+  #     - ./client/results:/results
 networks:
     testing_net:
-      external:
-        name: tp2_testing_net
+      name: tp2-distribuidos_testing_net
+      external: true

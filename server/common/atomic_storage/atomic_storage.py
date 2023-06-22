@@ -34,7 +34,10 @@ class AtomicBucket:
         self.data[key] = values
 
     def drop(self):
-        os.remove(self._get_bucket_path())
+        try:
+            os.remove(self._get_bucket_path())
+        except OSError:
+            pass  # Bucket was never persisted
 
     def collection(self, collection_name):
         return AtomicBucketCollection(collection_name, self)

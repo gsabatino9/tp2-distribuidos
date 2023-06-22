@@ -4,6 +4,7 @@ from server.groupby.common.state_manager import StateManager
 from server.common.utils_messages_client import decode, is_eof
 from server.common.utils_messages_eof import ack_msg, get_id_client
 from server.common.utils_messages_group import construct_msg
+from server.common.keep_alive.keep_alive import KeepAlive
 
 
 class GroupbyController:
@@ -31,6 +32,7 @@ class GroupbyController:
         self.prefetch_limit = 1000
         self.last_delivery_tag = None
         self.gen_key_value = gen_key_value
+        self.keep_alive = KeepAlive()
         print("action: groupby_started | result: success")
 
     def __connect(self, name_recv_queue, name_em_queue, name_send_queue):
@@ -50,10 +52,13 @@ class GroupbyController:
         """
         start receiving messages.
         """
+        self.keep_alive.start()
         self.recv_queue.receive(
             self.process_messages, prefetch_count=self.prefetch_limit
         )
         self.queue_connection.start_receiving()
+        self.keep_alive.stop()
+        self.keep_alive.join()
 
     def process_messages(self, ch, method, properties, body):
         # TODO: evaluate if it's a good idea to use 80~90% of the prefetch limit.
@@ -160,5 +165,3 @@ class GroupbyController:
             )
 
             self.running = False
-
-        sys.exit(0)

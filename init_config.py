@@ -18,6 +18,8 @@ services:
 
   <RECEIVER>
 
+  <PROCESS_RESTARTER>
+
   <JOINER_STATIONS>
   <JOINER_WEATHER>
 
@@ -47,7 +49,10 @@ services:
 
 networks:
   testing_net:
-    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.25.125.0/24      
 """
 
 RECEIVER = """
@@ -476,4 +481,25 @@ CLIENT = """
       - testing_net
     volumes:
     - ./client/results:/results
+"""
+
+PROCESS_RESTARTER = """
+  processes-restarter-{}:
+    container_name: processes-restarter-{}
+    image: processes_restarter:latest
+    entrypoint: python3 /main.py
+    environment:
+      - PYTHONUNBUFFERED=1
+      - LOGGING_LEVEL=INFO
+      - ID_ELECTION={}
+      - N_PROCESS_ELECTION={}
+      - CONTAINERS_KEEP_ALIVE={}
+      - CONTAINER_RESTARTER_NAME=processes-restarter-
+      - NETWORK_PROBLEMS={}
+      - BASE_IP_ADDRESS={}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      testing_net:
+        ipv4_address: {}
 """
