@@ -18,6 +18,8 @@ testing-image:
 
 server-image:
 	docker build -f ./server/receiver/Dockerfile -t "receiver:latest" .
+	docker build -f ./server/session_manager/Dockerfile -t "session_manager:latest" .
+	
 	docker build -f ./server/joiners/joiner_stations/Dockerfile -t "joiner_stations:latest" .
 	docker build -f ./server/joiners/joiner_weather/Dockerfile -t "joiner_weather:latest" .
 	
@@ -49,7 +51,7 @@ server-up: server-image
 .PHONY: server-up
 
 server-down:
-	docker compose -f docker-compose-server.yaml stop -t 30
+	docker compose -f docker-compose-server.yaml stop -t 1
 	docker compose -f docker-compose-server.yaml down
 .PHONY: server-down
 
@@ -58,6 +60,7 @@ server-logs:
 .PHONY: server-logs
 
 server-run: server-image
+	python3 create_docker_compose.py
 	docker compose -f docker-compose-server.yaml up -d --build
 	docker compose -f docker-compose-server.yaml logs -f
 .PHONY: server-run

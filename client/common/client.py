@@ -1,23 +1,20 @@
-from protocol.communication_client import CommunicationClient
-from common.utils import construct_payload, is_eof
-import csv, socket, time, signal, sys
+import csv, socket, time, signal, sys, struct
 from itertools import islice
 from datetime import datetime, timedelta
+from protocol.communication_client import CommunicationClient
+from common.utils import construct_payload, is_eof, is_error
 
 
 class Client:
     def __init__(self, host, port, chunk_size, max_retries, suscriptions):
-        self.__init_client(chunk_size, max_retries, suscriptions)
-        try:
-            self.__connect(host, port)
-        except OSError as e:
-            print(f"error: creating_queue_connection | log: {e}")
-            self.stop()
+        self.__init_client(host, port, chunk_size, max_retries, suscriptions)
 
-    def __init_client(self, chunk_size, max_retries, suscriptions):
+    def __init_client(self, host, port, chunk_size, max_retries, suscriptions):
         self.running = True
         signal.signal(signal.SIGTERM, self.stop)
 
+        self.host = host
+        self.port = port
         self.chunk_size = chunk_size
         self.max_retries = max_retries
         self.suscriptions = suscriptions
@@ -37,10 +34,21 @@ class Client:
         self.__get_results(addr_consult)
 
     def __recv_id(self):
-        self.id_client = self.conn.recv_id_client()
-        print(
-            f"action: id_client_received | result: success | id_client: {self.id_client}"
-        )
+        id_not_assigned = True
+        while id_not_assigned:
+            try:
+                self.__connect(self.host, self.port)
+                self.id_client = self.conn.recv_id_client()
+                id_not_assigned = False
+
+                print(
+                    f"action: id_client_received | result: success | id_client: {self.id_client}"
+                )
+            except struct.error as e:
+                print(
+                    f"action: id_client_received | result: failure | msg: retrying in 1sec"
+                )
+                time.sleep(1)
 
     def __send_files(self, filepath, types_files):
         for file in types_files:
@@ -134,35 +142,20 @@ class Client:
         print(f"action: results_obtained | result: success | results: {results}")
         self.__save_results(results)
 
+    def __send_request_results(self):
+        self.conn.send_get_results()
+
     def __connect_with_consults_server(self, host, port):
-        connected = False
-        retries = 0
-
-        while (not connected) and (retries < self.max_retries):
-            connected = self.__try_connect(host, port)
-            if not connected:
-                retries += 1
-
-        if not connected:
-            print(f"error: connection_server | msg: retries={max_retries}")
-            self.stop()
-
-    def __try_connect(self, host, port):
-        try:
-            self.__connect(host, port)
-            self.conn.set_id_client(self.id_client)
-            return True
-        except:
-            print(f"action: client_connected | result: failure | msg: retry in 1 sec")
-            time.sleep(1)
-
-            return False
+        self.__connect(host, port)
+        self.conn.set_id_client(self.id_client)
+        print("action: connection_consult_server | result: success")
+        self.__send_request_results()
 
     def __save_results(self, results):
         """
         it persists the results of the queries in a file.
         """
-        with open("results/output.csv", "w", newline="") as f:
+        with open(f"results/output-client-{self.id_client}.csv", "w", newline="") as f:
             writer = csv.writer(f)
             for key, values in results.items():
                 for row in values:

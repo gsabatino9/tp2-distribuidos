@@ -86,7 +86,6 @@ class ApplierController:
             self.send_queue.send(msg, routing_key=self.id_query)
 
     def __eof_arrived(self, ch, body):
-        ch.stop_consuming()
         self.em_queue.send(ack_msg(body))
         print("action: eof_trips_arrived")
 
