@@ -464,8 +464,7 @@ CLIENT = """
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
-      - HOST=receiver
-      - PORT=12345
+      - ADDRESSES=[('receiver_1', 12345), ('receiver_2', 12346)]
       - HOST_CONSULT=results_verifier
       - PORT_CONSULT=13000
       - CHUNK_SIZE=100
