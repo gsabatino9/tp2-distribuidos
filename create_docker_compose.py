@@ -77,6 +77,7 @@ def init_receivers(queues, em_queues, status_queues, amount_nodes):
         receivers += RECEIVER.format(
             i,
             i,
+            i,
             port,
             queues["joiners"]["stations"],
             queues["joiners"]["weather"],

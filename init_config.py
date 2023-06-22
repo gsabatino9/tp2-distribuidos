@@ -56,7 +56,7 @@ RECEIVER = """
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
-      - HOST=receiver
+      - HOST=receiver_{}
       - PORT={}
       - NAME_STATIONS_QUEUE={}
       - NAME_WEATHER_QUEUE={}
