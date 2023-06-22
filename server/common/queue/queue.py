@@ -11,8 +11,8 @@ class BasicQueue:
     def __build_queue(self):
         self.channel.queue_declare(queue=self.queue_name)
 
-    def receive(self, callback):
-        self.channel.basic_qos(prefetch_count=1)
+    def receive(self, callback, prefetch_count=1):
+        self.channel.basic_qos(prefetch_count=prefetch_count)
 
         self.channel.basic_consume(
             queue=self.queue_name, on_message_callback=callback, auto_ack=self.auto_ack

@@ -27,13 +27,18 @@ class GroupbyController:
 
         self.chunk_size = chunk_size
         self.state = StateManager(operation, base_data)
+        self.current_fetch_count = 0
+        self.prefetch_limit = 1000
+        self.last_delivery_tag = None
         self.gen_key_value = gen_key_value
         print("action: groupby_started | result: success")
 
     def __connect(self, name_recv_queue, name_em_queue, name_send_queue):
         try:
             self.queue_connection = Connection()
-            self.recv_queue = self.queue_connection.basic_queue(name_recv_queue)
+            self.recv_queue = self.queue_connection.basic_queue(
+                name_recv_queue, auto_ack=False
+            )
             self.send_queue = self.queue_connection.basic_queue(name_send_queue)
 
             self.em_queue = self.queue_connection.pubsub_queue(name_em_queue)
@@ -45,27 +50,44 @@ class GroupbyController:
         """
         start receiving messages.
         """
-        self.recv_queue.receive(self.process_messages)
+        self.recv_queue.receive(
+            self.process_messages, prefetch_count=self.prefetch_limit
+        )
         self.queue_connection.start_receiving()
 
     def process_messages(self, ch, method, properties, body):
+        # TODO: evaluate if it's a good idea to use 80~90% of the prefetch limit.
+        # I (Lucho) added this because i was getting off-by-one errors and just
+        # wanted to get it working fast.
+        if self.current_fetch_count * 10 // 8 > self.prefetch_limit:
+            self.__ack_messages(ch)
+
+        self.last_delivery_tag = method.delivery_tag
+        self.current_fetch_count += 1
         if is_eof(body):
             self.__eof_arrived(body)
+            self.__ack_messages(ch)
         else:
             self.__data_arrived(body)
-    
+
+    def __ack_messages(self, ch):
+        self.state.write_checkpoints()
+        ch.basic_ack(delivery_tag=self.last_delivery_tag, multiple=True)
+        self.current_fetch_count = 0
+
     def __data_arrived(self, body):
         header, filtered_trips = decode(body)
 
-        # if self.state.is_batch_already_processed(header.id_client, header.id_batch):
-        #     print(f"action: data_arrived | result: batch_already_processed | batch_id: {header.id_batch}")
-        #     return
+        if self.state.is_batch_already_processed(header.id_client, header.id_batch):
+            print(
+                f"action: data_arrived | result: batch_already_processed | batch_id: {header.id_batch}"
+            )
+            return
 
         for trip in filtered_trips:
             trip = trip.split(",")
             self.__agroup_trip(header.id_client, trip)
-        
-        print(f"action: data_arrived | result: batch_processed | batch_id: {header.id_batch}")
+
         self.state.mark_batch_as_processed(header.id_client, header.id_batch)
 
     def __agroup_trip(self, id_client, trip):
@@ -88,7 +110,9 @@ class GroupbyController:
         if self.state.delete_client(id_client):
             print(f"action: delete_client | result: success | id_client: {id_client}")
         else:
-            print(f"action: delete_client | result: warning | id_client: {id_client} was not found in groupby data")
+            print(
+                f"action: delete_client | result: warning | id_client: {id_client} was not found in groupby data"
+            )
 
     def __send_to_apply(self, id_client):
         """
