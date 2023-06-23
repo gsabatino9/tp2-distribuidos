@@ -45,3 +45,7 @@ def customer_subscribed_to_query(header, id_query):
 
 def last_message():
     return MessageServer.last_chunk_message()
+
+def is_last_message(body):
+    header, _ = MessageServer.decode(body)
+    return header.msg_type == MessageServer.SEND_LAST_RESULT

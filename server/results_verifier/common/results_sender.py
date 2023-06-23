@@ -8,37 +8,21 @@ class ResultsSender(Thread):
     def __init__(
         self,
         address,
-        clients_queues,
-        lock_clients_queues,
         name_session_manager_queue,
+        name_send_exchange,
+        name_send_queue,
         max_clients=5,
     ):
         super().__init__()
-        self.__init_results_sender(
-            address,
-            clients_queues,
-            lock_clients_queues,
-            name_session_manager_queue,
-            max_clients,
-        )
-
-    def __init_results_sender(
-        self,
-        address,
-        clients_queues,
-        lock_clients_queues,
-        name_session_manager_queue,
-        max_clients,
-    ):
         self.running = True
         signal.signal(signal.SIGTERM, self.stop)
 
         self.accepter_socket = self.__create_socket(address)
         self.max_clients = max_clients
         self.clients_handlers = []
-        self.clients_queues = clients_queues
-        self.lock_clients_queues = lock_clients_queues
         self.name_session_manager_queue = name_session_manager_queue
+        self.name_send_exchange = name_send_exchange
+        self.name_send_queue = name_send_queue
 
         print("action: results_sender_started | result: success")
 
@@ -58,13 +42,7 @@ class ResultsSender(Thread):
         self.clients = []
 
         while self.running:
-            client_connection = self.__accept_client()
-            client_handler = ClientHandler(
-                self.clients_queues,
-                self.lock_clients_queues,
-                client_connection,
-                self.name_session_manager_queue,
-            )
+            client_handler = self.__accept_client()
             client_handler.start()
             self.clients_handlers.append(client_handler)
 
@@ -82,7 +60,12 @@ class ResultsSender(Thread):
             f"action: client_connected | result: success | msg: starting to receive data"
         )
 
-        return client_connection
+        return ClientHandler(
+            client_connection,
+            self.name_session_manager_queue,
+            self.name_send_exchange,
+            self.name_send_queue
+        )
 
     def stop(self, *args):
         if self.running:
