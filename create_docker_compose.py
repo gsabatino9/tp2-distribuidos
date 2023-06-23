@@ -91,7 +91,7 @@ def init_accepters(queues, em_queues, status_queues, amount_nodes):
             queues["session_manager"]["init_session"],
             queues["accepter"],
             port,
-            port
+            port,
         )
 
         port += 1

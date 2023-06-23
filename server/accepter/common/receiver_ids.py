@@ -35,9 +35,7 @@ class ReceiverIds(Thread):
     def receive_id(self, ch, method, properties, body):
         id_client, client_address = decode(body)
         if client_address in self.clients_connections:
-            queue_client, client_connection = self.clients_connections[
-                client_address
-            ]
+            queue_client, client_connection = self.clients_connections[client_address]
             queue_client.put(id_client)
             print(
                 f"action: id_arrived_client | result: success | id_client: {id_client}"

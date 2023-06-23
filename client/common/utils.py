@@ -13,6 +13,7 @@ def is_eof(header):
 def is_id_client(header):
     return header.msg_type == MessageServer.SEND_ID_CLIENT
 
+
 def get_id_client(payload):
     return int(payload.data[0])
 

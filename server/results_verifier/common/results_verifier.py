@@ -53,7 +53,7 @@ class ResultsVerifier:
             address_consult_clients,
             name_session_manager_queue,
             name_send_exchange,
-            name_send_queue
+            name_send_queue,
         )
 
         print("action: results_verifier_started | result: success")
@@ -74,7 +74,9 @@ class ResultsVerifier:
             )
 
             self.em_queue = self.queue_connection.pubsub_queue(name_em_queue)
-            self.send_queue = self.queue_connection.routing_building_queue(name_send_exchange, name_send_queue)
+            self.send_queue = self.queue_connection.routing_building_queue(
+                name_send_exchange, name_send_queue
+            )
         except OSError as e:
             print(f"error: creating_queue_connection | log: {e}")
             self.stop()

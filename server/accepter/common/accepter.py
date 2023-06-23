@@ -84,7 +84,7 @@ class Accepter:
             self.name_trips_queues,
             self.name_session_manager_queue,
             self.name_em_queue,
-            self.amount_queries
+            self.amount_queries,
         )
 
     def stop(self, *args):

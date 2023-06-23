@@ -35,7 +35,9 @@ def is_eof(body):
 def construct_msg(header, trips_array):
     msg_client = MessageClient(header.queries_suscriptions, header.id_client)
 
-    return msg_client.new_message(header.data_type, header.msg_type, trips_array, header.id_batch)
+    return msg_client.new_message(
+        header.data_type, header.msg_type, trips_array, header.id_batch
+    )
 
 
 def customer_subscribed_to_query(header, id_query):
@@ -45,6 +47,7 @@ def customer_subscribed_to_query(header, id_query):
 
 def last_message():
     return MessageServer.last_chunk_message()
+
 
 def is_last_message(body):
     header, _ = MessageServer.decode(body)

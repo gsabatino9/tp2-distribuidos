@@ -17,7 +17,7 @@ class ClientHandler(Thread):
         name_trips_queues,
         name_session_manager_queue,
         name_em_queue,
-        amount_queries
+        amount_queries,
     ):
         super().__init__()
         self.client_address = client_address
@@ -36,9 +36,11 @@ class ClientHandler(Thread):
         client_running = True
         while client_running:
             try:
-                header, payload_bytes = self.client_connection.recv_data(decode_payload=False)
+                header, payload_bytes = self.client_connection.recv_data(
+                    decode_payload=False
+                )
 
-                if is_get_id(header): 
+                if is_get_id(header):
                     self.__assign_id_to_client()
                 elif is_eof(header):
                     self.__send_eof(header)
@@ -84,13 +86,17 @@ class ClientHandler(Thread):
         """
         informs the client that bach with id_batch arrived successfully.
         """
-        self.client_connection.send_ack_batch(id_batch)    
+        self.client_connection.send_ack_batch(id_batch)
 
     def __connect_queues(self):
         try:
             self.queue_connection = Connection()
-            self.stations_queue = self.queue_connection.basic_queue(self.name_stations_queue)
-            self.weather_queue = self.queue_connection.basic_queue(self.name_weather_queue)
+            self.stations_queue = self.queue_connection.basic_queue(
+                self.name_stations_queue
+            )
+            self.weather_queue = self.queue_connection.basic_queue(
+                self.name_weather_queue
+            )
             self.trips_queues = [
                 self.queue_connection.basic_queue(q) for q in self.name_trips_queues
             ]

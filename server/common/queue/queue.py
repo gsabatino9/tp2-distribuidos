@@ -110,9 +110,7 @@ class RoutingQueue:
 
 
 class RoutingBuildQueue:
-    def __init__(
-        self, channel, exchange_name, queue_name, auto_ack=True
-    ):
+    def __init__(self, channel, exchange_name, queue_name, auto_ack=True):
         self.channel = channel
         self.exchange_name = exchange_name
         self.auto_ack = auto_ack
@@ -124,9 +122,7 @@ class RoutingBuildQueue:
 
     def bind_queue(self, routing_key):
         self.channel.queue_bind(
-            exchange=self.exchange_name,
-            queue=self.queue_name,
-            routing_key=routing_key
+            exchange=self.exchange_name, queue=self.queue_name, routing_key=routing_key
         )
 
     def receive(self, callback):

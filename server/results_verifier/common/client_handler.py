@@ -21,12 +21,12 @@ class ClientHandler(Thread):
 
     def run(self):
         self.__connect_queues()
-        
+
         header, _ = self.client_connection.recv_data(decode_payload=False)
         self.__connect_client(header.id_client)
 
         self.recv_queue.receive(self.process_batch)
-        self.queue_connection.start_receiving()       
+        self.queue_connection.start_receiving()
 
     def process_batch(self, ch, method, properties, body):
         if is_eof(body):
@@ -41,7 +41,9 @@ class ClientHandler(Thread):
             self.session_manager_queue = self.queue_connection.pubsub_queue(
                 self.name_session_manager_queue
             )
-            self.recv_queue = self.queue_connection.routing_building_queue(self.name_send_exchange, self.name_send_queue)
+            self.recv_queue = self.queue_connection.routing_building_queue(
+                self.name_send_exchange, self.name_send_queue
+            )
         except OSError as e:
             print(f"error: creating_queue_connection | log: {e}")
 

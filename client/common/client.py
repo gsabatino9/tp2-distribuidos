@@ -2,7 +2,13 @@ import csv, socket, time, signal, sys, struct
 from itertools import islice
 from datetime import datetime, timedelta
 from protocol.communication_client import CommunicationClient
-from common.utils import construct_payload, is_eof, is_id_client, get_id_client, is_error
+from common.utils import (
+    construct_payload,
+    is_eof,
+    is_id_client,
+    get_id_client,
+    is_error,
+)
 from common.middleware_communication import connect
 
 

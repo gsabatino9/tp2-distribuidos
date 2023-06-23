@@ -64,7 +64,7 @@ class ResultsSender(Thread):
             client_connection,
             self.name_session_manager_queue,
             self.name_send_exchange,
-            self.name_send_queue
+            self.name_send_queue,
         )
 
     def stop(self, *args):
