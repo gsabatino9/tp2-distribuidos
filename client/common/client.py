@@ -49,6 +49,7 @@ class Client:
                 print(
                     f"action: id_client_received | result: failure | msg: retrying in 1sec"
                 )
+                # TODO: no finalizar conexión si falla
                 self.conn.stop()
                 time.sleep(1)
 
