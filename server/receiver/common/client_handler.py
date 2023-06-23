@@ -48,6 +48,7 @@ class ClientHandler(Thread):
                     self.__route_message(header, payload_bytes)
 
                 self.__send_ack_client(header.id_batch)
+                print("ack server id_batch: ", header.id_batch)
             except struct.error:
                 print("action: client_clossed")
                 client_running = False
@@ -55,7 +56,7 @@ class ClientHandler(Thread):
             # que el cliente no espera este mensaje... pero depende
             # de este ack para avanzar.
             except BrokenPipeError:
-                print("action: client_clossed")
+                print("action: client_clossed | msg: BrokenPipeError")
                 client_running = False
 
         self.stop()
@@ -112,3 +113,5 @@ class ClientHandler(Thread):
     def stop(self):
         self.client_connection.stop()
         self.queue_connection.close()
+
+        print("finalizando cliente")
