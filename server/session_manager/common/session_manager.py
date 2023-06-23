@@ -16,7 +16,6 @@ class SessionManager:
         signal.signal(signal.SIGTERM, self.stop)
 
         self.max_clients = max_clients
-        # (key: client_address), (value: id_client)
         self.active_clients = {}
 
         print("action: session_manager_started | result: success")
@@ -65,6 +64,7 @@ class SessionManager:
         self.send_queue.send(msg)
 
     def __assign_id_to_client(self, address):
+        # lo tengo que achicar para que entre en el header
         id_client = uuid4().int >> 64
         self.active_clients[address] = id_client
         print(f"action: id_assigned | result: success | id: {id_client}")
