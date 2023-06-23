@@ -3,7 +3,7 @@ from threading import Thread
 from server.common.queue.connection import Connection
 from server.common.utils_messages_eof import eof_msg
 from server.common.utils_messages_client import is_station, is_weather, encode_header
-from common.utils import is_eof
+from common.utils import is_get_id, is_eof
 
 
 class ClientHandler(Thread):
@@ -35,36 +35,14 @@ class ClientHandler(Thread):
         # obtener el id se crea el resto.
         self.__connect_queues()
 
-        # TODO: no enviarlo en caso de que el request del cliente
-        # sea de otro tipo
-        self.session_manager_queue.send(self.client_address)
-
-        not_assigned = self.__assign_id_to_client()
-        if not_assigned:
-            print(f"action: close_client | msg: max clients in system")
-            # TODO: hacer que no se cierre el cliente, sino que se espere
-            # al request del mismo.
-            self.__close_client()
-        else:
-            self.__run_loop_client()
-
-    def __assign_id_to_client(self):
-        id_client = self.queue_client.get()
-        if id_client == 0:
-            return True
-        else:
-            self.client_connection.send_id_client(id_client)
-            return False
-
-    def __run_loop_client(self):
         client_running = True
-
         while client_running:
             try:
                 header, payload_bytes = self.client_connection.recv_data(decode_payload=False)
 
-                #if is_set_id(header): 
-                if is_eof(header):
+                if is_get_id(header): 
+                    self.__assign_id_to_client()
+                elif is_eof(header):
                     self.__send_eof(header)
                 else:
                     self.__route_message(header, payload_bytes)
@@ -74,7 +52,16 @@ class ClientHandler(Thread):
                 print("action: client_clossed")
                 client_running = False
 
-        self.__close_client()
+        self.stop()
+
+    def __assign_id_to_client(self):
+        self.session_manager_queue.send(self.client_address)
+        # TODO: try-except por si tarda 1min en popear de la cola
+        id_client = self.queue_client.get()
+        if id_client == 0:
+            self.client_connection.send_error_message()
+        else:
+            self.client_connection.send_id_client(id_client)
 
     def __send_eof(self, header):
         self.em_queue.send(eof_msg(header))
@@ -115,7 +102,7 @@ class ClientHandler(Thread):
             self.em_queue = self.queue_connection.pubsub_queue(self.name_em_queue)
         except OSError as e:
             print(f"error: creating_queue_connection | log: {e}")
-            self.stop()        
 
-    def __close_client(self):
+    def stop(self):
         self.client_connection.stop()
+        self.queue_connection.close()

@@ -2,7 +2,7 @@ import csv, socket, time, signal, sys, struct
 from itertools import islice
 from datetime import datetime, timedelta
 from protocol.communication_client import CommunicationClient
-from common.utils import construct_payload, is_eof, is_error
+from common.utils import construct_payload, is_eof, is_id_client, get_id_client, is_error
 from common.middleware_communication import connect
 
 
@@ -26,22 +26,25 @@ class Client:
         )
 
     def run(self, filepath, types_files, addr_consult):
-        self.__recv_id()
+        self.conn = connect(self.addresses, self.suscriptions)
+        self.__receive_id()
         self.__send_files(filepath, types_files)
         self.__get_results(addr_consult)
 
-    def __recv_id(self):
+    def __receive_id(self):
         id_not_assigned = True
         while id_not_assigned:
-            try:
-                self.conn = connect(self.addresses, self.suscriptions)
-                self.id_client = self.conn.recv_id_client()
+            self.conn.send_get_id()
+            header, payload = self.conn.recv_id_client()
+            if is_id_client(header):
+                self.id_client = get_id_client(payload)
+                self.conn.set_id_client(self.id_client)
                 id_not_assigned = False
 
                 print(
                     f"action: id_client_received | result: success | id_client: {self.id_client}"
                 )
-            except struct.error as e:
+            else:
                 print(
                     f"action: id_client_received | result: failure | msg: retrying in 1sec"
                 )
