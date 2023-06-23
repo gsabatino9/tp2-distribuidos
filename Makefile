@@ -60,7 +60,6 @@ server-run: server-image
 .PHONY: server-run
 
 client-run: client-image
-	python3 create_client.py 2
 	docker compose -f docker-compose-client.yaml up -d --build
 	docker compose -f docker-compose-client.yaml logs -f
 .PHONY: client-run
