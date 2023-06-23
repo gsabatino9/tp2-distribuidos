@@ -31,8 +31,6 @@ class ClientHandler(Thread):
         self.amount_queries = amount_queries
 
     def run(self):
-        # TODO: primero se crea session_manager, luego de
-        # obtener el id se crea el resto.
         self.__connect_queues()
 
         client_running = True
@@ -50,12 +48,6 @@ class ClientHandler(Thread):
                     self.__send_ack_client(header.id_batch)
             except struct.error:
                 print("action: client_clossed")
-                client_running = False
-            # TODO: ver esta excepción. Por lo que vi, se ve
-            # que el cliente no espera este mensaje... pero depende
-            # de este ack para avanzar.
-            except BrokenPipeError:
-                print("action: client_clossed | msg: BrokenPipeError")
                 client_running = False
 
         self.stop()

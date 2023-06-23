@@ -96,7 +96,6 @@ class Accepter:
             )
             if hasattr(self, "clients_connections"):
                 for _, client_connection in self.clients_connections.values():
-                    # TODO: try-catch
                     try:
                         client_connection.stop()
                         print(
