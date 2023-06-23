@@ -64,7 +64,6 @@ class SessionManager:
         self.send_queue.send(msg)
 
     def __assign_id_to_client(self, address):
-        # lo tengo que achicar para que entre en el header
         id_client = uuid4().int >> 64
         self.active_clients[address] = id_client
         print(f"action: id_assigned | result: success | id: {id_client}")
