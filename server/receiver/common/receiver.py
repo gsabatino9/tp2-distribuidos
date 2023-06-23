@@ -109,22 +109,19 @@ class Receiver:
         client_connection = CommunicationServer(client_socket)
         client_address = client_connection.getpeername()[0]
 
-        with self.lock_clients_connections:
-            self.clients_connections[client_address] = (
-                queue.Queue(),
-                client_connection,
-            )
+        self.clients_connections[client_address] = (
+            queue.Queue(),
+            client_connection,
+        )
 
         print(
             f"action: client_connected | result: success | msg: starting to receive data | client_address: {client_address}"
         )
 
-        # TODO: ver si moverlo al hilo específico del cliente
-        self.session_manager_queue.send(client_address)
-
         return client_address
 
     def __handle_client(self, client_address):
+        self.session_manager_queue.send(client_address)
         not_assigned = self.__assign_id_to_client(client_address)
         if not_assigned:
             print(f"action: close_client | msg: max clients in system")
@@ -145,17 +142,13 @@ class Receiver:
             return False
 
     def __close_client(self, client_address):
-        # TODO: borrar cola y conexión del cliente acá.
-        # Por ahora no es necesario.
-        with self.lock_clients_connections:
-            _, client_connection = self.clients_connections[client_address]
-            client_connection.stop()
+        _, client_connection = self.clients_connections[client_address]
+        client_connection.stop()
 
     def __run_loop_client(self, client_address):
         types_ended = set()
 
-        with self.lock_clients_connections:
-            _, client_connection = self.clients_connections[client_address]
+        _, client_connection = self.clients_connections[client_address]
 
         while len(types_ended) < self.amount_queries:
             header, payload_bytes = client_connection.recv_data(decode_payload=False)

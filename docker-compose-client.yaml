@@ -20,24 +20,6 @@ services:
     volumes:
     - ./client/results:/results
 
-  client_2:
-    container_name: client_2
-    entrypoint: python3 /main.py
-    environment:
-      - PYTHONUNBUFFERED=1
-      - ADDRESSES=[('receiver_1', 12345), ('receiver_2', 12346)]
-      - HOST_CONSULT=results_verifier
-      - PORT_CONSULT=13000
-      - CHUNK_SIZE=100
-      - MAX_RETRIES=50
-      - SUSCRIPTIONS=[1,2,3,4]
-      - FILE_PATH=data/client_2/
-    image: client:latest
-    networks:      
-      - testing_net
-    volumes:
-    - ./client/results:/results
-
 networks:
     testing_net:
       external:
