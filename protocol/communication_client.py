@@ -51,9 +51,7 @@ class CommunicationClient:
 
     def recv_id_client(self):
         _, payload = self.__recv_message(decode_payload=True)
-        print("id_client:", payload.data)
         id_client = int(payload.data[0])
-
         self.msg = MessageClient(id_client, self.queries_suscriptions)
 
         return id_client

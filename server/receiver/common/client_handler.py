@@ -1,3 +1,4 @@
+import struct
 from threading import Thread
 from server.common.queue.connection import Connection
 from server.common.utils_messages_eof import eof_msg
@@ -30,11 +31,14 @@ class ClientHandler(Thread):
         self.amount_queries = amount_queries
 
     def run(self):
+        # TODO: primero se crea session_manager, luego de
+        # obtener el id se crea el resto.
         self.__connect_queues()
 
         # TODO: no enviarlo en caso de que el request del cliente
         # sea de otro tipo
         self.session_manager_queue.send(self.client_address)
+
         not_assigned = self.__assign_id_to_client()
         if not_assigned:
             print(f"action: close_client | msg: max clients in system")
@@ -53,18 +57,24 @@ class ClientHandler(Thread):
             return False
 
     def __run_loop_client(self):
-        types_ended = set()
+        client_running = True
 
-        while len(types_ended) < self.amount_queries:
-            header, payload_bytes = self.client_connection.recv_data(decode_payload=False)
+        while client_running:
+            try:
+                header, payload_bytes = self.client_connection.recv_data(decode_payload=False)
 
-            if is_eof(header):
-                types_ended.add(header.data_type)
-                self.__send_eof(header)
-            else:
-                self.__route_message(header, payload_bytes)
+                #if is_set_id(header): 
+                if is_eof(header):
+                    self.__send_eof(header)
+                else:
+                    self.__route_message(header, payload_bytes)
 
-            self.__send_ack_client(header.id_batch)
+                self.__send_ack_client(header.id_batch)
+            except struct.error:
+                print("action: client_clossed")
+                client_running = False
+
+        self.__close_client()
 
     def __send_eof(self, header):
         self.em_queue.send(eof_msg(header))
