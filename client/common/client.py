@@ -26,7 +26,7 @@ class Client:
         )
 
     def run(self, filepath, types_files, addr_consult):
-        #self.conn = connect(self.addresses, self.suscriptions)
+        self.conn = connect(self.addresses, self.suscriptions)
         self.__receive_id()
         self.__send_files(filepath, types_files)
         self.__get_results(addr_consult)
@@ -34,7 +34,6 @@ class Client:
     def __receive_id(self):
         id_not_assigned = True
         while id_not_assigned:
-            self.conn = connect(self.addresses, self.suscriptions)
             self.conn.send_get_id()
             header, payload = self.conn.recv_id_client()
             if is_id_client(header):
@@ -49,8 +48,6 @@ class Client:
                 print(
                     f"action: id_client_received | result: failure | msg: retrying in 1sec"
                 )
-                # TODO: no finalizar conexión si falla
-                self.conn.stop()
                 time.sleep(1)
 
     def __send_files(self, filepath, types_files):

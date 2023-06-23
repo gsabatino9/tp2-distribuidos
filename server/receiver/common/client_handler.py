@@ -44,11 +44,10 @@ class ClientHandler(Thread):
                     self.__assign_id_to_client()
                 elif is_eof(header):
                     self.__send_eof(header)
+                    self.__send_ack_client(header.id_batch)
                 else:
                     self.__route_message(header, payload_bytes)
-
-                self.__send_ack_client(header.id_batch)
-                print("ack server id_batch: ", header.id_batch)
+                    self.__send_ack_client(header.id_batch)
             except struct.error:
                 print("action: client_clossed")
                 client_running = False
