@@ -17,12 +17,12 @@ services:
       driver: none
 
   
-  receiver_1:
-    container_name: receiver_1
+  accepter_1:
+    container_name: accepter_1
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
-      - HOST=receiver_1
+      - HOST=accepter_1
       - PORT=12345
       - NAME_STATIONS_QUEUE=joiner_stations_q
       - NAME_WEATHER_QUEUE=joiner_weather_q
@@ -30,9 +30,9 @@ services:
       - NAME_EM_QUEUE=eof_manager_joiners_q
       - NAME_STATUS_QUEUE=new_clients_q
       - NAME_SM_QUEUE=session_manager_q
-      - NAME_RECV_QUEUE=receiver_q
+      - NAME_RECV_QUEUE=accepter_q
       - AMOUNT_QUERIES=3
-    image: receiver:latest
+    image: accepter:latest
     ports:
       - 12345:12345
     networks:      
@@ -41,12 +41,12 @@ services:
       rabbitmq:
         condition: service_healthy
 
-  receiver_2:
-    container_name: receiver_2
+  accepter_2:
+    container_name: accepter_2
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
-      - HOST=receiver_2
+      - HOST=accepter_2
       - PORT=12346
       - NAME_STATIONS_QUEUE=joiner_stations_q
       - NAME_WEATHER_QUEUE=joiner_weather_q
@@ -54,9 +54,9 @@ services:
       - NAME_EM_QUEUE=eof_manager_joiners_q
       - NAME_STATUS_QUEUE=new_clients_q
       - NAME_SM_QUEUE=session_manager_q
-      - NAME_RECV_QUEUE=receiver_q
+      - NAME_RECV_QUEUE=accepter_q
       - AMOUNT_QUERIES=3
-    image: receiver:latest
+    image: accepter:latest
     ports:
       - 12346:12346
     networks:      
@@ -414,7 +414,7 @@ services:
       - PYTHONUNBUFFERED=1
       - MAX_CLIENTS=1
       - NAME_RECV_QUEUE=session_manager_q
-      - NAME_SEND_QUEUE=receiver_q
+      - NAME_SEND_QUEUE=accepter_q
       - NAME_END_SESSION_QUEUE=end_session_q
     image: session_manager:latest
     networks:      

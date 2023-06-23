@@ -7,7 +7,7 @@ services:
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
-      - ADDRESSES=[('receiver_1', 12345), ('receiver_2', 12346)]
+      - ADDRESSES=[('accepter_1', 12345), ('accepter_2', 12346)]
       - HOST_CONSULT=results_verifier
       - PORT_CONSULT=13000
       - CHUNK_SIZE=100
@@ -25,7 +25,7 @@ services:
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
-      - ADDRESSES=[('receiver_1', 12345), ('receiver_2', 12346)]
+      - ADDRESSES=[('accepter_1', 12345), ('accepter_2', 12346)]
       - HOST_CONSULT=results_verifier
       - PORT_CONSULT=13000
       - CHUNK_SIZE=100

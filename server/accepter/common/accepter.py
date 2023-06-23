@@ -8,7 +8,7 @@ from server.common.utils_messages_eof import eof_msg
 from server.common.utils_messages_client import is_station, is_weather, encode_header
 
 
-class Receiver:
+class Accepter:
     def __init__(
         self,
         host,
@@ -38,7 +38,7 @@ class Receiver:
         self.name_session_manager_queue = name_session_manager_queue
         self.name_em_queue = name_em_queue
 
-        print("action: receiver_started | result: success")
+        print("action: accepter_started | result: success")
 
     def __create_socket(self, host, port):
         skt = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
