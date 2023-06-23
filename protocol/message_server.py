@@ -11,7 +11,7 @@ class MessageServer:
     ERROR_MESSAGE = 4
 
     # Struct format for message header
-    HEADER_CODE = "!BBBI"
+    HEADER_CODE = "!BIII"
     # Size of header in bytes
     SIZE_HEADER = calcsize(HEADER_CODE)
 

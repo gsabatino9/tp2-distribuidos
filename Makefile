@@ -11,8 +11,15 @@ client-image:
 	docker build -f ./client/Dockerfile -t "client:latest" .
 .PHONY: client-image
 
+testing-image:
+	docker build -f ./server/processes_restarter/Dockerfile -t "processes_restarter:latest" .
+	docker build -f ./testing/processes_stopper/Dockerfile -t "processes_stopper:latest" .
+.PHONY: testing-image
+
 server-image:
 	docker build -f ./server/accepter/Dockerfile -t "accepter:latest" .
+	docker build -f ./server/processes_restarter/Dockerfile -t "processes_restarter:latest" .
+
 	docker build -f ./server/session_manager/Dockerfile -t "session_manager:latest" .
 	
 	docker build -f ./server/joiners/joiner_stations/Dockerfile -t "joiner_stations:latest" .
@@ -38,6 +45,7 @@ server-image:
 	docker build -f ./server/eof_manager/groupby/Dockerfile -t "eof_manager_groupby:latest" .
 	docker build -f ./server/eof_manager/appliers/Dockerfile -t "eof_manager_appliers:latest" .
 	docker build -f ./server/eof_manager/results_verifier/Dockerfile -t "eof_manager_query_results:latest" .
+
 .PHONY: server-image
 
 server-up: server-image
@@ -68,3 +76,15 @@ client-down:
 	docker compose -f docker-compose-client.yaml stop -t 1
 	docker compose -f docker-compose-client.yaml down
 .PHONY: client-down
+
+
+testing-run: testing-image
+	python3 testing/create_docker_compose.py
+	docker compose -f ./testing/docker-compose-testing-restarters.yaml up -d --build
+	docker compose -f ./testing/docker-compose-testing-restarters.yaml logs -f
+.PHONY: testing-run
+
+testing-down:
+	docker compose -f ./testing/docker-compose-testing-restarters.yaml stop -t 15
+	docker compose -f ./testing/docker-compose-testing-restarters.yaml down
+.PHONY: testing-down

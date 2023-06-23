@@ -40,9 +40,25 @@ def main():
 
     session_manager = init_session_manager(queues, max_clients)
 
+    restarter_config = json_config["config"]["process_restarter"]
+    process_restarter = ""
+    for i in range(restarter_config["n_processes"]):
+        process_restarter += PROCESS_RESTARTER.format(
+            i,
+            i,
+            i,
+            restarter_config["n_processes"],
+            restarter_config["containers_keep_alive"],
+            restarter_config["network_problems"],
+            restarter_config["ip_base"],
+            restarter_config["ip_base"][0:-1]
+            + str(int(restarter_config["ip_base"].split(".")[-1]) + i),
+        )
+
     compose = (
         INIT_DOCKER.format()
         .replace("<ACCEPTER>", accepters)
+        .replace("<PROCESS_RESTARTER>", process_restarter)
         .replace("<JOINER_STATIONS>", joiner_stations)
         .replace("<JOINER_WEATHER>", joiner_weather)
         .replace("<EM_JOINERS>", em_joiners)
@@ -90,6 +106,7 @@ def init_accepters(queues, em_queues, status_queues, amount_nodes):
             status_queues["new_clients"],
             queues["session_manager"]["init_session"],
             queues["accepter"],
+            port,
             port,
             port,
         )

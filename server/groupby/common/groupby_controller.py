@@ -1,9 +1,10 @@
 import signal, sys
 from server.common.queue.connection import Connection
-from server.groupby.common.groupby import Groupby
+from server.groupby.common.state_manager import StateManager
 from server.common.utils_messages_client import decode, is_eof
 from server.common.utils_messages_eof import ack_msg, get_id_client
 from server.common.utils_messages_group import construct_msg
+from server.common.keep_alive.keep_alive import KeepAlive
 
 
 class GroupbyController:
@@ -26,14 +27,20 @@ class GroupbyController:
         signal.signal(signal.SIGTERM, self.stop)
 
         self.chunk_size = chunk_size
-        self.groupby = Groupby(operation, base_data)
+        self.state = StateManager(operation, base_data)
+        self.current_fetch_count = 0
+        self.prefetch_limit = 1000
+        self.last_delivery_tag = None
         self.gen_key_value = gen_key_value
+        self.keep_alive = KeepAlive()
         print("action: groupby_started | result: success")
 
     def __connect(self, name_recv_queue, name_em_queue, name_send_queue):
         try:
             self.queue_connection = Connection()
-            self.recv_queue = self.queue_connection.basic_queue(name_recv_queue)
+            self.recv_queue = self.queue_connection.basic_queue(
+                name_recv_queue, auto_ack=False
+            )
             self.send_queue = self.queue_connection.basic_queue(name_send_queue)
 
             self.em_queue = self.queue_connection.pubsub_queue(name_em_queue)
@@ -45,21 +52,48 @@ class GroupbyController:
         """
         start receiving messages.
         """
-        self.recv_queue.receive(self.process_messages)
+        self.keep_alive.start()
+        self.recv_queue.receive(
+            self.process_messages, prefetch_count=self.prefetch_limit
+        )
         self.queue_connection.start_receiving()
+        self.keep_alive.stop()
+        self.keep_alive.join()
 
     def process_messages(self, ch, method, properties, body):
+        # TODO: evaluate if it's a good idea to use 80~90% of the prefetch limit.
+        # I (Lucho) added this because i was getting off-by-one errors and just
+        # wanted to get it working fast.
+        if self.current_fetch_count * 10 // 8 > self.prefetch_limit:
+            self.__ack_messages(ch)
+
+        self.last_delivery_tag = method.delivery_tag
+        self.current_fetch_count += 1
         if is_eof(body):
             self.__eof_arrived(body)
+            self.__ack_messages(ch)
         else:
             self.__data_arrived(body)
+
+    def __ack_messages(self, ch):
+        self.state.write_checkpoints()
+        ch.basic_ack(delivery_tag=self.last_delivery_tag, multiple=True)
+        self.current_fetch_count = 0
 
     def __data_arrived(self, body):
         header, filtered_trips = decode(body)
 
+        if self.state.is_batch_already_processed(header.id_client, header.id_batch):
+            print(
+                f"action: data_arrived | result: batch_already_processed | batch_id: {header.id_batch}"
+            )
+            return
+
         for trip in filtered_trips:
             trip = trip.split(",")
             self.__agroup_trip(header.id_client, trip)
+
+        self.state.mark_batch_as_processed(header.id_client, header.id_batch)
 
     def __agroup_trip(self, id_client, trip):
         """
@@ -67,7 +101,7 @@ class GroupbyController:
         generates gen_key_value custom function.
         """
         key, value = self.gen_key_value(trip)
-        self.groupby.add_data(id_client, key, value)
+        self.state.add_data(id_client, key, value)
 
     def __eof_arrived(self, body):
         id_client = get_id_client(body)
@@ -78,8 +112,12 @@ class GroupbyController:
         print("action: eof_trips_arrived")
 
     def __delete_client(self, id_client):
-        self.groupby.delete_client(id_client)
-        print(f"action: delete_client | result: success | id_client: {id_client}")
+        if self.state.delete_client(id_client):
+            print(f"action: delete_client | result: success | id_client: {id_client}")
+        else:
+            print(
+                f"action: delete_client | result: warning | id_client: {id_client} was not found in groupby data"
+            )
 
     def __send_to_apply(self, id_client):
         """
@@ -88,8 +126,8 @@ class GroupbyController:
         """
         to_send = []
 
-        for i, key in enumerate(self.groupby.grouped_data):
-            to_send.append(self.__str_from_key(key))
+        for i, key in enumerate(self.state.iter_data(id_client)):
+            to_send.append(self.__str_from_key(id_client, key))
 
             if self.__finish_chunk_to_send(id_client, i, to_send):
                 to_send = []
@@ -99,21 +137,20 @@ class GroupbyController:
         stop building the message if the maximum number of data in a chunk has been reached,
         or if is the last data group.
         """
-        if (i + 1) % self.chunk_size == 0 or i + 1 == len(self.groupby.grouped_data):
+        if (i + 1) % self.chunk_size == 0 or i + 1 == self.state.len_data(id_client):
             msg = construct_msg(id_client, to_send)
             self.send_queue.send(msg)
 
             return True
-        else:
-            return False
+        return False
 
-    def __str_from_key(self, key):
+    def __str_from_key(self, id_client, key):
         """
         generates the correct format to send the message.
         concatenates the key with all the values.
         """
-        value = self.groupby.grouped_data[key]
-        to_ret = f"{key[1]},"
+        value = self.state.get_data(id_client, key)
+        to_ret = f"{key},"
         for v in value:
             to_ret += f"{v},"
 
@@ -128,5 +165,3 @@ class GroupbyController:
             )
 
             self.running = False
-
-        sys.exit(0)

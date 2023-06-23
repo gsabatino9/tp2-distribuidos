@@ -1,0 +1,10 @@
+{
+  "config": {
+    "process_restarter": {
+      "n_processes": 5,
+      "ip_base": "172.25.125.4",
+      "network_problems": 1,
+      "containers_keep_alive": ""
+    }
+  }
+}
