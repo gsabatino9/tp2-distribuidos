@@ -1,8 +1,6 @@
-FROM python:3.9.7-slim
-RUN pip install --upgrade pip && pip3 install pika
+FROM rabbitmq-python-server-base:latest
 
 COPY server/appliers/mean_distance_applier /
 COPY server/appliers/common /server/appliers/common
-COPY server/common /server/common
 
 ENTRYPOINT ["/bin/sh"]
