@@ -2,7 +2,7 @@ import socket
 import logging
 import threading
 
-CONNECTION_PORT = 12345
+CONNECTION_PORT = 12444
 
 ALIVE = b'1'
 
