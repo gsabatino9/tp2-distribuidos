@@ -1,4 +1,4 @@
-from common.receiver import Receiver
+from common.accepter import Accepter
 import os, ast
 
 HOST = os.environ.get("HOST")
@@ -15,7 +15,7 @@ AMOUNT_QUERIES = int(os.environ.get("AMOUNT_QUERIES"))
 
 def main():
     name_trips_queues = ast.literal_eval(NAME_TRIPS_QUEUES)
-    receiver = Receiver(
+    accepter = Accepter(
         HOST,
         PORT,
         NAME_STATIONS_QUEUE,
@@ -27,8 +27,8 @@ def main():
         NAME_RECV_QUEUE,
         AMOUNT_QUERIES,
     )
-    receiver.run()
-    receiver.stop()
+    accepter.run()
+    accepter.stop()
 
 
 if __name__ == "__main__":

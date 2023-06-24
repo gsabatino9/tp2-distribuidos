@@ -16,7 +16,6 @@ class SessionManager:
         signal.signal(signal.SIGTERM, self.stop)
 
         self.max_clients = max_clients
-        # (key: client_address), (value: id_client)
         self.active_clients = {}
 
         print("action: session_manager_started | result: success")

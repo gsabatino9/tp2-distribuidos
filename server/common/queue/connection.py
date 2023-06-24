@@ -29,8 +29,8 @@ class Connection:
             self.channel, exchange_name, routing_keys, auto_ack=auto_ack
         )
 
-    def routing_build_queue(self, exchange_name, queue_name, routing_keys=[]):
-        return RoutingBuildQueue(self.channel, exchange_name, queue_name, routing_keys)
+    def routing_building_queue(self, exchange_name, queue_name):
+        return RoutingBuildQueue(self.channel, exchange_name, queue_name)
 
     def start_receiving(self):
         self.channel.start_consuming()
