@@ -33,7 +33,7 @@
 			"applier_query3": "mean_distance_applier_q",
 			"applier_query4": "mean_duration_applier_4_q",
 			"results_verifier": "query_results_q",
-			"receiver": "receiver_q"
+			"accepter": "accepter_q"
 		},
 		"eof_manager_queues": {
 			"joiners": "eof_manager_joiners_q",
@@ -46,7 +46,7 @@
 			"new_clients": "new_clients_q"
 		},
 		"amount_nodes": {
-			"receiver": 2,
+			"accepter": 2,
 			"filter_year": 1,
 			"filter_pretoc": 1,
 			"filter_distance": 1,

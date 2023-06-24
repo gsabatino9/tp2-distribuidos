@@ -2,6 +2,7 @@ SHELL := /bin/bash
 PWD := $(shell pwd)
 
 GIT_REMOTE = github.com/7574-sistemas-distribuidos/docker-compose-init
+amount_clients ?= 1
 
 default: build
 
@@ -68,6 +69,7 @@ server-run: server-image
 .PHONY: server-run
 
 client-run: client-image
+	python3 create_client.py $(amount_clients)
 	docker compose -f docker-compose-client.yaml up -d --build
 	docker compose -f docker-compose-client.yaml logs -f
 .PHONY: client-run
