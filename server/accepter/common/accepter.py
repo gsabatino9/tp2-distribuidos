@@ -6,6 +6,7 @@ from common.receiver_ids import ReceiverIds
 from common.client_handler import ClientHandler
 from server.common.utils_messages_eof import eof_msg
 from server.common.utils_messages_client import is_station, is_weather, encode_header
+from server.common.keep_alive.keep_alive import KeepAlive
 
 
 class Accepter:
@@ -37,7 +38,7 @@ class Accepter:
         self.name_trips_queues = name_trips_queues
         self.name_session_manager_queue = name_session_manager_queue
         self.name_em_queue = name_em_queue
-
+        self.keep_alive = KeepAlive()
         print("action: accepter_started | result: success")
 
     def __create_socket(self, host, port):
@@ -47,6 +48,7 @@ class Accepter:
         return skt
 
     def run(self):
+        self.keep_alive.start()
         self.recv_ids.start()
         self.accepter_socket.listen(self.max_clients)
         print(f"action: waiting_clients | result: success")
@@ -61,6 +63,8 @@ class Accepter:
             client_handler.join()
 
         self.recv_ids.join()
+        self.keep_alive.stop()
+        self.keep_alive.join()
 
     def __accept_client(self):
         client_socket, _ = self.accepter_socket.accept()

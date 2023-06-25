@@ -1,10 +1,9 @@
 {
 	"config": {
 		"process_restarter": {
-			"n_processes": 5,
+			"n_processes": 2,
 			"ip_base": "172.25.125.4",
-			"network_problems": 0,
-			"containers_keep_alive": "groupby_start_date,groupby_start_station,groupby_end_station,groupby_all_elements"
+			"network_problems": 0
 		},
 		"queues": {
 			"joiners": {

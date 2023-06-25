@@ -4,7 +4,7 @@ from server.common.queue.connection import Connection
 from server.common.utils_messages_client import results_message, last_message
 from server.common.utils_messages_eof import ack_msg, get_id_client
 from server.common.utils_messages_group import decode, is_eof
-
+from server.common.keep_alive.keep_alive import KeepAlive
 
 class ResultsVerifier:
     CHUNK_SIZE = 100
@@ -55,7 +55,7 @@ class ResultsVerifier:
             name_send_exchange,
             name_send_queue,
         )
-
+        self.keep_alive = KeepAlive()
         print("action: results_verifier_started | result: success")
 
     def __connect(
@@ -85,11 +85,21 @@ class ResultsVerifier:
         """
         start receiving messages.
         """
+        self.keep_alive.start()
         self.sender.start()
         self.recv_queue.receive(self.process_messages)
-        self.queue_connection.start_receiving()
+        try:
+            self.queue_connection.start_receiving()
+        except Exception as e:
+            if self.running:
+                print(f"action: middleware_error | error: {str(e)}")
+        except:
+            if self.running:
+                print(f"action: middleware_error | error: unknown.")
 
         self.sender.join()
+        self.keep_alive.stop()
+        self.keep_alive.join()
 
     def process_messages(self, ch, method, properties, body):
         id_query = int(method.routing_key)
@@ -213,4 +223,4 @@ class ResultsVerifier:
 
             self.running = False
 
-        sys.exit(0)
+        

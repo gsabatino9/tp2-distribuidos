@@ -2,7 +2,7 @@ import signal, sys
 from uuid import uuid4
 from server.common.utils_messages_new_client import error_message, assigned_id_message
 from server.common.queue.connection import Connection
-
+from server.common.keep_alive.keep_alive import KeepAlive
 
 class SessionManager:
     def __init__(
@@ -17,7 +17,7 @@ class SessionManager:
 
         self.max_clients = max_clients
         self.active_clients = {}
-
+        self.keep_alive = KeepAlive()
         print("action: session_manager_started | result: success")
 
     def __connect_queue(self, name_recv_queue, name_send_queue, name_end_session_queue):
@@ -36,9 +36,19 @@ class SessionManager:
         """
         start receiving messages.
         """
+        self.keep_alive.start()
         self.recv_queue.receive(self.new_client_request)
         self.end_session_queue.receive(self.end_session)
-        self.queue_connection.start_receiving()
+        try:
+            self.queue_connection.start_receiving()
+        except Exception as e:
+            if self.running:
+                print(f"action: middleware_error | error: {str(e)}")
+        except:
+            if self.running:
+                print(f"action: middleware_error | error: unknown.")
+        self.keep_alive.stop()
+        self.keep_alive.join()
 
     def new_client_request(self, ch, method, properties, body):
         """
@@ -87,4 +97,4 @@ class SessionManager:
 
             self.running = False
 
-        sys.exit(0)
+        

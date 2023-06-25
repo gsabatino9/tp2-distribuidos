@@ -56,7 +56,14 @@ class GroupbyController:
         self.recv_queue.receive(
             self.process_messages, prefetch_count=self.prefetch_limit
         )
-        self.queue_connection.start_receiving()
+        try:
+            self.queue_connection.start_receiving()
+        except Exception as e:
+            if self.running:
+                print(f"action: middleware_error | error: {str(e)}")
+        except:
+            if self.running:
+                print(f"action: middleware_error | error: unknown.")
         self.keep_alive.stop()
         self.keep_alive.join()
 

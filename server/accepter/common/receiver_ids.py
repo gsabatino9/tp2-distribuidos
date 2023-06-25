@@ -30,7 +30,14 @@ class ReceiverIds(Thread):
 
     def run(self):
         self.recv_ids_queue.receive(self.receive_id)
-        self.queue_connection.start_receiving()
+        try:
+            self.queue_connection.start_receiving()
+        except Exception as e:
+            if self.running:
+                print(f"action: middleware_error | error: {str(e)}")
+        except:
+            if self.running:
+                print(f"action: middleware_error | error: unknown.")
 
     def receive_id(self, ch, method, properties, body):
         id_client, client_address = decode(body)

@@ -75,4 +75,4 @@ class ResultsSender(Thread):
             )
             self.running = False
 
-        sys.exit(0)
+        

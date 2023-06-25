@@ -11,7 +11,8 @@ def main():
     status_queues = json_config["config"]["status_queues"]
     amount_nodes = json_config["config"]["amount_nodes"]
     max_clients = json_config["config"]["max_clients"]
-
+    restarter_config = json_config["config"]["process_restarter"]
+    
     accepters = init_accepters(queues, em_queues, status_queues, amount_nodes)
 
     joiner_stations, joiner_weather, em_joiners = init_joiners(
@@ -40,20 +41,8 @@ def main():
 
     session_manager = init_session_manager(queues, max_clients)
 
-    restarter_config = json_config["config"]["process_restarter"]
-    process_restarter = ""
-    for i in range(restarter_config["n_processes"]):
-        process_restarter += PROCESS_RESTARTER.format(
-            i,
-            i,
-            i,
-            restarter_config["n_processes"],
-            restarter_config["containers_keep_alive"],
-            restarter_config["network_problems"],
-            restarter_config["ip_base"],
-            restarter_config["ip_base"][0:-1]
-            + str(int(restarter_config["ip_base"].split(".")[-1]) + i),
-        )
+    
+    process_restarter = init_process_restarters(restarter_config, amount_nodes)
 
     compose = (
         INIT_DOCKER.format()
@@ -309,6 +298,65 @@ def init_session_manager(queues, max_clients):
         queues["accepter"],
         queues["session_manager"]["end_session"],
     )
+
+
+def init_process_restarters(restarter_config, amount_nodes):
+    process_restarter = ""
+    containers_keep_alive = get_containers_keep_alive(amount_nodes)
+    for i in range(restarter_config["n_processes"]):
+        process_restarter += PROCESS_RESTARTER.format(
+            i,
+            i,
+            i,
+            restarter_config["n_processes"],
+            containers_keep_alive,
+            restarter_config["network_problems"],
+            restarter_config["ip_base"],
+            restarter_config["ip_base"][0:-1]
+            + str(int(restarter_config["ip_base"].split(".")[-1]) + i),
+        )
+    return process_restarter
+
+
+def get_containers_keep_alive(amount_nodes):
+    containers_keep_alive = []
+    for i in range(amount_nodes["accepter"]):
+        containers_keep_alive.append("accepter_"+str(i+1))
+
+    for i in range(amount_nodes["filter_year"]):
+        containers_keep_alive.append("filter_year_"+str(i+1))
+    for i in range(amount_nodes["filter_pretoc"]):
+        containers_keep_alive.append("filter_pretoc_"+str(i+1))
+    for i in range(amount_nodes["filter_distance"]):
+        containers_keep_alive.append("filter_distance_"+str(i+1))
+    containers_keep_alive.append("eof_manager_filters")
+
+    for i in range(amount_nodes["applier_query1"]):
+        containers_keep_alive.append("mean_duration_applier_1_"+str(i+1))
+    for i in range(amount_nodes["applier_query2"]):
+        containers_keep_alive.append("double_year_applier_"+str(i+1))
+    for i in range(amount_nodes["applier_query3"]):
+        containers_keep_alive.append("mean_distance_applier_"+str(i+1))
+    for i in range(amount_nodes["applier_query4"]):
+        containers_keep_alive.append("mean_duration_applier_4_"+str(i+1))
+    containers_keep_alive.append("eof_manager_appliers")
+
+    containers_keep_alive.append("groupby_start_date")
+    containers_keep_alive.append("groupby_end_station")
+    containers_keep_alive.append("groupby_start_station")
+    containers_keep_alive.append("groupby_all_elements")
+    containers_keep_alive.append("eof_manager_groupby")
+
+    containers_keep_alive.append("joiner_weather")
+    containers_keep_alive.append("joiner_stations")
+    containers_keep_alive.append("eof_manager_joiners")
+    
+    containers_keep_alive.append("session_manager")
+
+    containers_keep_alive.append("results_verifier")
+    containers_keep_alive.append("eof_manager_query_results")
+
+    return ",".join(containers_keep_alive)
 
 
 if __name__ == "__main__":

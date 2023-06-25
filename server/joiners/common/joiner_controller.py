@@ -2,6 +2,7 @@ import signal, sys
 from server.common.queue.connection import Connection
 from server.common.utils_messages_client import *
 from server.common.utils_messages_eof import ack_msg, get_id_client
+from server.common.keep_alive.keep_alive import KeepAlive
 
 
 class JoinerController:
@@ -26,6 +27,7 @@ class JoinerController:
         signal.signal(signal.SIGTERM, self.stop)
 
         self.joiner = joiner
+        self.keep_alive = KeepAlive()
         print("action: joiner_started | result: success")
 
     def __connect(
@@ -47,8 +49,18 @@ class JoinerController:
         """
         start receiving messages.
         """
+        self.keep_alive.start()
         self.recv_queue.receive(self.process_messages)
-        self.queue_connection.start_receiving()
+        try:
+            self.queue_connection.start_receiving()
+        except Exception as e:
+            if self.running:
+                print(f"action: middleware_error | error: {str(e)}")
+        except:
+            if self.running:
+                print(f"action: middleware_error | error: unknown.")
+        self.keep_alive.stop()
+        self.keep_alive.join()
 
     def process_messages(self, ch, method, properties, body):
         if is_eof(body):
@@ -123,4 +135,4 @@ class JoinerController:
 
             self.running = False
 
-        sys.exit(0)
+        

@@ -459,8 +459,8 @@ services:
   <CLIENT>
 networks:
     testing_net:
-      external:
-        name: tp2_testing_net
+      name: tp2-distribuidos_testing_net
+      external: true
 """
 
 CLIENT = """
@@ -475,12 +475,13 @@ CLIENT = """
       - CHUNK_SIZE=100
       - MAX_RETRIES=50
       - SUSCRIPTIONS=[1,2,3,4]
-      - FILE_PATH=data/client_{}/
+      - FILE_PATH=data/
     image: client:latest
     networks:      
       - testing_net
     volumes:
     - ./client/results:/results
+    - ./data/client_{}:/data
 """
 
 PROCESS_RESTARTER = """
