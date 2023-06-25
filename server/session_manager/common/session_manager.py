@@ -39,7 +39,14 @@ class SessionManager:
         """
         self.recv_queue.receive(self.new_client_request)
         self.end_session_queue.receive(self.end_session)
-        self.queue_connection.start_receiving()
+        try:
+            self.queue_connection.start_receiving()
+        except Exception as e:
+            if self.running:
+                print(f"action: middleware_error | error: {str(e)}")
+        except:
+            if self.running:
+                print(f"action: middleware_error | error: unknown.")
 
     def new_client_request(self, ch, method, properties, body):
         """
@@ -88,4 +95,4 @@ class SessionManager:
 
             self.running = False
 
-        sys.exit(0)
+        

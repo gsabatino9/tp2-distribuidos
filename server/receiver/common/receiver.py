@@ -215,4 +215,4 @@ class Receiver:
 
             self.running = False
 
-        sys.exit(0)
+        

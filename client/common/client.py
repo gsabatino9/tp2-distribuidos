@@ -167,4 +167,4 @@ class Client:
 
             self.running = False
 
-        sys.exit(0)
+        

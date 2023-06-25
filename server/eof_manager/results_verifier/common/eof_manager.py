@@ -39,7 +39,14 @@ class EOFManager:
         """
         self.status_queue.receive(self.receive_new_client)
         self.recv_queue.receive(self.receive_msg)
-        self.queue_connection.start_receiving()
+        try:
+            self.queue_connection.start_receiving()
+        except Exception as e:
+            if self.running:
+                print(f"action: middleware_error | error: {str(e)}")
+        except:
+            if self.running:
+                print(f"action: middleware_error | error: unknown.")
 
     def receive_new_client(self, ch, method, properties, body):
         id_new_client = get_id_client_from_msg(body)
@@ -88,4 +95,4 @@ class EOFManager:
 
             self.running = False
 
-        sys.exit(0)
+        

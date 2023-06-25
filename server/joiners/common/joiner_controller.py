@@ -48,7 +48,14 @@ class JoinerController:
         start receiving messages.
         """
         self.recv_queue.receive(self.process_messages)
-        self.queue_connection.start_receiving()
+        try:
+            self.queue_connection.start_receiving()
+        except Exception as e:
+            if self.running:
+                print(f"action: middleware_error | error: {str(e)}")
+        except:
+            if self.running:
+                print(f"action: middleware_error | error: unknown.")
 
     def process_messages(self, ch, method, properties, body):
         if is_eof(body):
@@ -123,4 +130,4 @@ class JoinerController:
 
             self.running = False
 
-        sys.exit(0)
+        
