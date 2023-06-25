@@ -28,7 +28,7 @@ class ClientHandler(Thread):
         self.recv_queue.receive(self.process_batch)
         self.queue_connection.start_receiving()
 
-    def process_batch(self, ch, method, properties, body):
+    def process_batch(self, body):
         if is_eof(body):
             self.client_connection.send_results(body, is_last=True)
             self.__stop_connection()

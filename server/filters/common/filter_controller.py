@@ -71,7 +71,7 @@ class FilterController:
         self.keep_alive.stop()
         self.keep_alive.join()
 
-    def proccess_message(self, ch, method, properties, body):
+    def proccess_message(self,  body):
         if is_eof(body):
             self.__eof_arrived(ch, body)
         else:

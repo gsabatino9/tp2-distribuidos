@@ -62,7 +62,7 @@ class JoinerController:
         self.keep_alive.stop()
         self.keep_alive.join()
 
-    def process_messages(self, ch, method, properties, body):
+    def process_messages(self, ):
         if is_eof(body):
             self.__last_static_data_arrived()
         else:
@@ -87,7 +87,7 @@ class JoinerController:
             data = data.split(",")
             self.joiner.add_data(id_client, data)
 
-    def process_join_messages(self, ch, method, properties, body):
+    def process_join_messages(self, body):
         if is_eof(body):
             self.__last_trip_arrived(body)
         else:

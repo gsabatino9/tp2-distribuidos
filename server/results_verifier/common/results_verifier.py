@@ -101,7 +101,7 @@ class ResultsVerifier:
         self.keep_alive.stop()
         self.keep_alive.join()
 
-    def process_messages(self, ch, method, properties, body):
+    def process_messages(self, body):
         id_query = int(method.routing_key)
         if is_eof(body):
             print("action: eof_trips_arrived")

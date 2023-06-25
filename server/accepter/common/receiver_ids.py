@@ -39,7 +39,7 @@ class ReceiverIds(Thread):
             if self.running:
                 print(f"action: middleware_error | error: unknown.")
 
-    def receive_id(self, ch, method, properties, body):
+    def receive_id(self, body):
         id_client, client_address = decode(body)
         if client_address in self.clients_connections:
             queue_client, client_connection = self.clients_connections[client_address]

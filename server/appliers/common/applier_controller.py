@@ -59,7 +59,7 @@ class ApplierController:
         self.keep_alive.stop()
         self.keep_alive.join()
 
-    def process_messages(self, ch, method, properties, body):
+    def process_messages(self, body):
         if is_eof(body):
             self.__eof_arrived(ch, body)
         else:

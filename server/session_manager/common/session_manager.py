@@ -50,7 +50,7 @@ class SessionManager:
         self.keep_alive.stop()
         self.keep_alive.join()
 
-    def new_client_request(self, ch, method, properties, body):
+    def new_client_request(self, ):
         """
         pueden pasar 3 cosas:
         - active_clients < max_clients: asigna id al cliente.
@@ -80,7 +80,7 @@ class SessionManager:
 
         return id_client
 
-    def end_session(self, ch, method, properties, body):
+    def end_session(self, body):
         client_address = body
         if client_address in self.active_clients:
             print(
