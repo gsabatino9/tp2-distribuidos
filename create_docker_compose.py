@@ -12,7 +12,7 @@ def main():
     amount_nodes = json_config["config"]["amount_nodes"]
     max_clients = json_config["config"]["max_clients"]
     restarter_config = json_config["config"]["process_restarter"]
-    
+
     accepters = init_accepters(queues, em_queues, status_queues, amount_nodes)
 
     joiner_stations, joiner_weather, em_joiners = init_joiners(
@@ -41,7 +41,6 @@ def main():
 
     session_manager = init_session_manager(queues, max_clients)
 
-    
     process_restarter = init_process_restarters(restarter_config, amount_nodes)
 
     compose = (
@@ -87,8 +86,9 @@ def init_accepters(queues, em_queues, status_queues, amount_nodes):
             queues["joiners"]["stations"],
             queues["joiners"]["weather"],
             [
-                queues["joiners"]["join_trip_stations"],
-                queues["joiners"]["join_trip_weather"],
+                # TODO: no pasarle esto, y aprovecho para filtrar antes.
+                queues["joiners"]["stations"],
+                queues["joiners"]["weather"],
                 queues["groupby_query4"],
             ],
             em_queues["joiners"],
@@ -321,24 +321,24 @@ def init_process_restarters(restarter_config, amount_nodes):
 def get_containers_keep_alive(amount_nodes):
     containers_keep_alive = []
     for i in range(amount_nodes["accepter"]):
-        containers_keep_alive.append("accepter_"+str(i+1))
+        containers_keep_alive.append("accepter_" + str(i + 1))
 
     for i in range(amount_nodes["filter_year"]):
-        containers_keep_alive.append("filter_year_"+str(i+1))
+        containers_keep_alive.append("filter_year_" + str(i + 1))
     for i in range(amount_nodes["filter_pretoc"]):
-        containers_keep_alive.append("filter_pretoc_"+str(i+1))
+        containers_keep_alive.append("filter_pretoc_" + str(i + 1))
     for i in range(amount_nodes["filter_distance"]):
-        containers_keep_alive.append("filter_distance_"+str(i+1))
+        containers_keep_alive.append("filter_distance_" + str(i + 1))
     containers_keep_alive.append("eof_manager_filters")
 
     for i in range(amount_nodes["applier_query1"]):
-        containers_keep_alive.append("mean_duration_applier_1_"+str(i+1))
+        containers_keep_alive.append("mean_duration_applier_1_" + str(i + 1))
     for i in range(amount_nodes["applier_query2"]):
-        containers_keep_alive.append("double_year_applier_"+str(i+1))
+        containers_keep_alive.append("double_year_applier_" + str(i + 1))
     for i in range(amount_nodes["applier_query3"]):
-        containers_keep_alive.append("mean_distance_applier_"+str(i+1))
+        containers_keep_alive.append("mean_distance_applier_" + str(i + 1))
     for i in range(amount_nodes["applier_query4"]):
-        containers_keep_alive.append("mean_duration_applier_4_"+str(i+1))
+        containers_keep_alive.append("mean_duration_applier_4_" + str(i + 1))
     containers_keep_alive.append("eof_manager_appliers")
 
     containers_keep_alive.append("groupby_start_date")
@@ -350,7 +350,7 @@ def get_containers_keep_alive(amount_nodes):
     containers_keep_alive.append("joiner_weather")
     containers_keep_alive.append("joiner_stations")
     containers_keep_alive.append("eof_manager_joiners")
-    
+
     containers_keep_alive.append("session_manager")
 
     containers_keep_alive.append("results_verifier")

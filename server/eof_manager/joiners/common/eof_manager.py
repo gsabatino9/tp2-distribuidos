@@ -12,8 +12,6 @@ class EOFManager:
         name_send_queue,
         name_stations_queue,
         name_weather_queue,
-        name_join_stations_queue,
-        name_join_weather_queue,
         name_status_queue,
     ):
         self.__init_eof_manager()
@@ -22,8 +20,6 @@ class EOFManager:
             name_send_queue,
             name_stations_queue,
             name_weather_queue,
-            name_join_stations_queue,
-            name_join_weather_queue,
             name_status_queue,
         )
         self.__run()
@@ -42,8 +38,6 @@ class EOFManager:
         name_send_queue,
         name_stations_queue,
         name_weather_queue,
-        name_join_stations_queue,
-        name_join_weather_queue,
         name_status_queue,
     ):
         try:
@@ -52,13 +46,6 @@ class EOFManager:
             self.recv_queue = self.queue_connection.pubsub_queue(name_recv_queue)
             self.stations_queue = self.queue_connection.basic_queue(name_stations_queue)
             self.weather_queue = self.queue_connection.basic_queue(name_weather_queue)
-
-            self.join_stations_queue = self.queue_connection.basic_queue(
-                name_join_stations_queue
-            )
-            self.join_weather_queue = self.queue_connection.basic_queue(
-                name_join_weather_queue
-            )
 
             self.status_queue = self.queue_connection.pubsub_queue(name_status_queue)
 
@@ -77,7 +64,7 @@ class EOFManager:
             self.queue_connection.start_receiving()
         except:
             if self.running:
-                raise # gracefull quit
+                raise  # gracefull quit
         self.keep_alive.stop()
         self.keep_alive.join()
 
@@ -103,13 +90,8 @@ class EOFManager:
         it sends EOF to each known worker, depends on the type of EOF.
         """
         print(f"action: send_eofs | result: success | msg: eof arrived")
-        if is_station(header):
-            self.stations_queue.send(msg)
-        elif is_weather(header):
-            self.weather_queue.send(msg)
-        else:
-            self.join_stations_queue.send(msg)
-            self.join_weather_queue.send(msg)
+        self.stations_queue.send(msg)
+        self.weather_queue.send(msg)
 
     def __recv_ack_trips(self, header, body):
         """

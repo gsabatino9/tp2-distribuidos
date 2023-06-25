@@ -26,7 +26,7 @@ services:
       - PORT=12345
       - NAME_STATIONS_QUEUE=joiner_stations_q
       - NAME_WEATHER_QUEUE=joiner_weather_q
-      - NAME_TRIPS_QUEUES=['join_trip_stations_q', 'join_trip_weather_q', 'groupby_all_elements_q']
+      - NAME_TRIPS_QUEUES=['joiner_stations_q', 'joiner_weather_q', 'groupby_all_elements_q']
       - NAME_EM_QUEUE=eof_manager_joiners_q
       - NAME_STATUS_QUEUE=new_clients_q
       - NAME_SM_QUEUE=session_manager_q
@@ -50,7 +50,7 @@ services:
       - PORT=12346
       - NAME_STATIONS_QUEUE=joiner_stations_q
       - NAME_WEATHER_QUEUE=joiner_weather_q
-      - NAME_TRIPS_QUEUES=['join_trip_stations_q', 'join_trip_weather_q', 'groupby_all_elements_q']
+      - NAME_TRIPS_QUEUES=['joiner_stations_q', 'joiner_weather_q', 'groupby_all_elements_q']
       - NAME_EM_QUEUE=eof_manager_joiners_q
       - NAME_STATUS_QUEUE=new_clients_q
       - NAME_SM_QUEUE=session_manager_q
@@ -452,7 +452,7 @@ services:
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
-      - MAX_CLIENTS=2
+      - MAX_CLIENTS=1
       - NAME_RECV_QUEUE=session_manager_q
       - NAME_SEND_QUEUE=accepter_q
       - NAME_END_SESSION_QUEUE=end_session_q

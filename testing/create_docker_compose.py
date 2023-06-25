@@ -1,6 +1,7 @@
 import sys, json
 from init_config import *
 
+
 def main():
     with open("testing/testing_config.json") as f:
         json_config = json.load(f)
@@ -17,7 +18,8 @@ def main():
             "",
             restarter_config["network_problems"],
             restarter_config["ip_base"],
-            restarter_config["ip_base"][0:-1]+str(int(restarter_config["ip_base"].split('.')[-1])+i),
+            restarter_config["ip_base"][0:-1]
+            + str(int(restarter_config["ip_base"].split(".")[-1]) + i),
         )
 
     processes_to_stop = ""
@@ -34,6 +36,7 @@ def main():
 
     with open("docker-compose-testing-restarters.yaml", "w") as compose_file:
         compose_file.write(compose)
+
 
 if __name__ == "__main__":
     main()

@@ -59,7 +59,7 @@ class GroupbyController:
             self.queue_connection.start_receiving()
         except:
             if self.running:
-                raise # gracefull quit # gracefull quit
+                raise  # gracefull quit # gracefull quit
 
         self.keep_alive.stop()
         self.keep_alive.join()

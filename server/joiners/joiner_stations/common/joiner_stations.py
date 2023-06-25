@@ -1,6 +1,7 @@
 from common.utils import StationsData
 from server.joiners.common.joiner_controller import JoinerController
 from server.joiners.common.joiner_state import JoinerState
+from server.common.utils_messages_client import is_station
 
 
 class JoinerStations:
@@ -13,6 +14,7 @@ class JoinerStations:
             name_em_queue,
             name_next_stage_queue,
             JoinerState(lambda _: StationsData()),
+            lambda data: is_station(data),
         )
 
     def stop(self):
