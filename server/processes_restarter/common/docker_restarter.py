@@ -24,7 +24,9 @@ class DockerRestarter(threading.Thread):
             container_name = self.restart_containers_q.get()
             if not container_name:
                 if self.active:
-                    logging.error(f"action: docker_restarter_error | error: container_is_none")
+                    logging.error(
+                        f"action: docker_restarter_error | error: container_is_none"
+                    )
                 continue
             logging.info(f"action: restart_container | container: {container_name}")
             container = self.docker_client.containers.get(container_name)

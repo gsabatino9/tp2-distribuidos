@@ -4,17 +4,19 @@ import threading
 
 CONNECTION_PORT = 12444
 
-ALIVE = b'1'
+ALIVE = b"1"
+
 
 def default_connection_accepted_callback():
     pass
+
 
 class KeepAlive(threading.Thread):
     def __init__(self, conn_accepted_callback=default_connection_accepted_callback):
         super().__init__()
         self.conn_accepted_callback = conn_accepted_callback
         self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.server_socket.bind(('', CONNECTION_PORT))
+        self.server_socket.bind(("", CONNECTION_PORT))
         self.server_socket.listen(5)
         self.skt = None
         self.active = True
@@ -43,8 +45,10 @@ class KeepAlive(threading.Thread):
                 self.skt.sendall(ALIVE)
         except socket.error as e:
             if self.active:
-                logging.error(f"action: keep_alive_error | error: {str(e)}"
-                              f" | possible_cause: check_if_leader_was_stopped")
+                logging.error(
+                    f"action: keep_alive_error | error: {str(e)}"
+                    f" | possible_cause: check_if_leader_was_stopped"
+                )
         finally:
             self.skt.close()
             self.skt = None
