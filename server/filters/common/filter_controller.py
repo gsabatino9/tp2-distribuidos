@@ -8,6 +8,7 @@ from server.common.utils_messages_client import (
     customer_subscribed_to_query,
 )
 from server.common.utils_messages_eof import ack_msg
+from server.common.keep_alive.keep_alive import KeepAlive
 
 
 class FilterController:
@@ -35,7 +36,7 @@ class FilterController:
         self.id_query = id_query
         self.not_filtered = 0
         self.filter = Filter(columns_names, reduced_columns, func_filter)
-
+        self.keep_alive = KeepAlive()
         print("action: filter_started | result: success")
 
     def __connect(
@@ -57,6 +58,7 @@ class FilterController:
         """
         start receiving messages.
         """
+        self.keep_alive.start()
         self.recv_queue.receive(self.proccess_message)
         try:
             self.queue_connection.start_receiving()
@@ -66,7 +68,8 @@ class FilterController:
         except:
             if self.running:
                 print(f"action: middleware_error | error: unknown.")
-
+        self.keep_alive.stop()
+        self.keep_alive.join()
 
     def proccess_message(self, ch, method, properties, body):
         if is_eof(body):

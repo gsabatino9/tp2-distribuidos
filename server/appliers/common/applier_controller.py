@@ -3,6 +3,7 @@ from server.common.queue.connection import Connection
 from server.appliers.common.applier import Applier
 from server.common.utils_messages_eof import ack_msg
 from server.common.utils_messages_group import decode, is_eof, construct_msg
+from server.common.keep_alive.keep_alive import KeepAlive
 
 
 class ApplierController:
@@ -27,7 +28,7 @@ class ApplierController:
         self.id_query = id_query
         self.gen_result_msg = gen_result_msg
         self.applier = Applier(operation)
-
+        self.keep_alive = KeepAlive()
         print("action: applier_started | result: success")
 
     def __connect(self, name_recv_queue, name_em_queue, name_send_queue):
@@ -45,6 +46,7 @@ class ApplierController:
         """
         start receiving messages.
         """
+        self.keep_alive.start()
         self.recv_queue.receive(self.process_messages)
         try:
             self.queue_connection.start_receiving()
@@ -54,7 +56,8 @@ class ApplierController:
         except:
             if self.running:
                 print(f"action: middleware_error | error: unknown.")
-
+        self.keep_alive.stop()
+        self.keep_alive.join()
 
     def process_messages(self, ch, method, properties, body):
         if is_eof(body):

@@ -7,6 +7,7 @@ from common.receiver_ids import ReceiverIds
 from server.common.utils_messages_eof import eof_msg
 from server.common.utils_messages_client import is_station, is_weather, encode_header
 from server.common.utils_messages_status import id_client_msg
+from server.common.keep_alive.keep_alive import KeepAlive
 
 
 class Receiver:
@@ -51,7 +52,7 @@ class Receiver:
         self.recv_ids = ReceiverIds(
             name_recv_ids_queue, self.clients_connections, self.lock_clients_connections
         )
-
+        self.keep_alive = KeepAlive()
         print("action: receiver_started | result: success")
 
     def __connect_queue(
@@ -88,6 +89,7 @@ class Receiver:
         return skt
 
     def run(self):
+        self.keep_alive.start()
         self.recv_ids.start()
         self.accepter_socket.listen(self.max_clients)
         print(f"action: waiting_clients | result: success")
@@ -103,6 +105,8 @@ class Receiver:
             client_thread.join()
 
         self.recv_ids.join()
+        self.keep_alive.stop()
+        self.keep_alive.join()
 
     def __accept_client(self):
         client_socket, _ = self.accepter_socket.accept()

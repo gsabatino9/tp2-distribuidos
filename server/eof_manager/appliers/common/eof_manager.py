@@ -2,6 +2,7 @@ import signal, sys
 from server.common.queue.connection import Connection
 from server.common.utils_messages_eof import *
 from server.common.utils_messages_status import get_id_client_from_msg
+from server.common.keep_alive.keep_alive import KeepAlive
 
 
 class EOFManager:
@@ -26,7 +27,7 @@ class EOFManager:
         self.size_workers = size_workers
         self.sum_workers = sum(size_workers)
         self.clients_acks = {}
-
+        self.keep_alive = KeepAlive()
         print("action: eof_manager_started | result: success")
 
     def __connect(
@@ -48,6 +49,7 @@ class EOFManager:
         """
         start receiving messages.
         """
+        self.keep_alive.start()
         self.status_queue.receive(self.receive_new_client)
         self.recv_queue.receive(self.receive_msg)
         try:
@@ -58,7 +60,9 @@ class EOFManager:
         except:
             if self.running:
                 print(f"action: middleware_error | error: unknown.")
-
+        self.keep_alive.stop()
+        self.keep_alive.join()
+    
     def receive_new_client(self, ch, method, properties, body):
         id_new_client = get_id_client_from_msg(body)
         print(f"action: new_client | result: success | id_new_client: {id_new_client}")
