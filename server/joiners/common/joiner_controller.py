@@ -55,7 +55,7 @@ class JoinerController:
             self.queue_connection.start_receiving()
         except:
             if self.running:
-                raise
+                raise # gracefull quit
         self.keep_alive.stop()
         self.keep_alive.join()
 

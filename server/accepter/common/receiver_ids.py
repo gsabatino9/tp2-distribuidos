@@ -34,7 +34,7 @@ class ReceiverIds(Thread):
             self.queue_connection.start_receiving()
         except:
             if self.running:
-                raise
+                raise # gracefull quit
 
     def receive_id(self, body):
         id_client, client_address = decode(body)
