@@ -1,5 +1,6 @@
 from common.utils import WeatherData
 from server.joiners.common.joiner_controller import JoinerController
+from server.joiners.common.joiner_state import JoinerState
 
 
 class JoinerWeather:
@@ -11,7 +12,7 @@ class JoinerWeather:
             name_trips_queue,
             name_em_queue,
             name_next_stage_queue,
-            WeatherData(),
+            JoinerState(lambda _: WeatherData()),
         )
 
     def stop(self):
