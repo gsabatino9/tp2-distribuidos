@@ -1,6 +1,7 @@
 from common.utils import WeatherData
 from server.joiners.common.joiner_controller import JoinerController
 from server.joiners.common.joiner_state import JoinerState
+from server.common.utils_messages_client import is_weather
 
 
 class JoinerWeather:
@@ -13,6 +14,7 @@ class JoinerWeather:
             name_em_queue,
             name_next_stage_queue,
             JoinerState(lambda _: WeatherData()),
+            lambda data: is_weather(data),
         )
 
     def stop(self):

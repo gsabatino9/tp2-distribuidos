@@ -93,7 +93,7 @@ class ResultsVerifier:
             self.queue_connection.start_receiving()
         except:
             if self.running:
-                raise
+                raise  # gracefull quit
 
         self.sender.join()
         self.keep_alive.stop()

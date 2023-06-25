@@ -59,6 +59,7 @@ class Client:
     def __send_files(self, filepath, types_files):
         for file in types_files:
             self.__send_type_file(filepath, file)
+        self.__send_last(types_files[-1])
 
         print(f"action: ack_files | result: success | msg: all files sent to server")
         self.conn.stop()
@@ -75,7 +76,9 @@ class Client:
             next(reader)
             send_data += self.__send_file_in_chunks(type_file, reader)
 
-        self.__send_last(type_file, send_data)
+        print(
+            f"action: file_sent | result: success | type_file: {type_file} | amount_chunks: {send_data}"
+        )
 
     def __send_file_in_chunks(self, type_file, reader):
         """
@@ -93,11 +96,8 @@ class Client:
 
         return send_data
 
-    def __send_last(self, type_file, send_data):
+    def __send_last(self, type_file):
         self.__send_chunk(type_file, list(""), True)
-        print(
-            f"action: file_sent | result: success | type_file: {type_file} | amount_chunks: {send_data}"
-        )
 
     def __send_chunk(self, data_type, chunk, last_chunk):
         payload = construct_payload(chunk)
@@ -175,5 +175,3 @@ class Client:
                 print("action: close_resource | result: success | resource: connection")
 
             self.running = False
-
-        
