@@ -30,7 +30,6 @@ class GroupbyController:
         self.state = StateManager(operation, base_data)
         self.current_fetch_count = 0
         self.prefetch_limit = 1000
-        self.last_delivery_tag = None
         self.gen_key_value = gen_key_value
         self.keep_alive = KeepAlive()
         print("action: groupby_started | result: success")
@@ -58,33 +57,30 @@ class GroupbyController:
         )
         try:
             self.queue_connection.start_receiving()
-        except Exception as e:
-            if self.running:
-                print(f"action: middleware_error | error: {str(e)}")
         except:
             if self.running:
-                print(f"action: middleware_error | error: unknown.")
+                raise # gracefull quit
+
         self.keep_alive.stop()
         self.keep_alive.join()
 
-    def process_messages(self, ch, method, properties, body):
+    def process_messages(self, body):
         # TODO: evaluate if it's a good idea to use 80~90% of the prefetch limit.
         # I (Lucho) added this because i was getting off-by-one errors and just
         # wanted to get it working fast.
         if self.current_fetch_count * 10 // 8 > self.prefetch_limit:
-            self.__ack_messages(ch)
+            self.__ack_messages()
 
-        self.last_delivery_tag = method.delivery_tag
         self.current_fetch_count += 1
         if is_eof(body):
             self.__eof_arrived(body)
-            self.__ack_messages(ch)
+            self.__ack_messages()
         else:
             self.__data_arrived(body)
 
-    def __ack_messages(self, ch):
+    def __ack_messages(self):
         self.state.write_checkpoints()
-        ch.basic_ack(delivery_tag=self.last_delivery_tag, multiple=True)
+        self.recv_queue.ack_all()
         self.current_fetch_count = 0
 
     def __data_arrived(self, body):

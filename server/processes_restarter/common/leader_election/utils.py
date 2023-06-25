@@ -13,13 +13,14 @@ SELF_PROCLAIMER_TIMEOUT = 1.0
 CONNECTION_PORT = 6767
 
 # Si una eleccion no se completa en este tiempo, el contenedor decidira volver a empezarla.
-MAX_TIME_WAITING_FOR_ELECTION=20.0
+MAX_TIME_WAITING_FOR_ELECTION = 20.0
 
 NO_LEADER = None
 
+
 class Message(Enum):
-    ELECTION = b'E'
-    COORDINATOR = b'C'
-    ELECTION_ACK = b'A'
-    LEADER_ALIVE = b'L'
-    LEADER_ALIVE_REPLY = b'R'
+    ELECTION = b"E"
+    COORDINATOR = b"C"
+    ELECTION_ACK = b"A"
+    LEADER_ALIVE = b"L"
+    LEADER_ALIVE_REPLY = b"R"

@@ -3,8 +3,13 @@ import time
 import queue
 import logging
 import socket
-from common.utils import ARE_YOU_ALIVE_MESSAGE, HEALTHCHECK_TIMEOUT,\
-                         MINIMUM_TIMEOUT_TIME, TIME_BETWEEN_HEALTHCHECKS
+from common.utils import (
+    ARE_YOU_ALIVE_MESSAGE,
+    HEALTHCHECK_TIMEOUT,
+    MINIMUM_TIMEOUT_TIME,
+    TIME_BETWEEN_HEALTHCHECKS,
+)
+
 
 class HealthyChecker(threading.Thread):
     def __init__(self, connected_processes_q, restart_containers_q):
@@ -28,15 +33,18 @@ class HealthyChecker(threading.Thread):
             container, skt, send_time = self.connected_processes_q.get()
             if not container:
                 if self.active:
-                    logging.error(f"action: healthy_checker_error | error: container_is_none")
+                    logging.error(
+                        f"action: healthy_checker_error | error: container_is_none"
+                    )
                 continue
             try:
                 self.__wait_for_healthcheck_reply(container, skt, send_time)
             except Exception as e:
-                logging.error(f"action: healthy_checker_timeout | container: {container}")
+                logging.error(
+                    f"action: healthy_checker_timeout | container: {container}"
+                )
                 self.__free_socket(skt)
                 self.restart_containers_q.put(container)
-
 
     def __wait_for_healthcheck_reply(self, container, skt, send_time):
         waited_time = time.time() - send_time
@@ -45,9 +53,12 @@ class HealthyChecker(threading.Thread):
         a = skt.recv(1)
         if not a:
             raise Exception("No message received")
-        logging.debug(f"action: keep_alive_loop | result: success"
-                      f" | container: {container}")
-        constant_time_loop = max(TIME_BETWEEN_HEALTHCHECKS - (time.time() - send_time), 0.0)
+        logging.debug(
+            f"action: keep_alive_loop | result: success" f" | container: {container}"
+        )
+        constant_time_loop = max(
+            TIME_BETWEEN_HEALTHCHECKS - (time.time() - send_time), 0.0
+        )
         time.sleep(constant_time_loop)
         skt.sendall(ARE_YOU_ALIVE_MESSAGE)
         self.connected_processes_q.put((container, skt, time.time()))
@@ -69,7 +80,6 @@ class HealthyChecker(threading.Thread):
                 # shutdown fails if connection is already shutdown.
                 pass
             skt.close()
-
 
     def stop(self):
         self.active = False

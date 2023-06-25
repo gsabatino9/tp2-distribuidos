@@ -50,18 +50,15 @@ class ApplierController:
         self.recv_queue.receive(self.process_messages)
         try:
             self.queue_connection.start_receiving()
-        except Exception as e:
-            if self.running:
-                print(f"action: middleware_error | error: {str(e)}")
         except:
             if self.running:
-                print(f"action: middleware_error | error: unknown.")
+                raise
         self.keep_alive.stop()
         self.keep_alive.join()
 
-    def process_messages(self, ch, method, properties, body):
+    def process_messages(self, body):
         if is_eof(body):
-            self.__eof_arrived(ch, body)
+            self.__eof_arrived(body)
         else:
             self.__agroup_trips_arrived(body)
 
@@ -96,7 +93,7 @@ class ApplierController:
             msg = construct_msg(id_client, trips_to_next_stage)
             self.send_queue.send(msg, routing_key=self.id_query)
 
-    def __eof_arrived(self, ch, body):
+    def __eof_arrived(self, body):
         self.em_queue.send(ack_msg(body))
         print("action: eof_trips_arrived")
 

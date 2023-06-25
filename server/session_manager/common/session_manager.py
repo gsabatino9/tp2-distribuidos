@@ -4,6 +4,7 @@ from server.common.utils_messages_new_client import error_message, assigned_id_m
 from server.common.queue.connection import Connection
 from server.common.keep_alive.keep_alive import KeepAlive
 
+
 class SessionManager:
     def __init__(
         self, max_clients, name_recv_queue, name_send_queue, name_end_session_queue
@@ -41,24 +42,19 @@ class SessionManager:
         self.end_session_queue.receive(self.end_session)
         try:
             self.queue_connection.start_receiving()
-        except Exception as e:
-            if self.running:
-                print(f"action: middleware_error | error: {str(e)}")
         except:
             if self.running:
-                print(f"action: middleware_error | error: unknown.")
+                raise
         self.keep_alive.stop()
         self.keep_alive.join()
 
-    def new_client_request(self, ch, method, properties, body):
+    def new_client_request(self, client_address):
         """
         pueden pasar 3 cosas:
         - active_clients < max_clients: asigna id al cliente.
         - active_clients == max_clients: rechaza el id al cliente.
         - cliente ya se encuentra asignado: devuelve el id asignado.
         """
-        client_address = body
-
         print(f"action: new_client_request | client_address: {client_address}")
         if client_address in self.active_clients:
             msg = assigned_id_message(
@@ -80,7 +76,7 @@ class SessionManager:
 
         return id_client
 
-    def end_session(self, ch, method, properties, body):
+    def end_session(self, body):
         client_address = body
         if client_address in self.active_clients:
             print(
@@ -96,5 +92,3 @@ class SessionManager:
             )
 
             self.running = False
-
-        

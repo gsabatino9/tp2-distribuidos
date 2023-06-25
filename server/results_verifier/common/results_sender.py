@@ -74,5 +74,3 @@ class ResultsSender(Thread):
                 "action: close_resource | result: success | resource: accepter_socket"
             )
             self.running = False
-
-        

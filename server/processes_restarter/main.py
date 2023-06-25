@@ -6,15 +6,15 @@ import socket
 
 
 logging.basicConfig(
-    format='%(asctime)s %(levelname)-8s %(message)s',
+    format="%(asctime)s %(levelname)-8s %(message)s",
     level="INFO",
-    datefmt='%Y-%m-%d %H:%M:%S',
+    datefmt="%Y-%m-%d %H:%M:%S",
 )
 
-docker_logger = logging.getLogger('docker')
+docker_logger = logging.getLogger("docker")
 docker_logger.setLevel(logging.INFO)
 
-socket_logger = logging.getLogger('socket')
+socket_logger = logging.getLogger("socket")
 socket_logger.setLevel(logging.INFO)
 
 
@@ -30,12 +30,16 @@ if containers_keep_alive == "":
 else:
     containers_keep_alive = containers_keep_alive.split(",")
 
+
 def main():
-    processes_restarter = ProcessesRestarter(my_id, n_processes,
-                                             containers_keep_alive,
-                                             container_restarter_name,
-                                             network_problems,
-                                             ip_base)
+    processes_restarter = ProcessesRestarter(
+        my_id,
+        n_processes,
+        containers_keep_alive,
+        container_restarter_name,
+        network_problems,
+        ip_base,
+    )
     processes_restarter.run()
 
 
