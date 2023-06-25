@@ -71,9 +71,9 @@ class FilterController:
         self.keep_alive.stop()
         self.keep_alive.join()
 
-    def proccess_message(self,  body):
+    def proccess_message(self, body):
         if is_eof(body):
-            self.__eof_arrived(ch, body)
+            self.__eof_arrived(body)
         else:
             self.__trips_arrived(body)
 
@@ -103,7 +103,7 @@ class FilterController:
             msg = construct_msg(header, trips_to_next_stage)
             self.send_queue.send(msg)
 
-    def __eof_arrived(self, ch, body):
+    def __eof_arrived(self, body):
         # ch.stop_consuming()
         self.em_queue.send(ack_msg(body))
         print(f"action: eof_trips_arrived | not_filtered_trips: {self.not_filtered}")
@@ -117,5 +117,3 @@ class FilterController:
             )
 
             self.running = False
-
-        

@@ -56,11 +56,11 @@ class EOFManager:
         self.keep_alive.stop()
         self.keep_alive.join()
 
-    def receive_new_client(self,  body):
+    def receive_new_client(self, body):
         id_new_client = get_id_client_from_msg(body)
         print(f"action: new_client | result: success | id_new_client: {id_new_client}")
 
-    def receive_msg(self,  body):
+    def receive_msg(self, body):
         header = decode(body)
         self.__verify_client(header.id_client)
 
@@ -103,5 +103,3 @@ class EOFManager:
             )
 
             self.running = False
-
-        

@@ -62,7 +62,7 @@ class JoinerController:
         self.keep_alive.stop()
         self.keep_alive.join()
 
-    def process_messages(self, ):
+    def process_messages(self, body):
         if is_eof(body):
             self.__last_static_data_arrived()
         else:
@@ -134,5 +134,3 @@ class JoinerController:
             )
 
             self.running = False
-
-        

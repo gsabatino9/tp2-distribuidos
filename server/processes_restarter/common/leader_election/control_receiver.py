@@ -2,9 +2,18 @@ from common.leader_election.utils import Message
 import threading
 import logging
 
+
 class ControlReceiver(threading.Thread):
-    def __init__(self, my_id, middleware, election_starter, control_sender, leader_alive,
-                       stop_being_leader_callback, i_am_leader_callback):
+    def __init__(
+        self,
+        my_id,
+        middleware,
+        election_starter,
+        control_sender,
+        leader_alive,
+        stop_being_leader_callback,
+        i_am_leader_callback,
+    ):
         super().__init__()
         self.my_id = my_id
         self.middleware = middleware
@@ -25,9 +34,8 @@ class ControlReceiver(threading.Thread):
             if self.active:
                 logging.error(f"action: control_receiver_error | error: unknown")
 
-
     def __run_loop(self):
-        while (self.active):
+        while self.active:
             msg, id_from = self.middleware.recv_message()
             if msg == Message.ELECTION.value:
                 self.__handle_election(id_from)

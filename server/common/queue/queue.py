@@ -1,5 +1,6 @@
 import pika
 
+
 class GenericQueue:
     def __init__(self, channel, auto_ack=True):
         self.channel = channel
@@ -13,7 +14,7 @@ class GenericQueue:
         if self.auto_ack:
             self.channel.basic_ack(delivery_tag=self.last_delivery_tag)
 
-    def __receive(self, queue_name, callback):
+    def receive_msg(self, queue_name, callback):
         self.callback = callback
         self.channel.basic_consume(
             queue=queue_name, on_message_callback=self.__callback, auto_ack=False
@@ -24,6 +25,7 @@ class GenericQueue:
 
     def ack_all(self):
         self.channel.basic_ack(delivery_tag=self.last_delivery_tag, multiple=True)
+
 
 class BasicQueue(GenericQueue):
     def __init__(self, channel, queue_name, auto_ack=True):
@@ -36,7 +38,7 @@ class BasicQueue(GenericQueue):
 
     def receive(self, callback, prefetch_count=1):
         self.channel.basic_qos(prefetch_count=prefetch_count)
-        self.__receive(self.queue_name, callback)
+        self.receive_msg(self.queue_name, callback)
 
     def send(self, message):
         self.channel.basic_publish(
@@ -59,7 +61,7 @@ class PubsubQueue(GenericQueue):
         result = self.channel.queue_declare(queue="", exclusive=True)
         queue_name = result.method.queue
         self.channel.queue_bind(exchange=self.exchange_name, queue=queue_name)
-        self.__receive(queue_name, callback)
+        self.receive_msg(queue_name, callback)
 
     def send(self, message):
         self.channel.basic_publish(
@@ -86,7 +88,7 @@ class PubsubWorkerQueue(GenericQueue):
         )
 
     def receive(self, callback):
-        self.__receive(self.queue_name, callback)
+        self.receive_msg(self.queue_name, callback)
 
 
 class RoutingQueue(GenericQueue):
@@ -110,8 +112,17 @@ class RoutingQueue(GenericQueue):
                 routing_key=routing_key,
             )
 
+    def __callback(self, ch, method, properties, body):
+        self.last_delivery_tag = method.delivery_tag
+        self.callback(body, method.routing_key)
+        if self.auto_ack:
+            self.channel.basic_ack(delivery_tag=self.last_delivery_tag)
+
     def receive(self, callback):
-        self.__receive(self.queue_name, callback)
+        self.callback = callback
+        self.channel.basic_consume(
+            queue=self.queue_name, on_message_callback=self.__callback, auto_ack=False
+        )
 
     def send(self, message, routing_key):
         self.channel.basic_publish(
@@ -135,7 +146,7 @@ class RoutingBuildQueue(GenericQueue):
         )
 
     def receive(self, callback):
-        self.__receive(self.queue_name, callback)
+        self.receive_msg(self.queue_name, callback)
 
     def send(self, message, routing_key):
         self.channel.basic_publish(

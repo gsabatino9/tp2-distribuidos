@@ -2,17 +2,23 @@ import threading
 import queue
 from enum import Enum
 import logging
-from common.leader_election.utils import Message, HEALTHCHECK_TIMEOUT,\
-                                         N_RETRIES_CONTACT_LEADER,\
-                                         TIME_BETWEEN_HEALTHCHECKS, NO_LEADER,\
-                                         MAX_TIME_WAITING_FOR_ELECTION
+from common.leader_election.utils import (
+    Message,
+    HEALTHCHECK_TIMEOUT,
+    N_RETRIES_CONTACT_LEADER,
+    TIME_BETWEEN_HEALTHCHECKS,
+    NO_LEADER,
+    MAX_TIME_WAITING_FOR_ELECTION,
+)
 
 import time
+
 
 class LeaderAliveState(Enum):
     LEADER = 1
     FOLLOWER = 2
     WAITING_ELECTION = 3
+
 
 class LeaderAlive(threading.Thread):
     def __init__(self, my_id, control_sender, election_starter):
@@ -27,7 +33,6 @@ class LeaderAlive(threading.Thread):
         # Try healthcheck N_RETRIES_CONTACT_LEADER times.
         # If leader doesn't respond, then start ELECTION.
         self.follower_retries = N_RETRIES_CONTACT_LEADER
-
 
     def run(self):
         try:
@@ -63,8 +68,8 @@ class LeaderAlive(threading.Thread):
         elif msg == Message.COORDINATOR:
             self.leader = id_from
             if self.leader != self.my_id:
-               self.state = LeaderAliveState.FOLLOWER
-               self.follower_retries = N_RETRIES_CONTACT_LEADER
+                self.state = LeaderAliveState.FOLLOWER
+                self.follower_retries = N_RETRIES_CONTACT_LEADER
 
     def __execute_follower(self):
         self.control_sender.send_alive(self.leader)
@@ -82,7 +87,7 @@ class LeaderAlive(threading.Thread):
     def __wait_for_alive_reply(self):
         time_sent = time.time()
         timeout_time = HEALTHCHECK_TIMEOUT
-        while (timeout_time > 0 and self.active):
+        while timeout_time > 0 and self.active:
             msg, id_from = self.leader_alive_q.get(timeout=timeout_time)
             now = time.time()
             if msg == Message.COORDINATOR:
@@ -101,7 +106,9 @@ class LeaderAlive(threading.Thread):
 
     def __execute_waiting_election(self):
         try:
-            msg, id_from = self.leader_alive_q.get(timeout=MAX_TIME_WAITING_FOR_ELECTION)
+            msg, id_from = self.leader_alive_q.get(
+                timeout=MAX_TIME_WAITING_FOR_ELECTION
+            )
             if msg == Message.COORDINATOR:
                 self.leader = id_from
                 if self.leader == self.my_id:
@@ -110,9 +117,9 @@ class LeaderAlive(threading.Thread):
                     self.state = LeaderAliveState.FOLLOWER
                     self.follower_retries = N_RETRIES_CONTACT_LEADER
         except queue.Empty:
-           # If the election isn't finished in MAX_TIME_WAITING_FOR_ELECTION, probably
-           # there were network issues -> restart election.
-           self.election_starter.restart_election() 
+            # If the election isn't finished in MAX_TIME_WAITING_FOR_ELECTION, probably
+            # there were network issues -> restart election.
+            self.election_starter.restart_election()
 
     def coordinator_received(self, id_from):
         self.leader_alive_q.put((Message.COORDINATOR, id_from))

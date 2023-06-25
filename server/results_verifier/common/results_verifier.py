@@ -6,6 +6,7 @@ from server.common.utils_messages_eof import ack_msg, get_id_client
 from server.common.utils_messages_group import decode, is_eof
 from server.common.keep_alive.keep_alive import KeepAlive
 
+
 class ResultsVerifier:
     CHUNK_SIZE = 100
 
@@ -90,19 +91,16 @@ class ResultsVerifier:
         self.recv_queue.receive(self.process_messages)
         try:
             self.queue_connection.start_receiving()
-        except Exception as e:
-            if self.running:
-                print(f"action: middleware_error | error: {str(e)}")
         except:
             if self.running:
-                print(f"action: middleware_error | error: unknown.")
+                raise
 
         self.sender.join()
         self.keep_alive.stop()
         self.keep_alive.join()
 
-    def process_messages(self, body):
-        id_query = int(method.routing_key)
+    def process_messages(self, body, id_query):
+        id_query = int(id_query)
         if is_eof(body):
             print("action: eof_trips_arrived")
             self.__eof_arrived(id_query, body)
@@ -222,5 +220,3 @@ class ResultsVerifier:
             )
 
             self.running = False
-
-        

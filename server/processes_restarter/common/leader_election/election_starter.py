@@ -6,6 +6,7 @@ import logging
 
 MUST_RESTART = -1
 
+
 class ElectionStarter(threading.Thread):
     def __init__(self, control_sender, my_id):
         super().__init__()
@@ -30,7 +31,6 @@ class ElectionStarter(threading.Thread):
         finally:
             self.self_proclaimer.stop()
 
-
     def __run_loop(self):
         self.__execute_election(self.my_id)
         while self.active:
@@ -44,8 +44,10 @@ class ElectionStarter(threading.Thread):
             elif msg == Message.COORDINATOR:
                 self.leader_id = id_from
                 self.self_proclaimer.stop()
-                logging.info(f"action: leader_election | result: "
-                             f"finished | leader: {self.leader_id}")
+                logging.info(
+                    f"action: leader_election | result: "
+                    f"finished | leader: {self.leader_id}"
+                )
             else:
                 if self.active:
                     raise Exception(f"Invalid Message Received: {msg}. From: {id_from}")
