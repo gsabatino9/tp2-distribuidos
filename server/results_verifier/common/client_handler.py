@@ -28,6 +28,8 @@ class ClientHandler(Thread):
         self.recv_queue.receive(self.process_batch)
         self.queue_connection.start_receiving()
 
+        self.queue_connection.close()
+
     def process_batch(self, body):
         if is_eof(body):
             self.client_connection.send_results(body, is_last=True)
@@ -52,5 +54,5 @@ class ClientHandler(Thread):
 
     def __stop_connection(self):
         self.session_manager_queue.send(self.client_address)
-        self.queue_connection.close()
+        self.queue_connection.stop_receiving()
         self.client_connection.stop()

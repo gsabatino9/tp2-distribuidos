@@ -54,12 +54,9 @@ class EOFManager:
         self.recv_queue.receive(self.receive_msg)
         try:
             self.queue_connection.start_receiving()
-        except Exception as e:
-            if self.running:
-                print(f"action: middleware_error | error: {str(e)}")
         except:
             if self.running:
-                print(f"action: middleware_error | error: unknown.")
+                raise
         self.keep_alive.stop()
         self.keep_alive.join()
 

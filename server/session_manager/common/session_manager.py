@@ -42,12 +42,9 @@ class SessionManager:
         self.end_session_queue.receive(self.end_session)
         try:
             self.queue_connection.start_receiving()
-        except Exception as e:
-            if self.running:
-                print(f"action: middleware_error | error: {str(e)}")
         except:
             if self.running:
-                print(f"action: middleware_error | error: unknown.")
+                raise
         self.keep_alive.stop()
         self.keep_alive.join()
 
