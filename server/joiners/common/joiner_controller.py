@@ -67,13 +67,13 @@ class JoinerController:
             is_eof = False
         except:
             is_eof = True
-        finally:
-            if is_eof:
-                self.__last_trip_arrived(body)
-            elif self.is_static_data(header):
-                self.__static_data_arrived(header, payload)
-            else:  # is_trip
-                self.__request_join_arrived(header, payload)
+
+        if is_eof:
+            self.__last_trip_arrived(body)
+        elif self.is_static_data(header):
+            self.__static_data_arrived(header, payload)
+        else:  # is_trip
+            self.__request_join_arrived(header, payload)
 
     def __static_data_arrived(self, header, chunk_data):
         self.__add_chunk_data(header.id_client, chunk_data)
