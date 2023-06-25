@@ -18,12 +18,13 @@ class CommunicationClient:
         """
         self.comm = Communication(socket)
         self.queries_suscriptions = suscriptions_to_number(suscriptions)
+        self.msg = MessageClient(self.queries_suscriptions)
 
     def getpeername(self):
         return self.comm.getpeername()
 
     def set_id_client(self, id_client):
-        self.msg = MessageClient(id_client, self.queries_suscriptions)
+        self.msg.set_id_client(id_client)
 
     def send(self, data_type, data, is_last=False):
         if data_type == "stations":
@@ -32,6 +33,10 @@ class CommunicationClient:
             self.__send_weathers(data, is_last)
         else:
             self.__send_trips(data, is_last)
+
+    def send_get_id(self):
+        msg = self.msg.get_id_message()
+        self.comm.send_message(msg)
 
     def send_get_results(self):
         msg = self.msg.get_results_message()
@@ -50,13 +55,7 @@ class CommunicationClient:
         self.comm.send_message(msg)
 
     def recv_id_client(self):
-        _, payload = self.__recv_message(decode_payload=True)
-        print("id_client:", payload.data)
-        id_client = int(payload.data[0])
-
-        self.msg = MessageClient(id_client, self.queries_suscriptions)
-
-        return id_client
+        return self.__recv_message(decode_payload=True)
 
     def recv_ack(self):
         return self.__recv_message()

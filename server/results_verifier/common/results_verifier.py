@@ -15,19 +15,32 @@ class ResultsVerifier:
         name_recv_queue,
         name_em_queue,
         name_session_manager_queue,
+        name_send_exchange,
+        name_send_queue,
         amount_queries,
     ):
         self.__init_results_verifier(
-            address_consult_clients, amount_queries, name_session_manager_queue
+            address_consult_clients,
+            name_session_manager_queue,
+            name_send_exchange,
+            name_send_queue,
+            amount_queries,
         )
         self.__connect(
             name_recv_queue,
             name_em_queue,
+            name_send_exchange,
+            name_send_queue,
             amount_queries,
         )
 
     def __init_results_verifier(
-        self, address_consult_clients, amount_queries, name_session_manager_queue
+        self,
+        address_consult_clients,
+        name_session_manager_queue,
+        name_send_exchange,
+        name_send_queue,
+        amount_queries,
     ):
         self.running = True
         signal.signal(signal.SIGTERM, self.stop)
@@ -36,14 +49,11 @@ class ResultsVerifier:
         self.queries_results = {}
         self.queries_ended = {}
         self.amount_queries = amount_queries
-        self.clients_queues = {}
-        self.lock_clients_queues = threading.Lock()
-
         self.sender = ResultsSender(
             address_consult_clients,
-            self.clients_queues,
-            self.lock_clients_queues,
             name_session_manager_queue,
+            name_send_exchange,
+            name_send_queue,
         )
         self.keep_alive = KeepAlive()
         print("action: results_verifier_started | result: success")
@@ -52,6 +62,8 @@ class ResultsVerifier:
         self,
         name_recv_queue,
         name_em_queue,
+        name_send_exchange,
+        name_send_queue,
         amount_queries,
     ):
         try:
@@ -62,6 +74,9 @@ class ResultsVerifier:
             )
 
             self.em_queue = self.queue_connection.pubsub_queue(name_em_queue)
+            self.send_queue = self.queue_connection.routing_building_queue(
+                name_send_exchange, name_send_queue
+            )
         except OSError as e:
             print(f"error: creating_queue_connection | log: {e}")
             self.stop()
@@ -127,10 +142,6 @@ class ResultsVerifier:
         if id_client not in self.ids_clients:
             self.__add_client(id_client)
 
-        with self.lock_clients_queues:
-            if id_client not in self.clients_queues:
-                self.clients_queues[id_client] = queue.Queue()
-
     def __verify_last_result(self, id_client):
         """
         check if all the queries have ended or if it needs to continue waiting for the EOF, otherwise.
@@ -150,22 +161,13 @@ class ResultsVerifier:
             self.__delete_client(id_client)
 
     def __inform_results(self, id_client):
-        """
-        - particiona los resultados en batches.
-        - crea una cola de tipo routing en rabbit, la buildea, y la
-        clave de routing es el id_client.
-        - envia los batches a través de la cola buildeada.
+        self.send_queue.bind_queue(str(id_client))
+        print("cliente bindeado:", id_client)
 
-        lo que no hace es eliminar la cola, porque de eso se va a
-        encargar el otro extremo una vez que finalice.
-        por eso, el otro extremo tiene que persistir las colas a eliminar,
-        por si se cae justo cuando iba a eliminar esa cola => cuando se levanta,
-        la elimina y listo.
-        """
         batches_to_send = self.__get_batches_to_send(id_client)
         for batch in batches_to_send:
-            self.clients_queues[id_client].put(batch)
-        self.clients_queues[id_client].put(last_message())
+            self.send_queue.send(batch, str(id_client))
+        self.send_queue.send(last_message(), str(id_client))
 
         print(f"action: inform_results | result: success | id_client: {id_client}")
 

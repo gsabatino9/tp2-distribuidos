@@ -1,6 +1,7 @@
 import random, time, socket, signal
 from protocol.communication_client import CommunicationClient
 
+
 def connect(addresses, suscriptions):
     not_connected = True
     conn = None
@@ -24,6 +25,7 @@ def connect(addresses, suscriptions):
             time.sleep(1)
 
         return conn
+
 
 def __pick_address(addresses):
     return random.choice(addresses)

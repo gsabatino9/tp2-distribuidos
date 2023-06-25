@@ -17,12 +17,12 @@ services:
       driver: none
 
   
-  receiver_1:
-    container_name: receiver_1
+  accepter_1:
+    container_name: accepter_1
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
-      - HOST=receiver_1
+      - HOST=accepter_1
       - PORT=12345
       - NAME_STATIONS_QUEUE=joiner_stations_q
       - NAME_WEATHER_QUEUE=joiner_weather_q
@@ -30,9 +30,9 @@ services:
       - NAME_EM_QUEUE=eof_manager_joiners_q
       - NAME_STATUS_QUEUE=new_clients_q
       - NAME_SM_QUEUE=session_manager_q
-      - NAME_RECV_QUEUE=receiver_q
+      - NAME_RECV_QUEUE=accepter_q
       - AMOUNT_QUERIES=3
-    image: receiver:latest
+    image: accepter:latest
     ports:
       - 12345:12345
     networks:      
@@ -41,12 +41,12 @@ services:
       rabbitmq:
         condition: service_healthy
 
-  receiver_2:
-    container_name: receiver_2
+  accepter_2:
+    container_name: accepter_2
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
-      - HOST=receiver_2
+      - HOST=accepter_2
       - PORT=12346
       - NAME_STATIONS_QUEUE=joiner_stations_q
       - NAME_WEATHER_QUEUE=joiner_weather_q
@@ -54,9 +54,9 @@ services:
       - NAME_EM_QUEUE=eof_manager_joiners_q
       - NAME_STATUS_QUEUE=new_clients_q
       - NAME_SM_QUEUE=session_manager_q
-      - NAME_RECV_QUEUE=receiver_q
+      - NAME_RECV_QUEUE=accepter_q
       - AMOUNT_QUERIES=3
-    image: receiver:latest
+    image: accepter:latest
     ports:
       - 12346:12346
     networks:      
@@ -64,6 +64,46 @@ services:
     depends_on:
       rabbitmq:
         condition: service_healthy
+
+
+  
+  processes-restarter-0:
+    container_name: processes-restarter-0
+    image: processes_restarter:latest
+    entrypoint: python3 /main.py
+    environment:
+      - PYTHONUNBUFFERED=1
+      - LOGGING_LEVEL=INFO
+      - ID_ELECTION=0
+      - N_PROCESS_ELECTION=2
+      - CONTAINERS_KEEP_ALIVE=accepter_1,accepter_2,filter_year_1,filter_pretoc_1,filter_distance_1,eof_manager_filters,mean_duration_applier_1_1,double_year_applier_1,mean_distance_applier_1,mean_duration_applier_4_1,eof_manager_appliers,groupby_start_date,groupby_end_station,groupby_start_station,groupby_all_elements,eof_manager_groupby,joiner_weather,joiner_stations,eof_manager_joiners,session_manager,results_verifier,eof_manager_query_results
+      - CONTAINER_RESTARTER_NAME=processes-restarter-
+      - NETWORK_PROBLEMS=0
+      - BASE_IP_ADDRESS=172.25.125.4
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      testing_net:
+        ipv4_address: 172.25.125.4
+
+  processes-restarter-1:
+    container_name: processes-restarter-1
+    image: processes_restarter:latest
+    entrypoint: python3 /main.py
+    environment:
+      - PYTHONUNBUFFERED=1
+      - LOGGING_LEVEL=INFO
+      - ID_ELECTION=1
+      - N_PROCESS_ELECTION=2
+      - CONTAINERS_KEEP_ALIVE=accepter_1,accepter_2,filter_year_1,filter_pretoc_1,filter_distance_1,eof_manager_filters,mean_duration_applier_1_1,double_year_applier_1,mean_distance_applier_1,mean_duration_applier_4_1,eof_manager_appliers,groupby_start_date,groupby_end_station,groupby_start_station,groupby_all_elements,eof_manager_groupby,joiner_weather,joiner_stations,eof_manager_joiners,session_manager,results_verifier,eof_manager_query_results
+      - CONTAINER_RESTARTER_NAME=processes-restarter-
+      - NETWORK_PROBLEMS=0
+      - BASE_IP_ADDRESS=172.25.125.4
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      testing_net:
+        ipv4_address: 172.25.125.5
 
 
   
@@ -412,9 +452,9 @@ services:
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
-      - MAX_CLIENTS=1
+      - MAX_CLIENTS=2
       - NAME_RECV_QUEUE=session_manager_q
-      - NAME_SEND_QUEUE=receiver_q
+      - NAME_SEND_QUEUE=accepter_q
       - NAME_END_SESSION_QUEUE=end_session_q
     image: session_manager:latest
     networks:      
@@ -426,4 +466,7 @@ services:
 
 networks:
   testing_net:
-    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.25.125.0/24      

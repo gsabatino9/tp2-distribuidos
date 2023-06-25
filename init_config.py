@@ -16,7 +16,7 @@ services:
     logging:
       driver: none
 
-  <RECEIVER>
+  <ACCEPTER>
 
   <PROCESS_RESTARTER>
 
@@ -55,13 +55,13 @@ networks:
         - subnet: 172.25.125.0/24      
 """
 
-RECEIVER = """
-  receiver_{}:
-    container_name: receiver_{}
+ACCEPTER = """
+  accepter_{}:
+    container_name: accepter_{}
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
-      - HOST=receiver_{}
+      - HOST=accepter_{}
       - PORT={}
       - NAME_STATIONS_QUEUE={}
       - NAME_WEATHER_QUEUE={}
@@ -71,7 +71,7 @@ RECEIVER = """
       - NAME_SM_QUEUE={}
       - NAME_RECV_QUEUE={}
       - AMOUNT_QUERIES=3
-    image: receiver:latest
+    image: accepter:latest
     ports:
       - {}:{}
     networks:      
@@ -459,8 +459,8 @@ services:
   <CLIENT>
 networks:
     testing_net:
-      external:
-        name: tp2_testing_net
+      name: tp2-distribuidos_testing_net
+      external: true
 """
 
 CLIENT = """
@@ -469,18 +469,19 @@ CLIENT = """
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
-      - ADDRESSES=[('receiver_1', 12345), ('receiver_2', 12346)]
+      - ADDRESSES=[('accepter_1', 12345), ('accepter_2', 12346)]
       - HOST_CONSULT=results_verifier
       - PORT_CONSULT=13000
       - CHUNK_SIZE=100
       - MAX_RETRIES=50
       - SUSCRIPTIONS=[1,2,3,4]
-      - FILE_PATH=data/client_{}/
+      - FILE_PATH=data/
     image: client:latest
     networks:      
       - testing_net
     volumes:
     - ./client/results:/results
+    - ./data/client_{}:/data
 """
 
 PROCESS_RESTARTER = """

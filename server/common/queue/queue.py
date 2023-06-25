@@ -110,36 +110,20 @@ class RoutingQueue:
 
 
 class RoutingBuildQueue:
-    def __init__(
-        self, channel, exchange_name, queue_name, routing_keys=[], auto_ack=True
-    ):
+    def __init__(self, channel, exchange_name, queue_name, auto_ack=True):
         self.channel = channel
         self.exchange_name = exchange_name
         self.auto_ack = auto_ack
         self.queue_name = queue_name
-        self.__build_exchange()
-        self.__build_queues(routing_keys)
-
-    def __build_exchange(self):
         self.channel.exchange_declare(
             exchange=self.exchange_name, exchange_type="direct"
         )
+        self.channel.queue_declare(queue=self.queue_name, durable=True)
 
-        self.channel.queue_declare(queue=self.queue_name)
-
-    def __build_queues(self, routing_keys):
-        if len(routing_keys) == 0:
-            self.channel.queue_bind(
-                exchange=self.exchange_name,
-                queue=self.queue_name,
-            )
-        else:
-            for routing_key in routing_keys:
-                self.channel.queue_bind(
-                    exchange=self.exchange_name,
-                    queue=self.queue_name,
-                    routing_key=routing_key,
-                )
+    def bind_queue(self, routing_key):
+        self.channel.queue_bind(
+            exchange=self.exchange_name, queue=self.queue_name, routing_key=routing_key
+        )
 
     def receive(self, callback):
         self.channel.basic_consume(

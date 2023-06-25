@@ -1,22 +1,21 @@
 import sys, json
 from init_config import *
 
+
 def main(amount_clients):
     clients = ""
-    for i in range(1, amount_clients+1):
+    for i in range(1, amount_clients + 1):
         clients += CLIENT.format(
             i,
             i,
             i,
         )
 
-    compose = (
-        INIT_CLIENT.format()
-        .replace("<CLIENT>", clients)
-    )
+    compose = INIT_CLIENT.format().replace("<CLIENT>", clients)
 
     with open("docker-compose-client.yaml", "w") as compose_file:
         compose_file.write(compose)
+
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:

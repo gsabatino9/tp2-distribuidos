@@ -2,6 +2,7 @@ SHELL := /bin/bash
 PWD := $(shell pwd)
 
 GIT_REMOTE = github.com/7574-sistemas-distribuidos/docker-compose-init
+amount_clients ?= 1
 
 default: build
 
@@ -19,8 +20,9 @@ testing-image:
 server-image:
 	docker build -f ./server/base_image/python-base.Dockerfile -t "rabbitmq-python-server-base:latest" .
 
+	docker build -f ./server/accepter/Dockerfile -t "accepter:latest" .
 	docker build -f ./server/processes_restarter/Dockerfile -t "processes_restarter:latest" .
-	docker build -f ./server/receiver/Dockerfile -t "receiver:latest" .
+
 	docker build -f ./server/session_manager/Dockerfile -t "session_manager:latest" .
 	
 	docker build -f ./server/joiners/joiner_stations/Dockerfile -t "joiner_stations:latest" .
@@ -69,6 +71,7 @@ server-run: server-image
 .PHONY: server-run
 
 client-run: client-image
+	python3 create_client.py $(amount_clients)
 	docker compose -f docker-compose-client.yaml up -d --build
 	docker compose -f docker-compose-client.yaml logs -f
 .PHONY: client-run

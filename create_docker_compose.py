@@ -13,7 +13,7 @@ def main():
     max_clients = json_config["config"]["max_clients"]
     restarter_config = json_config["config"]["process_restarter"]
     
-    receivers = init_receivers(queues, em_queues, status_queues, amount_nodes)
+    accepters = init_accepters(queues, em_queues, status_queues, amount_nodes)
 
     joiner_stations, joiner_weather, em_joiners = init_joiners(
         queues, em_queues, status_queues
@@ -46,7 +46,7 @@ def main():
 
     compose = (
         INIT_DOCKER.format()
-        .replace("<RECEIVER>", receivers)
+        .replace("<ACCEPTER>", accepters)
         .replace("<PROCESS_RESTARTER>", process_restarter)
         .replace("<JOINER_STATIONS>", joiner_stations)
         .replace("<JOINER_WEATHER>", joiner_weather)
@@ -74,12 +74,12 @@ def main():
         compose_file.write(compose)
 
 
-def init_receivers(queues, em_queues, status_queues, amount_nodes):
-    receivers = ""
+def init_accepters(queues, em_queues, status_queues, amount_nodes):
+    accepters = ""
     port = 12345
 
-    for i in range(1, amount_nodes["receiver"] + 1):
-        receivers += RECEIVER.format(
+    for i in range(1, amount_nodes["accepter"] + 1):
+        accepters += ACCEPTER.format(
             i,
             i,
             i,
@@ -94,14 +94,15 @@ def init_receivers(queues, em_queues, status_queues, amount_nodes):
             em_queues["joiners"],
             status_queues["new_clients"],
             queues["session_manager"]["init_session"],
-            queues["receiver"],
+            queues["accepter"],
+            port,
             port,
             port,
         )
 
         port += 1
 
-    return receivers
+    return accepters
 
 
 def init_joiners(queues, em_queues, status_queues):
@@ -294,7 +295,7 @@ def init_session_manager(queues, max_clients):
     return SESSION_MANAGER.format(
         max_clients,
         queues["session_manager"]["init_session"],
-        queues["receiver"],
+        queues["accepter"],
         queues["session_manager"]["end_session"],
     )
 
@@ -319,8 +320,8 @@ def init_process_restarters(restarter_config, amount_nodes):
 
 def get_containers_keep_alive(amount_nodes):
     containers_keep_alive = []
-    for i in range(amount_nodes["receiver"]):
-        containers_keep_alive.append("receiver_"+str(i+1))
+    for i in range(amount_nodes["accepter"]):
+        containers_keep_alive.append("accepter_"+str(i+1))
 
     for i in range(amount_nodes["filter_year"]):
         containers_keep_alive.append("filter_year_"+str(i+1))

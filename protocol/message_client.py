@@ -39,10 +39,13 @@ class MessageClient:
     )
     Payload = namedtuple("Payload", "data")
 
-    def __init__(self, id_client, queries_suscriptions):
+    def __init__(self, queries_suscriptions, id_client=0):
         self.id_client = id_client
         self.queries_suscriptions = queries_suscriptions
         self.id_batch = 0
+
+    def set_id_client(self, id_client):
+        self.id_client = id_client
 
     def new_message(self, data_type, msg_type, payload, id_batch=None):
         if payload is None:
