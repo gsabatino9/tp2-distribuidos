@@ -144,6 +144,7 @@ def init_filters(queues, em_queues, status_queues, amount_nodes):
             filters_q["filter_pretoc"],
             em_queues["filters"],
             queues["groupby_query1"],
+            i
         )
 
     filters_year = ""
@@ -155,6 +156,7 @@ def init_filters(queues, em_queues, status_queues, amount_nodes):
             filters_q["filter_year"],
             em_queues["filters"],
             queues["groupby_query2"],
+            i
         )
 
     filters_distance = ""
@@ -166,6 +168,7 @@ def init_filters(queues, em_queues, status_queues, amount_nodes):
             filters_q["filter_distance"],
             em_queues["filters"],
             queues["groupby_query3"],
+            i
         )
 
     em_filters = EM_FILTERS.format(

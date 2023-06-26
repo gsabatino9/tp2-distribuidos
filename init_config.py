@@ -128,6 +128,7 @@ FILTER_PRETOC = """
       - NAME_EM_QUEUE={}
       - NAME_SEND_QUEUE={}
       - ID_QUERY=1
+      - ID_FILTER={}
     image: filter_pretoc:latest
     networks:      
       - testing_net
@@ -147,6 +148,7 @@ FILTER_YEAR = """
       - NAME_EM_QUEUE={}
       - NAME_SEND_QUEUE={}
       - ID_QUERY=2
+      - ID_FILTER={}
     image: filter_year:latest
     networks:      
       - testing_net
@@ -166,6 +168,7 @@ FILTER_DISTANCE = """
       - NAME_EM_QUEUE={}
       - NAME_SEND_QUEUE={}
       - ID_QUERY=3
+      - ID_FILTER={}
     image: filter_distance:latest
     networks:      
       - testing_net
