@@ -36,10 +36,14 @@ class EOFManager:
         try:
             self.queue_connection = Connection()
             self.recv_queue = self.queue_connection.pubsub_queue(name_recv_queue)
-            self.filters_queues = [
-                self.queue_connection.basic_queue(q) for q in name_filters_queue
-            ]
             self.send_queue = self.queue_connection.pubsub_queue(name_send_queue)
+            self.filters_queues = []
+            for i, name_q in enumerate(name_filters_queue):
+                for idx_filter in range(self.size_workers[i]):
+                    name_queue = name_q + str(idx_filter+1)
+                    self.filters_queues.append(
+                        self.queue_connection.basic_queue(name_queue)
+                    )
             self.status_queue = self.queue_connection.pubsub_queue(name_status_queue)
         except OSError as e:
             print(f"error: creating_queue_connection | log: {e}")
@@ -82,9 +86,8 @@ class EOFManager:
         it sends EOF to each known worker.
         """
         print(f"action: send_eofs | result: success | msg: eof arrived")
-        for i, size_w in enumerate(self.size_workers):
-            for _ in range(size_w):
-                self.filters_queues[i].send(msg)
+        for filter_queue in self.filters_queues:
+            filter_queue.send(msg)
 
     def __recv_ack_trips(self, header, body):
         """

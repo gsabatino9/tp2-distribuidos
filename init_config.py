@@ -128,6 +128,7 @@ FILTER_PRETOC = """
       - NAME_EM_QUEUE={}
       - NAME_SEND_QUEUE={}
       - ID_QUERY=1
+      - ID_FILTER={}
     image: filter_pretoc:latest
     networks:      
       - testing_net
@@ -147,6 +148,7 @@ FILTER_YEAR = """
       - NAME_EM_QUEUE={}
       - NAME_SEND_QUEUE={}
       - ID_QUERY=2
+      - ID_FILTER={}
     image: filter_year:latest
     networks:      
       - testing_net
@@ -166,6 +168,7 @@ FILTER_DISTANCE = """
       - NAME_EM_QUEUE={}
       - NAME_SEND_QUEUE={}
       - ID_QUERY=3
+      - ID_FILTER={}
     image: filter_distance:latest
     networks:      
       - testing_net
@@ -257,6 +260,7 @@ APPLIER_QUERY1 = """
       - NAME_EM_QUEUE={}
       - NAME_SEND_QUEUE={}
       - ID_QUERY=1
+      - ID_APPLIER={}
     image: mean_duration_applier:latest
     networks:      
       - testing_net
@@ -274,6 +278,7 @@ APPLIER_QUERY2 = """
       - NAME_RECV_QUEUE={}
       - NAME_EM_QUEUE={}
       - NAME_SEND_QUEUE={}
+      - ID_APPLIER={}
     image: double_year_applier:latest
     networks:      
       - testing_net
@@ -291,6 +296,7 @@ APPLIER_QUERY3 = """
       - NAME_RECV_QUEUE={}
       - NAME_EM_QUEUE={}
       - NAME_SEND_QUEUE={}
+      - ID_APPLIER={}
     image: mean_distance_applier:latest
     networks:      
       - testing_net
@@ -309,6 +315,7 @@ APPLIER_QUERY4 = """
       - NAME_EM_QUEUE={}
       - NAME_SEND_QUEUE={}
       - ID_QUERY=4
+      - ID_APPLIER={}
     image: mean_duration_applier:latest
     networks:      
       - testing_net
