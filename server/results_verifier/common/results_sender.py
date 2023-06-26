@@ -7,22 +7,27 @@ from common.client_handler import ClientHandler
 class ResultsSender(Thread):
     def __init__(
         self,
-        address,
         name_session_manager_queue,
-        name_send_exchange,
-        name_send_queue,
-        max_clients=5,
+        address,
+        client_handlers_queues
     ):
         super().__init__()
         self.running = True
         signal.signal(signal.SIGTERM, self.stop)
 
         self.accepter_socket = self.__create_socket(address)
-        self.max_clients = max_clients
         self.clients_handlers = []
-        self.name_session_manager_queue = name_session_manager_queue
-        self.name_send_exchange = name_send_exchange
-        self.name_send_queue = name_send_queue
+        self.clients_handlers_queue = queue.Queue()
+
+        for i, queue_results in enumerate(client_handlers_queues):
+            client_handler = ClientHandler(
+                name_session_manager_queue,
+                self.clients_handlers_queue, 
+                queue_results,
+                i
+            )
+            client_handler.start()
+            self.clients_handlers.append(client_handler)
 
         print("action: results_sender_started | result: success")
 
@@ -42,9 +47,7 @@ class ResultsSender(Thread):
         self.clients = []
 
         while self.running:
-            client_handler = self.__accept_client()
-            client_handler.start()
-            self.clients_handlers.append(client_handler)
+            self.__accept_client()
 
     def __join_clients(self):
         for client_handler in self.clients_handlers:
@@ -60,12 +63,7 @@ class ResultsSender(Thread):
             f"action: client_connected | result: success | msg: starting to receive data"
         )
 
-        return ClientHandler(
-            client_connection,
-            self.name_session_manager_queue,
-            self.name_send_exchange,
-            self.name_send_queue,
-        )
+        self.clients_handlers_queue.put(client_connection)
 
     def stop(self, *args):
         if self.running:
