@@ -87,7 +87,7 @@ class EOFManager:
         """
         print(f"action: send_eofs | result: success | msg: eof arrived")
         for filter_queue in self.filters_queues:
-                filter_queue.send(msg)
+            filter_queue.send(msg)
 
     def __recv_ack_trips(self, header, body):
         """

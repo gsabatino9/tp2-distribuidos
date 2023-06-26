@@ -195,6 +195,7 @@ def init_appliers(queues, em_queues, status_queues, amount_nodes):
             queues["applier_query1"],
             em_queues["appliers"],
             queues["results_verifier"],
+            i
         )
 
     appliers_query2 = ""
@@ -205,6 +206,7 @@ def init_appliers(queues, em_queues, status_queues, amount_nodes):
             queues["applier_query2"],
             em_queues["appliers"],
             queues["results_verifier"],
+            i
         )
 
     appliers_query3 = ""
@@ -215,6 +217,7 @@ def init_appliers(queues, em_queues, status_queues, amount_nodes):
             queues["applier_query3"],
             em_queues["appliers"],
             queues["results_verifier"],
+            i
         )
 
     appliers_query4 = ""
@@ -225,6 +228,7 @@ def init_appliers(queues, em_queues, status_queues, amount_nodes):
             queues["applier_query4"],
             em_queues["appliers"],
             queues["results_verifier"],
+            i
         )
 
     em_appliers = EM_APPLIERS.format(
