@@ -15,7 +15,7 @@ class ApplierController:
         id_query,
         operation,
         gen_result_msg,
-        id_applier
+        id_applier,
     ):
         self.__init_applier(str(id_query), gen_result_msg, operation, id_applier)
 
@@ -37,7 +37,7 @@ class ApplierController:
         try:
             self.queue_connection = Connection()
             self.recv_queue = self.queue_connection.pubsub_worker_queue(
-                name_recv_queue, name_recv_queue+self.id_applier
+                name_recv_queue, name_recv_queue + self.id_applier
             )
             self.send_queue = self.queue_connection.routing_queue(name_send_queue)
 

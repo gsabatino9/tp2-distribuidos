@@ -13,6 +13,7 @@
 				"join_trip_weather": "join_trip_weather_q"
 			},
 			"filters": {
+				"exchange": "filters_exchange",
 				"filter_trip_stations": "filter_joined_stations_q",
 				"filter_trip_weather": "filter_joined_weather_q",
 				"filter_year": "filter_year_q",
@@ -46,14 +47,14 @@
 		},
 		"amount_nodes": {
 			"accepter": 2,
-			"filter_year": 1,
-			"filter_pretoc": 1,
-			"filter_distance": 1,
+			"filter_year": 2,
+			"filter_pretoc": 2,
+			"filter_distance": 2,
 			"applier_query1": 1,
 			"applier_query2": 1,
 			"applier_query3": 1,
 			"applier_query4": 1
 		},
-		"max_clients": 1
+		"max_clients": 3
 	}
 }

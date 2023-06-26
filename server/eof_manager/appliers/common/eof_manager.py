@@ -39,7 +39,7 @@ class EOFManager:
             self.appliers_queues = []
             for i, name_q in enumerate(name_appliers_queues):
                 for idx_applier in range(self.size_workers[i]):
-                    name_queue = name_q + str(idx_applier+1)
+                    name_queue = name_q + str(idx_applier + 1)
                     self.appliers_queues.append(
                         self.queue_connection.basic_queue(name_queue)
                     )

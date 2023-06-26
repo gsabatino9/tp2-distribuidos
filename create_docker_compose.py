@@ -16,7 +16,7 @@ def main():
     accepters = init_accepters(queues, em_queues, status_queues, amount_nodes)
 
     joiner_stations, joiner_weather, em_joiners = init_joiners(
-        queues, em_queues, status_queues
+        queues, em_queues, status_queues, amount_nodes
     )
 
     filters_pretoc, filters_year, filters_distance, em_filters = init_filters(
@@ -105,18 +105,30 @@ def init_accepters(queues, em_queues, status_queues, amount_nodes):
     return accepters
 
 
-def init_joiners(queues, em_queues, status_queues):
+def init_joiners(queues, em_queues, status_queues, amount_nodes):
     joiner_stations = JOINER_STATIONS.format(
         queues["joiners"]["stations"],
         queues["joiners"]["join_trip_stations"],
         em_queues["joiners"],
-        queues["filters"]["filter_trip_stations"],
+        queues["filters"]["exchange"],
+        [
+            queues["filters"]["filter_year"],
+            queues["filters"]["filter_distance"],
+        ],
+        [
+            amount_nodes["filter_year"],
+            amount_nodes["filter_distance"],
+        ],
     )
     joiner_weather = JOINER_WEATHER.format(
         queues["joiners"]["weather"],
         queues["joiners"]["join_trip_weather"],
         em_queues["joiners"],
-        queues["filters"]["filter_trip_weather"],
+        queues["filters"]["exchange"],
+        [
+            queues["filters"]["filter_pretoc"],
+        ],
+        [amount_nodes["filter_pretoc"]],
     )
 
     em_joiners = EM_JOINERS.format(
@@ -140,11 +152,11 @@ def init_filters(queues, em_queues, status_queues, amount_nodes):
         filters_pretoc += FILTER_PRETOC.format(
             i,
             i,
-            filters_q["filter_trip_weather"],
+            filters_q["exchange"],
             filters_q["filter_pretoc"],
             em_queues["filters"],
             queues["groupby_query1"],
-            i
+            i,
         )
 
     filters_year = ""
@@ -152,11 +164,11 @@ def init_filters(queues, em_queues, status_queues, amount_nodes):
         filters_year += FILTER_YEAR.format(
             i,
             i,
-            filters_q["filter_trip_stations"],
+            filters_q["exchange"],
             filters_q["filter_year"],
             em_queues["filters"],
             queues["groupby_query2"],
-            i
+            i,
         )
 
     filters_distance = ""
@@ -164,15 +176,16 @@ def init_filters(queues, em_queues, status_queues, amount_nodes):
         filters_year += FILTER_DISTANCE.format(
             i,
             i,
-            filters_q["filter_trip_stations"],
+            filters_q["exchange"],
             filters_q["filter_distance"],
             em_queues["filters"],
             queues["groupby_query3"],
-            i
+            i,
         )
 
     em_filters = EM_FILTERS.format(
         em_queues["filters"],
+        filters_q["exchange"],
         [
             filters_q["filter_year"],
             filters_q["filter_pretoc"],
@@ -195,7 +208,7 @@ def init_appliers(queues, em_queues, status_queues, amount_nodes):
             queues["applier_query1"],
             em_queues["appliers"],
             queues["results_verifier"],
-            i
+            i,
         )
 
     appliers_query2 = ""
@@ -206,7 +219,7 @@ def init_appliers(queues, em_queues, status_queues, amount_nodes):
             queues["applier_query2"],
             em_queues["appliers"],
             queues["results_verifier"],
-            i
+            i,
         )
 
     appliers_query3 = ""
@@ -217,7 +230,7 @@ def init_appliers(queues, em_queues, status_queues, amount_nodes):
             queues["applier_query3"],
             em_queues["appliers"],
             queues["results_verifier"],
-            i
+            i,
         )
 
     appliers_query4 = ""
@@ -228,7 +241,7 @@ def init_appliers(queues, em_queues, status_queues, amount_nodes):
             queues["applier_query4"],
             em_queues["appliers"],
             queues["results_verifier"],
-            i
+            i,
         )
 
     em_appliers = EM_APPLIERS.format(

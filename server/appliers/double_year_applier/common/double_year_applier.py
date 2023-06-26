@@ -12,7 +12,7 @@ class DoubleYearApplier:
             2,
             operation,
             self.gen_result_msg,
-            id_applier
+            id_applier,
         )
 
     def gen_result_msg(self, trip, applier):

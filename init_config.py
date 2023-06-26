@@ -90,7 +90,9 @@ JOINER_STATIONS = """
       - NAME_RECV_QUEUE={}
       - NAME_TRIPS_QUEUE={}
       - NAME_EM_QUEUE={}
+      - NAME_NEXT_STAGE_EXCHANGE={}
       - NAME_NEXT_STAGE_QUEUE={}
+      - SIZE_WORKERS={}
     image: joiner_stations:latest
     networks:      
       - testing_net
@@ -108,7 +110,9 @@ JOINER_WEATHER = """
       - NAME_RECV_QUEUE={}
       - NAME_TRIPS_QUEUE={}
       - NAME_EM_QUEUE={}
+      - NAME_NEXT_STAGE_EXCHANGE={}
       - NAME_NEXT_STAGE_QUEUE={}
+      - SIZE_WORKERS={}
     image: joiner_weather:latest
     networks:      
       - testing_net
@@ -331,6 +335,7 @@ EM_FILTERS = """
     environment:
       - PYTHONUNBUFFERED=1
       - NAME_RECV_QUEUE={}
+      - NAME_FILTERS_EXCHANGE={}
       - NAME_FILTERS_QUEUE={}
       - NAME_SEND_QUEUE={}
       - NAME_STATUS_QUEUE={}

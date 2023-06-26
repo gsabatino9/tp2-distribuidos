@@ -6,13 +6,21 @@ from server.common.utils_messages_client import is_station
 
 class JoinerStations:
     def __init__(
-        self, name_recv_queue, name_trips_queue, name_em_queue, name_next_stage_queue
+        self,
+        name_recv_queue,
+        name_trips_queue,
+        name_em_queue,
+        name_next_stage_exchage,
+        name_next_stage_queues,
+        size_workers_next_stage,
     ):
         self.joiner = JoinerController(
             name_recv_queue,
             name_trips_queue,
             name_em_queue,
-            name_next_stage_queue,
+            name_next_stage_exchage,
+            name_next_stage_queues,
+            size_workers_next_stage,
             JoinerState(lambda _: StationsData()),
             lambda data: is_station(data),
         )

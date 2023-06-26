@@ -1,4 +1,4 @@
-import pika
+import pika, random
 
 
 class GenericQueue:
@@ -152,3 +152,16 @@ class RoutingBuildQueue(GenericQueue):
         self.channel.basic_publish(
             exchange=self.exchange_name, routing_key=routing_key, body=message
         )
+
+    def broadcast_workers(self, amount_nodes, msg):
+        for idx_worker in range(amount_nodes):
+            binding_key = self.queue_name + str(idx_worker)
+            self.send(msg, routing_key=binding_key)
+
+    def send_worker(self, amount_nodes, msg):
+        # se elige un worker de forma random para mandar el mensaje,
+        # dentro de todos los posibles workers.
+        # parecido a un round-robin.
+        idx_worker = random.choice(range(1, amount_nodes + 1))
+        binding_key = self.queue_name + str(idx_worker)
+        self.send(msg, routing_key=binding_key)

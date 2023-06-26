@@ -11,7 +11,12 @@ ID_FILTER = int(os.environ.get("ID_FILTER"))
 
 def main():
     f = FilterPretoc(
-        ID_QUERY, NAME_RECV_EXCHANGE, NAME_RECV_QUEUE, NAME_EM_QUEUE, NAME_SEND_QUEUE, ID_FILTER
+        ID_QUERY,
+        NAME_RECV_EXCHANGE,
+        NAME_RECV_QUEUE,
+        NAME_EM_QUEUE,
+        NAME_SEND_QUEUE,
+        ID_FILTER,
     )
     f.stop()
 
