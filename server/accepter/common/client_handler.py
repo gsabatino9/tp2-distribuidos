@@ -1,4 +1,4 @@
-import struct
+import struct, socket
 from threading import Thread
 from server.common.queue.connection import Connection
 from server.common.utils_messages_eof import eof_msg
@@ -19,6 +19,8 @@ class ClientHandler(Thread):
         amount_queries,
     ):
         super().__init__()
+        self.running = True
+
         self.accepter_queue = accepter_queue
         self.queue_client = queue_client
         self.name_stations_queue = name_stations_queue
@@ -32,14 +34,14 @@ class ClientHandler(Thread):
     def run(self):
         self.__connect_queues()
 
-        while True:
+        while self.running:
             self.client_connection = self.accepter_queue.get()
-            if not self.client_connection:
+            if not self.client_connection or not self.running:
                 break
 
             self.client_address = self.client_connection.getpeername()[0]
             self.active = True
-            while self.active:
+            while self.active and self.running:
                 try:
                     header, payload_bytes = self.client_connection.recv_data(
                         decode_payload=False
@@ -50,6 +52,7 @@ class ClientHandler(Thread):
                     elif is_eof(header):
                         self.__send_eof(header)
                         self.__send_ack_client(header.id_batch)
+                        self.active = False
                     else:
                         self.__route_message(header, payload_bytes)
                         self.__send_ack_client(header.id_batch)
@@ -57,12 +60,17 @@ class ClientHandler(Thread):
                     print("action: client_clossed")
                     self.active = False
 
+            self.client_connection.socket.close()
+
     def __assign_id_to_client(self):
         self.session_manager_queue.send(self.client_address)
         
         id_client = -1
         while True:
             id_client, client_address = self.queue_client.get()
+            if not self.running:
+                return
+            
             if client_address == self.client_address:
                 break
 
@@ -116,7 +124,8 @@ class ClientHandler(Thread):
             print(f"error: creating_queue_connection | log: {e}")
 
     def stop(self):
-        self.client_connection.stop()
-        self.queue_connection.close()
-
-        print("finalizando cliente")
+        if self.running:
+            self.running = False
+            if hasattr(self, "client_connection"):
+                self.client_connection.socket.shutdown(socket.SHUT_RDWR)
+            self.queue_client.put((None, None))

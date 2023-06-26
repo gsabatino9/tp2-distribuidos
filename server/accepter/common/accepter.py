@@ -50,7 +50,7 @@ class Accepter:
 
     def __create_client_handlers(self):
         self.clients_handlers = []
-        self.accepter_queue = queue.Queue(maxsize=1)
+        self.accepter_queue = queue.Queue(maxsize=3)
         queues = [queue.Queue() for _ in range(3)]
 
         for i in range(3):
@@ -95,10 +95,13 @@ class Accepter:
 
     def stop(self, *args):
         if self.running:
-            self.accepter_socket.close()
-            self.queue_connection.close()
-            print(
-                "action: close_resource | result: success | resource: rabbit_connection"
-            )
-
             self.running = False
+
+            self.accepter_socket.shutdown(socket.SHUT_RDWR)
+            for client_handler in self.clients_handlers:
+                try:
+                    client_handler.stop()
+                    self.accepter_queue.put_nowait(None)
+                except queue.QueueFull:
+                    pass
+
