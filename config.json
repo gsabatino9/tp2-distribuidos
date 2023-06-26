@@ -24,14 +24,17 @@
 				"init_session": "session_manager_q",
 				"end_session": "end_session_q"
 			},
+			"appliers": {
+				"exchange": "appliers_exchange",
+				"applier_query1": "mean_duration_applier_1_q",
+				"applier_query2": "double_year_applier_q",
+				"applier_query3": "mean_distance_applier_q",
+				"applier_query4": "mean_duration_applier_4_q"
+			},
 			"groupby_query1": "groupby_start_date_q",
 			"groupby_query2": "groupby_start_station_q",
 			"groupby_query3": "groupby_end_station_q",
 			"groupby_query4": "groupby_all_elements_q",
-			"applier_query1": "mean_duration_applier_1_q",
-			"applier_query2": "double_year_applier_q",
-			"applier_query3": "mean_distance_applier_q",
-			"applier_query4": "mean_duration_applier_4_q",
 			"results_verifier": "query_results_q",
 			"accepter": "accepter_q"
 		},
@@ -50,10 +53,10 @@
 			"filter_year": 2,
 			"filter_pretoc": 2,
 			"filter_distance": 2,
-			"applier_query1": 1,
-			"applier_query2": 1,
-			"applier_query3": 1,
-			"applier_query4": 1
+			"applier_query1": 2,
+			"applier_query2": 2,
+			"applier_query3": 2,
+			"applier_query4": 2
 		},
 		"max_clients": 3
 	}

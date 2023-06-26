@@ -94,7 +94,6 @@ class FilterController:
 
     def __trips_arrived(self, body):
         header, joined_trips = decode(body)
-        print("llegó batch: ", header)
 
         if customer_subscribed_to_query(header, self.id_query):
             trips_to_next_stage = self.__filter_trips(joined_trips)

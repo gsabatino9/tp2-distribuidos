@@ -3,10 +3,11 @@ from server.appliers.common.applier_controller import ApplierController
 
 class MeanDurationApplier:
     def __init__(
-        self, name_recv_queue, name_em_queue, name_send_queue, id_query, id_applier
+        self, name_recv_exchange, name_recv_queue, name_em_queue, name_send_queue, id_query, id_applier
     ):
         operation = lambda k, v: [k, str(v[0] / v[1])]
         self.applier_controller = ApplierController(
+            name_recv_exchange,
             name_recv_queue,
             name_em_queue,
             name_send_queue,

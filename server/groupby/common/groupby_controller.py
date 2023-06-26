@@ -12,17 +12,25 @@ class GroupbyController:
         self,
         name_recv_queue,
         name_em_queue,
+        name_send_exchange,
         name_send_queue,
+        size_workers_send,
         operation,
         base_data,
         gen_key_value,
         chunk_size,
     ):
-        self.__init_groupby(chunk_size, operation, base_data, gen_key_value)
-        self.__connect(name_recv_queue, name_em_queue, name_send_queue)
+        self.__init_groupby(chunk_size, operation, base_data, gen_key_value, size_workers_send)
+        self.__connect(
+            name_recv_queue, 
+            name_em_queue, 
+            name_send_exchange,
+            name_send_queue,
+            size_workers_send
+        )
         self.__run()
 
-    def __init_groupby(self, chunk_size, operation, base_data, gen_key_value):
+    def __init_groupby(self, chunk_size, operation, base_data, gen_key_value, size_workers_send):
         self.running = True
         signal.signal(signal.SIGTERM, self.stop)
 
@@ -30,17 +38,31 @@ class GroupbyController:
         self.state = StateManager(operation, base_data)
         self.current_fetch_count = 0
         self.prefetch_limit = 1000
+        self.size_workers_send = size_workers_send
         self.gen_key_value = gen_key_value
         self.keep_alive = KeepAlive()
         print("action: groupby_started | result: success")
 
-    def __connect(self, name_recv_queue, name_em_queue, name_send_queue):
+    def __connect(
+        self, 
+        name_recv_queue, 
+        name_em_queue, 
+        name_send_exchange,
+        name_send_queue,
+        size_workers_send
+    ):
         try:
             self.queue_connection = Connection()
             self.recv_queue = self.queue_connection.basic_queue(
                 name_recv_queue, auto_ack=False
             )
-            self.send_queue = self.queue_connection.pubsub_queue(name_send_queue)
+            self.send_queue = self.queue_connection.routing_building_queue(
+                name_send_exchange, name_send_queue  # appliers_exchange  # applier_q1
+            )
+            for idx_applier in range(self.size_workers_send):
+                # id_applier=7
+                self.send_queue.bind_queue(name_send_queue + str(idx_applier))
+
             self.em_queue = self.queue_connection.pubsub_queue(name_em_queue)
         except OSError as e:
             print(f"error: creating_queue_connection | log: {e}")
@@ -141,7 +163,7 @@ class GroupbyController:
         """
         if (i + 1) % self.chunk_size == 0 or i + 1 == self.state.len_data(id_client):
             msg = construct_msg(id_client, to_send)
-            self.send_queue.send(msg)
+            self.send_queue.send_worker(self.size_workers_send, msg)
 
             return True
         return False

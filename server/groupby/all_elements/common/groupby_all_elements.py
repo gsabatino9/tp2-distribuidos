@@ -2,7 +2,7 @@ from server.groupby.common.groupby_controller import GroupbyController
 
 
 class GroupbyAllElements:
-    def __init__(self, name_recv_queue, name_em_queue, name_send_queue, chunk_size):
+    def __init__(self, name_recv_queue, name_em_queue, name_send_exchange, name_send_queue, size_workers_send, chunk_size):
         def operation(old, new):
             if new > 0:
                 return [old[0] + new, old[1] + 1]
@@ -14,7 +14,9 @@ class GroupbyAllElements:
         self.groupby_controller = GroupbyController(
             name_recv_queue,
             name_em_queue,
+            name_send_exchange,
             name_send_queue,
+            size_workers_send,
             operation,
             base_data,
             self.gen_key_value,
