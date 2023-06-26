@@ -107,6 +107,8 @@ class ResultsVerifier:
     def process_messages(self, body, id_query):
         if id_query == 'request_results':
             id_client_handler, id_client = decode_request_results(body)
+            self.__verify_client(id_client)
+
             if self.__verify_last_result(id_client):
                 self.__inform_results(id_client_handler, id_client)
             else:
@@ -171,7 +173,7 @@ class ResultsVerifier:
         batches_to_send = self.__get_batches_to_send(id_client)
         queue.put(batches_to_send)
 
-        print(f"action: inform_results | result: success | id_client: {id_client}")
+        print(f"action: inform_results | result: success | id_client: {id_client} | batches: {batches_to_send}")
 
     def __inform_error(self, id_client_handler):
         queue = self.client_handlers_queues[id_client_handler]

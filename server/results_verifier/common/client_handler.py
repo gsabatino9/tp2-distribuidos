@@ -31,6 +31,7 @@ class ClientHandler(Thread):
     def run(self):
         while True:
             self.client_connection = self.queue_client_connections.get()
+            self.client_address = self.client_connection.getpeername()[0]
 
             header, _ = self.client_connection.recv_data(decode_payload=False)
             self.__send_request_results_verifier(header.id_client)
@@ -38,7 +39,7 @@ class ClientHandler(Thread):
 
             if not is_error(results_batches):
                 for batch in results_batches:
-                    self.client_connection.send_results(body, is_last=False)
+                    self.client_connection.send_results(batch, is_last=False)
                 self.client_connection.send_results(last_message(), is_last=True)
 
                 self.__stop_connection()
