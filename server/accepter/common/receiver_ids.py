@@ -5,16 +5,17 @@ from server.common.utils_messages_new_client import decode
 
 
 class ReceiverIds(Thread):
-    def __init__(self, name_recv_ids_queue, clients_connections):
+    def __init__(self, name_recv_ids_queue, clients_connections, clients_queues):
         super().__init__()
-        self.__init_receiver_ids(clients_connections)
+        self.__init_receiver_ids(clients_connections, clients_queues)
         self.__connect_queue(name_recv_ids_queue)
 
-    def __init_receiver_ids(self, clients_connections):
+    def __init_receiver_ids(self, clients_connections, clients_queues):
         self.running = True
         signal.signal(signal.SIGTERM, self.stop)
 
         self.clients_connections = clients_connections
+        self.clients_queues = clients_queues
 
         print("action: receiver_ids_started | result: success")
 
@@ -38,12 +39,12 @@ class ReceiverIds(Thread):
 
     def receive_id(self, body):
         id_client, client_address = decode(body)
-        if client_address in self.clients_connections:
-            queue_client, client_connection = self.clients_connections[client_address]
-            queue_client.put(id_client)
-            print(
-                f"action: id_arrived_client | result: success | id_client: {id_client}"
-            )
+        for queue_client in self.clients_queues:
+            queue_client.put((id_client, client_address))
+        
+        print(
+            f"action: id_arrived_client | result: success | id_client: {id_client}"
+        )
 
     def stop(self, *args):
         if self.running:

@@ -9,9 +9,8 @@ from common.utils import is_get_id, is_eof
 class ClientHandler(Thread):
     def __init__(
         self,
-        client_address,
+        accepter_queue,
         queue_client,
-        client_connection,
         name_stations_queue,
         name_weather_queue,
         name_trips_queues,
@@ -20,44 +19,53 @@ class ClientHandler(Thread):
         amount_queries,
     ):
         super().__init__()
-        self.client_address = client_address
+        self.accepter_queue = accepter_queue
         self.queue_client = queue_client
-        self.client_connection = client_connection
         self.name_stations_queue = name_stations_queue
         self.name_weather_queue = name_weather_queue
         self.name_trips_queues = name_trips_queues
         self.name_session_manager_queue = name_session_manager_queue
         self.name_em_queue = name_em_queue
         self.amount_queries = amount_queries
+        self.active = False
 
     def run(self):
         self.__connect_queues()
 
-        client_running = True
-        while client_running:
-            try:
-                header, payload_bytes = self.client_connection.recv_data(
-                    decode_payload=False
-                )
+        while True:
+            self.client_connection = self.accepter_queue.get()
+            if not self.client_connection:
+                break
 
-                if is_get_id(header):
-                    self.__assign_id_to_client()
-                elif is_eof(header):
-                    self.__send_eof(header)
-                    self.__send_ack_client(header.id_batch)
-                else:
-                    self.__route_message(header, payload_bytes)
-                    self.__send_ack_client(header.id_batch)
-            except struct.error:
-                print("action: client_clossed")
-                client_running = False
+            self.client_address = self.client_connection.getpeername()[0]
+            self.active = True
+            while self.active:
+                try:
+                    header, payload_bytes = self.client_connection.recv_data(
+                        decode_payload=False
+                    )
 
-        self.stop()
+                    if is_get_id(header):
+                        self.__assign_id_to_client()
+                    elif is_eof(header):
+                        self.__send_eof(header)
+                        self.__send_ack_client(header.id_batch)
+                    else:
+                        self.__route_message(header, payload_bytes)
+                        self.__send_ack_client(header.id_batch)
+                except struct.error:
+                    print("action: client_clossed")
+                    self.active = False
 
     def __assign_id_to_client(self):
         self.session_manager_queue.send(self.client_address)
-        # TODO: try-except por si tarda 1min en popear de la cola
-        id_client = self.queue_client.get()
+        
+        id_client = -1
+        while True:
+            id_client, client_address = self.queue_client.get()
+            if client_address == self.client_address:
+                break
+
         if id_client == 0:
             self.client_connection.send_error_message()
         else:
