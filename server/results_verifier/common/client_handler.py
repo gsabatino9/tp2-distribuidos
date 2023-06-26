@@ -9,6 +9,7 @@ class ClientHandler(Thread):
     def __init__(
         self,
         name_session_manager_queue,
+        name_request_queue,
         queue_client_connections,
         queue_results,
         id_client_handler,
@@ -21,7 +22,7 @@ class ClientHandler(Thread):
         try:
             self.queue_connection = Connection()
             self.session_manager_queue = self.queue_connection.pubsub_queue(
-                self.name_session_manager_queue
+                name_session_manager_queue
             )
             self.request_queue = self.queue_connection.routing_queue(name_request_queue)
         except OSError as e:

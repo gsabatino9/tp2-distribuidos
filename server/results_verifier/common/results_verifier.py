@@ -24,6 +24,7 @@ class ResultsVerifier:
         self.__init_results_verifier(
             address_consult_clients,
             name_session_manager_queue,
+            name_recv_queue,
             name_send_exchange,
             name_send_queue,
             amount_queries,
@@ -40,6 +41,7 @@ class ResultsVerifier:
         self,
         address_consult_clients,
         name_session_manager_queue,
+        name_recv_queue,
         name_send_exchange,
         name_send_queue,
         amount_queries,
@@ -55,6 +57,7 @@ class ResultsVerifier:
         self.client_handlers_queues = [queue.Queue() for i in range(3)]
         self.sender = ResultsSender(
             name_session_manager_queue,
+            name_recv_queue,
             address_consult_clients,
             self.client_handlers_queues
         )

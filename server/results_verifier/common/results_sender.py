@@ -1,4 +1,4 @@
-import socket, signal, sys
+import socket, signal, sys, queue
 from threading import Thread
 from protocol.communication_server import CommunicationServer
 from common.client_handler import ClientHandler
@@ -8,6 +8,7 @@ class ResultsSender(Thread):
     def __init__(
         self,
         name_session_manager_queue,
+        name_request_queue,
         address,
         client_handlers_queues
     ):
@@ -22,6 +23,7 @@ class ResultsSender(Thread):
         for i, queue_results in enumerate(client_handlers_queues):
             client_handler = ClientHandler(
                 name_session_manager_queue,
+                name_request_queue,
                 self.clients_handlers_queue, 
                 queue_results,
                 i
@@ -42,7 +44,7 @@ class ResultsSender(Thread):
         self.__join_clients()
 
     def __run_accept_loop(self):
-        self.accepter_socket.listen(self.max_clients)
+        self.accepter_socket.listen()
         print(f"action: waiting_clients | result: success")
         self.clients = []
 

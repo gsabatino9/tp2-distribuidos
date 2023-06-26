@@ -9,8 +9,11 @@ def request_message(id_client_handler, id_client):
     ).encode()
 
 def is_error(message_bytes):
-    msg = MessageResults.decode(message_bytes)
-    return MessageResults.ERROR == msg.code
+    try:
+        msg = MessageResults.decode(message_bytes)
+        return MessageResults.ERROR == msg.code
+    except:
+        return False
 
 def error_message():
     return MessageResults(
@@ -39,4 +42,4 @@ class MessageResults:
 
     @staticmethod
     def decode(msg):
-        return MessageNewClient.Header._make(unpack(MessageNewClient.HEADER_CODE, msg))
+        return MessageResults.Header._make(unpack(MessageResults.HEADER_CODE, msg))
