@@ -11,7 +11,6 @@ class JoinerController:
         name_recv_queue,
         name_trips_queue,
         name_em_queue,
-        name_next_stage_exchage,
         name_next_stage_queues,
         size_workers_next_stage,
         joiner,
@@ -23,7 +22,6 @@ class JoinerController:
             name_recv_queue,
             name_trips_queue,
             name_em_queue,
-            name_next_stage_exchage,
             name_next_stage_queues,
             size_workers_next_stage,
         )
@@ -45,7 +43,6 @@ class JoinerController:
         name_recv_queue,
         name_trips_queue,
         name_em_queue,
-        name_next_stage_exchage,
         name_next_stage_queues,
         size_workers_next_stage,
     ):
@@ -54,15 +51,7 @@ class JoinerController:
             self.recv_queue = self.queue_connection.basic_queue(name_recv_queue)
             self.trips_queue = self.queue_connection.basic_queue(name_trips_queue)
             self.em_queue = self.queue_connection.pubsub_queue(name_em_queue)
-            self.next_stage_queues = []
-            for i, name_queue in enumerate(name_next_stage_queues):
-                queue = self.queue_connection.routing_building_queue(
-                    name_next_stage_exchage, name_queue  # filters_exchange  # filter_q1
-                )
-                for idx_filter in range(self.size_workers_next_stage[i]):
-                    queue.bind_queue(name_queue + str(idx_filter))  # id_filter=7
-
-                self.next_stage_queues.append(queue)
+            self.next_stage_queues = self.queue_connection.multiple_queues(name_next_stage_queues, self.size_workers_next_stage)
         except OSError as e:
             print(f"error: creating_queue_connection | log: {e}")
             self.stop()
@@ -128,9 +117,7 @@ class JoinerController:
     def __send_next_stage(self, header, joined_trips):
         if len(joined_trips) > 0:
             msg = construct_msg(header, joined_trips)
-            for i, queue in enumerate(self.next_stage_queues):
-                queue.send_worker(self.size_workers_next_stage[i], msg)
-                # le manda a un solo worker
+            self.next_stage_queues.send(msg)
 
     def __last_trip_arrived(self, body):
         self.joiner.delete_client(get_id_client(body))

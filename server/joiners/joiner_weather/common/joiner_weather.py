@@ -10,7 +10,6 @@ class JoinerWeather:
         name_recv_queue,
         name_trips_queue,
         name_em_queue,
-        name_next_stage_exchage,
         name_next_stage_queues,
         size_workers_next_stage,
     ):
@@ -18,7 +17,6 @@ class JoinerWeather:
             name_recv_queue,
             name_trips_queue,
             name_em_queue,
-            name_next_stage_exchage,
             name_next_stage_queues,
             size_workers_next_stage,
             JoinerState(lambda _: WeatherData()),

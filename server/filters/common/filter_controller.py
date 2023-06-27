@@ -15,25 +15,22 @@ class FilterController:
     def __init__(
         self,
         id_query,
-        name_recv_exchange,
         name_recv_queue,
         name_em_queue,
         name_send_queue,
         columns_names,
         reduced_columns,
         func_filter,
-        id_filter,
     ):
         self.__init_filter(
             id_query,
             columns_names,
             reduced_columns,
             func_filter,
-            id_filter,
             name_recv_queue,
         )
         self.__connect(
-            name_recv_exchange, name_recv_queue, name_em_queue, name_send_queue
+            name_recv_queue, name_em_queue, name_send_queue
         )
         self.__run()
 
@@ -43,28 +40,23 @@ class FilterController:
         columns_names,
         reduced_columns,
         func_filter,
-        id_filter,
         name_recv_queue,
     ):
         self.running = True
         signal.signal(signal.SIGTERM, self.stop)
 
         self.id_query = id_query
-        self.binding_key = name_recv_queue + str(id_filter)
         self.not_filtered = 0
         self.filter = Filter(columns_names, reduced_columns, func_filter)
         self.keep_alive = KeepAlive()
         print("action: filter_started | result: success")
 
     def __connect(
-        self, name_recv_exchange, name_recv_queue, name_em_queue, name_send_queue
+        self, name_recv_queue, name_em_queue, name_send_queue
     ):
         try:
             self.queue_connection = Connection()
-            self.recv_queue = self.queue_connection.routing_building_queue(
-                name_recv_exchange, name_recv_queue
-            )
-            self.recv_queue.bind_queue(self.binding_key)
+            self.recv_queue = self.queue_connection.basic_queue(name_recv_queue)
             self.send_queue = self.queue_connection.basic_queue(name_send_queue)
 
             self.em_queue = self.queue_connection.pubsub_queue(name_em_queue)

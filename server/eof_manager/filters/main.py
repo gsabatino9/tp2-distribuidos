@@ -14,7 +14,6 @@ def main():
     size_workers = ast.literal_eval(SIZE_WORKERS)
     e = EOFManager(
         NAME_RECV_QUEUE,
-        NAME_FILTERS_EXCHANGE,
         name_filters_queue,
         NAME_SEND_QUEUE,
         NAME_STATUS_QUEUE,

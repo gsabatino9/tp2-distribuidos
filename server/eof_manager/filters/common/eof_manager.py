@@ -9,7 +9,6 @@ class EOFManager:
     def __init__(
         self,
         name_recv_queue,
-        name_filters_exchange,
         name_filters_queues,
         name_send_queue,
         name_status_queue,
@@ -18,7 +17,6 @@ class EOFManager:
         self.__init_eof_manager(size_workers)
         self.__connect(
             name_recv_queue,
-            name_filters_exchange,
             name_filters_queues,
             name_send_queue,
             name_status_queue,
@@ -38,7 +36,6 @@ class EOFManager:
     def __connect(
         self,
         name_recv_queue,
-        name_filters_exchange,
         name_filters_queues,
         name_send_queue,
         name_status_queue,
@@ -47,15 +44,7 @@ class EOFManager:
             self.queue_connection = Connection()
             self.recv_queue = self.queue_connection.pubsub_queue(name_recv_queue)
             self.send_queue = self.queue_connection.pubsub_queue(name_send_queue)
-            self.filters_queues = []
-            for i, name_queue in enumerate(name_filters_queues):
-                queue = self.queue_connection.routing_building_queue(
-                    name_filters_exchange, name_queue  # filters_exchange  # filter_q1
-                )
-                for idx_filter in range(self.size_workers[i]):
-                    queue.bind_queue(name_queue + str(idx_filter))  # id_filter=7
-
-                self.filters_queues.append(queue)
+            self.filters_queues = self.queue_connection.multiple_queues(name_filters_queues, self.size_workers)
             self.status_queue = self.queue_connection.pubsub_queue(name_status_queue)
         except OSError as e:
             print(f"error: creating_queue_connection | log: {e}")
@@ -98,8 +87,7 @@ class EOFManager:
         it sends EOF to each known worker.
         """
         print(f"action: send_eofs | result: success | msg: eof arrived")
-        for i, filter_queue in enumerate(self.filters_queues):
-            filter_queue.broadcast_workers(self.size_workers[i], msg)
+        self.filters_queues.broadcast(msg)
 
     def __recv_ack_trips(self, header, body):
         """
