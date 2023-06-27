@@ -70,6 +70,9 @@ ACCEPTER = """
       - NAME_STATUS_QUEUE={}
       - NAME_SM_QUEUE={}
       - NAME_RECV_QUEUE={}
+      - SIZE_STATIONS={}
+      - SIZE_WEATHER={}
+      - SHARDING_AMOUNT={}
       - AMOUNT_QUERIES=3
     image: accepter:latest
     ports:
@@ -82,8 +85,8 @@ ACCEPTER = """
 """
 
 JOINER_STATIONS = """
-  joiner_stations:
-    container_name: joiner_stations
+  joiner_stations_{}:
+    container_name: joiner_stations_{}
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
@@ -93,6 +96,7 @@ JOINER_STATIONS = """
       - NAME_NEXT_STAGE_EXCHANGE={}
       - NAME_NEXT_STAGE_QUEUE={}
       - SIZE_WORKERS={}
+      - ID_JOINER={}
     image: joiner_stations:latest
     networks:      
       - testing_net
@@ -102,8 +106,8 @@ JOINER_STATIONS = """
 """
 
 JOINER_WEATHER = """
-  joiner_weather:
-    container_name: joiner_weather
+  joiner_weather_{}:
+    container_name: joiner_weather_{}
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
@@ -113,6 +117,7 @@ JOINER_WEATHER = """
       - NAME_NEXT_STAGE_EXCHANGE={}
       - NAME_NEXT_STAGE_QUEUE={}
       - SIZE_WORKERS={}
+      - ID_JOINER={}
     image: joiner_weather:latest
     networks:      
       - testing_net
@@ -373,6 +378,8 @@ EM_JOINERS = """
       - NAME_JOIN_STATIONS_QUEUE={}
       - NAME_JOIN_WEATHER_QUEUE={}
       - NAME_STATUS_QUEUE={}
+      - SIZE_STATIONS={}
+      - SIZE_WEATHER={}
     image: eof_manager_joiners:latest
     networks:      
       - testing_net

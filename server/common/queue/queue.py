@@ -196,3 +196,47 @@ class MultipleQueues(GenericQueue):
                 self.channel.basic_publish(
                     exchange="", routing_key=name_queue+str(idx_worker), body=message
                 )
+
+
+class ShardingQueue(GenericQueue):
+    """
+    si tenemos N workers que deben recibir data estática y ejecutar
+    tareas sobre esa data estática, usamos un subconjunto de estos workers
+    para enviar la data estática.
+    Luego, elegimos, sobre ese subconjunto, 1 de ellos (al azar) en cada envío.
+    """
+
+    def __init__(self, channel, name_queue, amount_nodes, sharding_amount, auto_ack=True):
+        super().__init__(channel, auto_ack)
+        self.name_queue = name_queue
+        self.amount_nodes = amount_nodes
+        self.sharding_amount = sharding_amount
+
+        self.__build_queues()
+
+    def __build_queues(self):
+        for idx_worker in range(1, self.amount_nodes+1):
+            self.channel.queue_declare(queue=self.name_queue+str(idx_worker))
+
+    def __get_shards(self, id_client):
+        start_idx = id_client % self.amount_nodes
+        list_idxs = []
+
+        for i in range(start_idx, start_idx+self.sharding_amount):
+            name_queue = self.name_queue + str((i % self.amount_nodes)+1)
+            list_idxs.append(name_queue)
+
+        return list_idxs
+
+    def send_static(self, msg, id_client):
+        list_shards = self.__get_shards(id_client)
+        for name_queue in list_shards:
+            self.channel.basic_publish(
+                exchange="", routing_key=name_queue, body=msg
+            )
+
+    def send_workers(self, msg, id_client):
+        list_shards = self.__get_shards(id_client)
+        self.channel.basic_publish(
+            exchange="", routing_key=random.choice(list_shards), body=msg
+        )

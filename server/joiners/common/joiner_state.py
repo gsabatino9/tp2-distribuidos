@@ -10,7 +10,8 @@ class JoinerState:
         return self.__get_client(id_client).join_trip(trip)
 
     def delete_client(self, id_client):
-        self.clients.pop(id_client)
+        if id_client in self.clients:
+            self.clients.pop(id_client)
 
     def __get_client(self, id_client):
         if id_client not in self.clients:

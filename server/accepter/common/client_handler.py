@@ -17,6 +17,9 @@ class ClientHandler(Thread):
         name_session_manager_queue,
         name_em_queue,
         amount_queries,
+        size_stations,
+        size_weather,
+        sharding_amount
     ):
         super().__init__()
         self.running = True
@@ -29,6 +32,9 @@ class ClientHandler(Thread):
         self.name_session_manager_queue = name_session_manager_queue
         self.name_em_queue = name_em_queue
         self.amount_queries = amount_queries
+        self.size_stations = size_stations
+        self.size_weather = size_weather
+        self.sharding_amount = sharding_amount
         self.active = False
 
     def run(self):
@@ -60,7 +66,7 @@ class ClientHandler(Thread):
                     print("action: client_clossed")
                     self.active = False
 
-            self.client_connection.socket.close()
+            #self.client_connection.socket.close()
 
     def __assign_id_to_client(self):
         self.session_manager_queue.send(self.client_address)
@@ -89,13 +95,15 @@ class ClientHandler(Thread):
         msg = encode_header(header) + payload_bytes
 
         if is_station(header):
-            self.stations_queue.send(msg)
+            self.stations_queue.send_static(msg, header.id_client)
         elif is_weather(header):
-            self.weather_queue.send(msg)
+            self.weather_queue.send_static(msg, header.id_client)
         else:
-            self.__send_msg_to_trips(msg)
+            self.__send_msg_to_trips(msg, header.id_client)
 
-    def __send_msg_to_trips(self, msg):
+    def __send_msg_to_trips(self, msg, id_client):
+        self.stations_queue.send_workers(msg, id_client)
+        self.weather_queue.send_workers(msg, id_client)
         [trips_queue.send(msg) for trips_queue in self.trips_queues]
 
     def __send_ack_client(self, id_batch):
@@ -107,11 +115,11 @@ class ClientHandler(Thread):
     def __connect_queues(self):
         try:
             self.queue_connection = Connection()
-            self.stations_queue = self.queue_connection.basic_queue(
-                self.name_stations_queue
+            self.stations_queue = self.queue_connection.sharding_queue(
+                self.name_stations_queue, self.size_stations, self.sharding_amount
             )
-            self.weather_queue = self.queue_connection.basic_queue(
-                self.name_weather_queue
+            self.weather_queue = self.queue_connection.sharding_queue(
+                self.name_weather_queue, self.size_weather, self.sharding_amount
             )
             self.trips_queues = [
                 self.queue_connection.basic_queue(q) for q in self.name_trips_queues

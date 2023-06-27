@@ -86,16 +86,15 @@ def init_accepters(queues, em_queues, status_queues, amount_nodes):
             queues["joiners"]["stations"],
             queues["joiners"]["weather"],
             [
-                # TODO: no pasarle esto, y aprovecho para filtrar antes.
-                queues["joiners"]["stations"],
-                queues["joiners"]["weather"],
                 queues["groupby_query4"],
             ],
             em_queues["joiners"],
             status_queues["new_clients"],
             queues["session_manager"]["init_session"],
             queues["accepter"],
-            port,
+            amount_nodes["joiner_stations"],
+            amount_nodes["joiner_weather"],
+            amount_nodes["sharding_amount"],
             port,
             port,
         )
@@ -106,30 +105,40 @@ def init_accepters(queues, em_queues, status_queues, amount_nodes):
 
 
 def init_joiners(queues, em_queues, status_queues, amount_nodes):
-    joiner_stations = JOINER_STATIONS.format(
-        queues["joiners"]["stations"],
-        queues["joiners"]["join_trip_stations"],
-        em_queues["joiners"],
-        queues["filters"]["exchange"],
-        [
-            queues["filters"]["filter_year"],
-            queues["filters"]["filter_distance"],
-        ],
-        [
-            amount_nodes["filter_year"],
-            amount_nodes["filter_distance"],
-        ],
-    )
-    joiner_weather = JOINER_WEATHER.format(
-        queues["joiners"]["weather"],
-        queues["joiners"]["join_trip_weather"],
-        em_queues["joiners"],
-        queues["filters"]["exchange"],
-        [
-            queues["filters"]["filter_pretoc"],
-        ],
-        [amount_nodes["filter_pretoc"]],
-    )
+    joiner_stations = ""
+    for i in range(1, amount_nodes["joiner_stations"] + 1):
+        joiner_stations += JOINER_STATIONS.format(
+            i,
+            i,
+            queues["joiners"]["stations"],
+            queues["joiners"]["join_trip_stations"],
+            em_queues["joiners"],
+            queues["filters"]["exchange"],
+            [
+                queues["filters"]["filter_year"],
+                queues["filters"]["filter_distance"],
+            ],
+            [
+                amount_nodes["filter_year"],
+                amount_nodes["filter_distance"],
+            ],
+            i
+        )
+    joiner_weather = ""
+    for i in range(1, amount_nodes["joiner_weather"] + 1):
+        joiner_weather += JOINER_WEATHER.format(
+            i,
+            i,
+            queues["joiners"]["weather"],
+            queues["joiners"]["join_trip_weather"],
+            em_queues["joiners"],
+            queues["filters"]["exchange"],
+            [
+                queues["filters"]["filter_pretoc"],
+            ],
+            [amount_nodes["filter_pretoc"]],
+            i
+        )
 
     em_joiners = EM_JOINERS.format(
         em_queues["joiners"],
@@ -139,6 +148,8 @@ def init_joiners(queues, em_queues, status_queues, amount_nodes):
         queues["joiners"]["join_trip_stations"],
         queues["joiners"]["join_trip_weather"],
         status_queues["new_clients"],
+        amount_nodes["joiner_stations"],
+        amount_nodes["joiner_weather"],
     )
 
     return joiner_stations, joiner_weather, em_joiners
@@ -390,8 +401,10 @@ def get_containers_keep_alive(amount_nodes):
     containers_keep_alive.append("groupby_all_elements")
     containers_keep_alive.append("eof_manager_groupby")
 
-    containers_keep_alive.append("joiner_weather")
-    containers_keep_alive.append("joiner_stations")
+    for i in range(amount_nodes["joiner_weather"]):
+        containers_keep_alive.append("joiner_weather_" + str(i+1))
+    for i in range(amount_nodes["joiner_stations"]):
+        containers_keep_alive.append("joiner_stations_" + str(i+1))
     containers_keep_alive.append("eof_manager_joiners")
 
     containers_keep_alive.append("session_manager")

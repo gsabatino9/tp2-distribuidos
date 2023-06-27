@@ -22,6 +22,9 @@ class Accepter:
         name_session_manager_queue,
         name_recv_ids_queue,
         amount_queries,
+        size_stations,
+        size_weather,
+        sharding_amount,
         max_clients=5,
     ):
         self.running = True
@@ -37,7 +40,7 @@ class Accepter:
         self.name_trips_queues = name_trips_queues
         self.name_session_manager_queue = name_session_manager_queue
         self.name_em_queue = name_em_queue
-        queues = self.__create_client_handlers()
+        queues = self.__create_client_handlers(size_stations, size_weather, sharding_amount)
         self.recv_ids = ReceiverIds(name_recv_ids_queue, self.clients_connections, queues)
         self.keep_alive = KeepAlive()
         print("action: accepter_started | result: success")
@@ -48,11 +51,12 @@ class Accepter:
 
         return skt
 
-    def __create_client_handlers(self):
+    def __create_client_handlers(self, size_stations, size_weather, sharding_amount):
         self.clients_handlers = []
         self.accepter_queue = queue.Queue(maxsize=3)
         queues = [queue.Queue() for _ in range(3)]
 
+        # TODO: cambiar a parámetro.
         for i in range(3):
             client_handler = ClientHandler(
                 self.accepter_queue,
@@ -63,6 +67,9 @@ class Accepter:
                 self.name_session_manager_queue,
                 self.name_em_queue,
                 self.amount_queries,
+                size_stations,
+                size_weather,
+                sharding_amount
             )
             client_handler.start()
             self.clients_handlers.append(client_handler)

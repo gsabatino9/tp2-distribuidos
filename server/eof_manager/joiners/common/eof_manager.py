@@ -13,6 +13,8 @@ class EOFManager:
         name_stations_queue,
         name_weather_queue,
         name_status_queue,
+        size_stations,
+        size_weather,
     ):
         self.__init_eof_manager()
         self.__connect(
@@ -21,6 +23,8 @@ class EOFManager:
             name_stations_queue,
             name_weather_queue,
             name_status_queue,
+            size_stations,
+            size_weather,
         )
         self.__run()
 
@@ -39,11 +43,17 @@ class EOFManager:
         name_stations_queue,
         name_weather_queue,
         name_status_queue,
+        size_stations,
+        size_weather,
     ):
         try:
             self.queue_connection = Connection()
             self.send_queue = self.queue_connection.pubsub_queue(name_send_queue)
             self.recv_queue = self.queue_connection.pubsub_queue(name_recv_queue)
+            self.joiners_queue = self.queue_connection.multiple_queues(
+                [name_stations_queue, name_weather_queue],
+                [size_stations, size_weather]
+            )
             self.stations_queue = self.queue_connection.basic_queue(name_stations_queue)
             self.weather_queue = self.queue_connection.basic_queue(name_weather_queue)
 
@@ -90,8 +100,7 @@ class EOFManager:
         it sends EOF to each known worker, depends on the type of EOF.
         """
         print(f"action: send_eofs | result: success | msg: eof arrived")
-        self.stations_queue.send(msg)
-        self.weather_queue.send(msg)
+        self.joiners_queue.broadcast(msg)
 
     def __recv_ack_trips(self, header, body):
         """

@@ -50,6 +50,9 @@
 		},
 		"amount_nodes": {
 			"accepter": 2,
+			"joiner_stations": 3,
+			"joiner_weather": 3,
+			"sharding_amount": 2,
 			"filter_year": 1,
 			"filter_pretoc": 1,
 			"filter_distance": 1,
