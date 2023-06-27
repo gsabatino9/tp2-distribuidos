@@ -100,10 +100,10 @@ class ApplierController:
 
     def stop(self, *args):
         if self.running:
+            self.running = False
             self.queue_connection.stop_receiving()
             self.queue_connection.close()
             print(
                 "action: close_resource | result: success | resource: rabbit_connection"
             )
 
-            self.running = False
