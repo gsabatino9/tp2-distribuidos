@@ -1,7 +1,7 @@
 import queue
 from threading import Thread
 from server.common.utils_messages_client import last_message
-from server.common.utils_messages_results import request_message, is_error
+from server.common.utils_messages_results import request_message, is_error, delete_message
 from server.common.queue.connection import Connection
 
 
@@ -42,7 +42,7 @@ class ClientHandler(Thread):
                     self.client_connection.send_results(batch, is_last=False)
                 self.client_connection.send_results(last_message(), is_last=True)
 
-                self.__stop_connection()
+                self.__stop_connection(header.id_client)
 
             self.client_connection.stop()
 
@@ -50,7 +50,7 @@ class ClientHandler(Thread):
         msg = request_message(self.id_client_handler, id_client)
         self.request_queue.send(msg, routing_key="request_results")
 
-    def __stop_connection(self):
-        # también tenemos que informar al results_verifier que borre
+    def __stop_connection(self, id_client):
+        self.request_queue.send(delete_message(id_client), routing_key="request_results")
         self.session_manager_queue.send(self.client_address)
         #self.client_connection.stop()

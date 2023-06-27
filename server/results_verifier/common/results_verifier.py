@@ -4,7 +4,7 @@ from server.common.queue.connection import Connection
 from server.common.utils_messages_client import results_message, last_message
 from server.common.utils_messages_eof import ack_msg, get_id_client
 from server.common.utils_messages_group import decode, is_eof
-from server.common.utils_messages_results import decode_request_results, error_message
+from server.common.utils_messages_results import decode_request_results, error_message, is_delete_message, decode_delete_client
 from server.common.keep_alive.keep_alive import KeepAlive
 
 
@@ -106,13 +106,17 @@ class ResultsVerifier:
 
     def process_messages(self, body, id_query):
         if id_query == 'request_results':
-            id_client_handler, id_client = decode_request_results(body)
-            self.__verify_client(id_client)
-
-            if self.__verify_last_result(id_client):
-                self.__inform_results(id_client_handler, id_client)
+            if is_delete_message(body):
+                id_client = decode_delete_client(body)
+                self.__delete_client(id_client)
             else:
-                self.__inform_error(id_client_handler)
+                id_client_handler, id_client = decode_request_results(body)
+                self.__verify_client(id_client)
+
+                if self.__verify_last_result(id_client):
+                    self.__inform_results(id_client_handler, id_client)
+                else:
+                    self.__inform_error(id_client_handler)
         else:
             id_query = int(id_query)
             if is_eof(body):
