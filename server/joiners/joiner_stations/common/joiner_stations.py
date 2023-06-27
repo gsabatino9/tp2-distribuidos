@@ -12,7 +12,7 @@ class JoinerStations:
             name_trips_queue,
             name_em_queue,
             name_next_stage_queue,
-            JoinerState(lambda _: StationsData()),
+            JoinerState(lambda bucket: StationsData(storage=bucket)),
         )
 
     def stop(self):

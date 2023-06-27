@@ -12,7 +12,7 @@ class JoinerWeather:
             name_trips_queue,
             name_em_queue,
             name_next_stage_queue,
-            JoinerState(lambda _: WeatherData()),
+            JoinerState(lambda bucket: WeatherData(storage=bucket)),
         )
 
     def stop(self):

@@ -1,28 +1,20 @@
-class WeatherData:
-    def __init__(self, idx_date=0, len_msg=10):
-        self.weathers = {}
-        self.idx_date = idx_date
-        self.idxs_joined_data = []
+from server.common.atomic_storage.atomic_storage import AtomicBucket
+from server.joiners.common.join_data import JoinData
 
-        for i in range(len_msg):
-            if i != idx_date:
-                self.idxs_joined_data.append(i)
+
+class WeatherData:
+    def __init__(self, idx_date=0, len_msg=10, storage=None):
+        self._data = JoinData((idx_date,), len_msg, backing_storage=storage)
 
     def add_data(self, weather):
-        idx_date = weather[self.idx_date]
-        self.weathers[idx_date] = [
-            elem for i, elem in enumerate(weather) if i in self.idxs_joined_data
-        ]
+        self._data.add_data(weather)
 
     def join_trip(self, trip):
-        try:
-            start_date, end_date = trip[0], trip[2]
-            start_weather = self.__join_trip(start_date)
-            end_weather = self.__join_trip(end_date)
+        start_date, end_date = trip[0], trip[2]
+        start_weather = self._data.find_record((start_date,))
+        end_weather = self._data.find_record((end_date,))
 
-            return ",".join(trip + start_weather + end_weather)
-        except:
-            return None
+        return ",".join(trip + start_weather + end_weather)
 
-    def __join_trip(self, date):
-        return self.weathers[date]
+    def drop(self):
+        self._data.drop()

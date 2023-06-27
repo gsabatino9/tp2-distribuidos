@@ -27,6 +27,8 @@ class JoinerController:
         signal.signal(signal.SIGTERM, self.stop)
 
         self.joiner = joiner
+        self.current_fetch_count = 0
+        self.prefetch_limit = 1000
         self.keep_alive = KeepAlive()
         print("action: joiner_started | result: success")
 
@@ -35,8 +37,12 @@ class JoinerController:
     ):
         try:
             self.queue_connection = Connection()
-            self.recv_queue = self.queue_connection.basic_queue(name_recv_queue)
-            self.trips_queue = self.queue_connection.basic_queue(name_trips_queue)
+            self.recv_queue = self.queue_connection.basic_queue(
+                name_recv_queue, auto_ack=False
+            )
+            self.trips_queue = self.queue_connection.basic_queue(
+                name_trips_queue, auto_ack=False
+            )
             self.em_queue = self.queue_connection.pubsub_queue(name_em_queue)
             self.next_stage_queue = self.queue_connection.pubsub_queue(
                 name_next_stage_queue
@@ -50,7 +56,9 @@ class JoinerController:
         start receiving messages.
         """
         self.keep_alive.start()
-        self.recv_queue.receive(self.process_messages)
+        self.recv_queue.receive(
+            self.process_messages, prefetch_count=self.prefetch_limit
+        )
         try:
             self.queue_connection.start_receiving()
         except:
@@ -60,10 +68,20 @@ class JoinerController:
         self.keep_alive.join()
 
     def process_messages(self, body):
+        if self.current_fetch_count * 10 // 8 > self.prefetch_limit:
+            self.__ack_messages()
+
+        self.current_fetch_count += 1
         if is_eof(body):
             self.__last_static_data_arrived()
+            self.__ack_messages()
         else:
             self.__static_data_arrived(body)
+
+    def __ack_messages(self):
+        self.joiner.write_checkpoints()
+        self.recv_queue.ack_all()
+        self.current_fetch_count = 0
 
     def __last_static_data_arrived(self):
         print(
@@ -85,8 +103,13 @@ class JoinerController:
             self.joiner.add_data(id_client, data)
 
     def process_join_messages(self, body):
+        if self.current_fetch_count * 10 // 8 > self.prefetch_limit:
+            self.__ack_messages()
+
+        self.current_fetch_count += 1
         if is_eof(body):
             self.__last_trip_arrived(body)
+            self.__ack_messages()
         else:
             self.__request_join_arrived(body)
 
