@@ -25,7 +25,7 @@ class Accepter:
         size_stations,
         size_weather,
         sharding_amount,
-        max_clients=5,
+        max_clients=3,
     ):
         self.running = True
         signal.signal(signal.SIGTERM, self.stop)
@@ -53,11 +53,10 @@ class Accepter:
 
     def __create_client_handlers(self, size_stations, size_weather, sharding_amount):
         self.clients_handlers = []
-        self.accepter_queue = queue.Queue(maxsize=3)
-        queues = [queue.Queue() for _ in range(3)]
+        self.accepter_queue = queue.Queue()
+        queues = [queue.Queue() for _ in range(self.max_clients)]
 
-        # TODO: cambiar a parámetro.
-        for i in range(3):
+        for i in range(self.max_clients):
             client_handler = ClientHandler(
                 self.accepter_queue,
                 queues[i],
@@ -85,30 +84,41 @@ class Accepter:
         while self.running:
             self.__accept_client()
 
-        for client_handler in self.clients_handlers:
-            client_handler.join()
-
-        self.recv_ids.join()
-        self.keep_alive.stop()
-        self.keep_alive.join()
+        self.__free_resources()
 
     def __accept_client(self):
-        client_socket, _ = self.accepter_socket.accept()
-        client_connection = CommunicationServer(client_socket)
-        self.accepter_queue.put(client_connection)
-        print(
-            f"action: client_connected | result: success | msg: starting to receive data | client_address: {client_connection.getpeername()}"
-        )
+        try:
+            client_socket, _ = self.accepter_socket.accept()
+            client_connection = CommunicationServer(client_socket)
+            self.accepter_queue.put(client_connection)
+            print(
+                f"action: client_connected | result: success | msg: starting to receive data | client_address: {client_connection.getpeername()}"
+            )
+        except:
+            if self.running:
+                raise
+
+    def __free_resources(self):
+        print("sale del accept")
+        [client_handler.stop() for client_handler in self.clients_handlers]
+        [client_handler.join() for client_handler in self.clients_handlers]
+        print("sale del ch")
+
+        try:
+            while True:
+                client_connection = self.accepter_queue.get_nowait()
+                if client_connection:
+                    client_connection.stop()
+        except queue.Empty:
+            pass
+        self.recv_ids.stop()
+        self.recv_ids.join()
+        print("sale del rid")
+        self.keep_alive.stop()
+        self.keep_alive.join()
 
     def stop(self, *args):
         if self.running:
             self.running = False
-
             self.accepter_socket.shutdown(socket.SHUT_RDWR)
-            for client_handler in self.clients_handlers:
-                try:
-                    client_handler.stop()
-                    self.accepter_queue.put_nowait(None)
-                except queue.QueueFull:
-                    pass
 

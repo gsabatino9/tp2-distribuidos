@@ -19,14 +19,8 @@ class ClientHandler(Thread):
         self.queue_results = queue_results
         self.id_client_handler = id_client_handler
 
-        try:
-            self.queue_connection = Connection()
-            self.session_manager_queue = self.queue_connection.pubsub_queue(
-                name_session_manager_queue
-            )
-            self.request_queue = self.queue_connection.routing_queue(name_request_queue)
-        except OSError as e:
-            print(f"error: creating_queue_connection | log: {e}")
+        self.name_session_manager_queue = name_session_manager_queue
+        self.name_request_queue = name_request_queue
 
     def run(self):
         while True:
@@ -34,6 +28,7 @@ class ClientHandler(Thread):
             self.client_address = self.client_connection.getpeername()[0]
 
             header, _ = self.client_connection.recv_data(decode_payload=False)
+            self.__connect_queues()
             self.__send_request_results_verifier(header.id_client)
             results_batches = self.queue_results.get()
 
@@ -45,6 +40,17 @@ class ClientHandler(Thread):
                 self.__stop_connection(header.id_client)
 
             self.client_connection.stop()
+            self.queue_connection.close()
+
+    def __connect_queues(self):
+        try:
+            self.queue_connection = Connection()
+            self.session_manager_queue = self.queue_connection.pubsub_queue(
+                self.name_session_manager_queue
+            )
+            self.request_queue = self.queue_connection.routing_queue(self.name_request_queue)
+        except OSError as e:
+            print(f"error: creating_queue_connection | log: {e}")
 
     def __send_request_results_verifier(self, id_client):
         msg = request_message(self.id_client_handler, id_client)

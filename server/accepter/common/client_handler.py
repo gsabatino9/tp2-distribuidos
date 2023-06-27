@@ -38,35 +38,39 @@ class ClientHandler(Thread):
         self.active = False
 
     def run(self):
-        self.__connect_queues()
 
         while self.running:
             self.client_connection = self.accepter_queue.get()
             if not self.client_connection or not self.running:
                 break
+            self.__connect_queues()
+            self.__handle_client()
+            self.queue_connection.close()
+        print("termina el client handler")
 
-            self.client_address = self.client_connection.getpeername()[0]
-            self.active = True
-            while self.active and self.running:
-                try:
-                    header, payload_bytes = self.client_connection.recv_data(
-                        decode_payload=False
-                    )
+    def __handle_client(self):
+        self.client_address = self.client_connection.getpeername()[0]
+        self.active = True
+        while self.active and self.running:
+            try:
+                header, payload_bytes = self.client_connection.recv_data(
+                    decode_payload=False
+                )
 
-                    if is_get_id(header):
-                        self.__assign_id_to_client()
-                    elif is_eof(header):
-                        self.__send_eof(header)
-                        self.__send_ack_client(header.id_batch)
-                        self.active = False
-                    else:
-                        self.__route_message(header, payload_bytes)
-                        self.__send_ack_client(header.id_batch)
-                except struct.error:
-                    print("action: client_clossed")
+                if is_get_id(header):
+                    self.__assign_id_to_client()
+                elif is_eof(header):
+                    self.__send_eof(header)
+                    self.__send_ack_client(header.id_batch)
                     self.active = False
+                else:
+                    self.__route_message(header, payload_bytes)
+                    self.__send_ack_client(header.id_batch)
+            except:
+                print("action: client_clossed")
+                self.active = False
 
-            #self.client_connection.socket.close()
+        self.client_connection.stop()
 
     def __assign_id_to_client(self):
         self.session_manager_queue.send(self.client_address)
@@ -134,6 +138,10 @@ class ClientHandler(Thread):
     def stop(self):
         if self.running:
             self.running = False
-            if hasattr(self, "client_connection"):
-                self.client_connection.socket.shutdown(socket.SHUT_RDWR)
+            if self.active:
+                try:
+                    self.client_connection.comm.socket.shutdown(socket.SHUT_RDWR)
+                except:
+                    print("error: shutdown_client_connection_failed")
             self.queue_client.put((None, None))
+            self.accepter_queue.put(None)
