@@ -5,45 +5,53 @@ from server.common.utils_messages_eof import ack_msg, get_id_client
 from server.common.keep_alive.keep_alive import KeepAlive
 
 
-
 class JoinerController:
     def __init__(
         self,
         name_recv_queue,
         name_trips_queue,
         name_em_queue,
-        name_next_stage_queue,
+        name_next_stage_queues,
+        size_workers_next_stage,
         joiner,
         is_static_data,
     ):
-        self.__init_joiner(joiner, is_static_data)
+        self.__init_joiner(joiner, is_static_data, size_workers_next_stage)
 
         self.__connect(
-            name_recv_queue, name_trips_queue, name_em_queue, name_next_stage_queue
+            name_recv_queue,
+            name_trips_queue,
+            name_em_queue,
+            name_next_stage_queues,
+            size_workers_next_stage,
         )
 
         self.__run()
 
-    def __init_joiner(self, joiner, is_static_data):
+    def __init_joiner(self, joiner, is_static_data, size_workers_next_stage):
         self.running = True
         signal.signal(signal.SIGTERM, self.stop)
 
         self.joiner = joiner
+        self.size_workers_next_stage = size_workers_next_stage
         self.is_static_data = is_static_data
         self.keep_alive = KeepAlive()
         print("action: joiner_started | result: success")
 
     def __connect(
-        self, name_recv_queue, name_trips_queue, name_em_queue, name_next_stage_queue
+        self,
+        name_recv_queue,
+        name_trips_queue,
+        name_em_queue,
+        name_next_stage_queues,
+        size_workers_next_stage,
     ):
         try:
             self.queue_connection = Connection()
             self.recv_queue = self.queue_connection.basic_queue(name_recv_queue)
             self.trips_queue = self.queue_connection.basic_queue(name_trips_queue)
             self.em_queue = self.queue_connection.pubsub_queue(name_em_queue)
-            self.next_stage_queue = self.queue_connection.pubsub_queue(
-                name_next_stage_queue
-            )
+            self.next_stage_queues = self.queue_connection.multiple_queues(name_next_stage_queues, self.size_workers_next_stage)
         except OSError as e:
             print(f"error: creating_queue_connection | log: {e}")
             self.stop()
@@ -109,7 +117,7 @@ class JoinerController:
     def __send_next_stage(self, header, joined_trips):
         if len(joined_trips) > 0:
             msg = construct_msg(header, joined_trips)
-            self.next_stage_queue.send(msg)
+            self.next_stage_queues.send(msg)
 
     def __last_trip_arrived(self, body):
         self.joiner.delete_client(get_id_client(body))

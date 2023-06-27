@@ -2,6 +2,7 @@ from common.eof_manager import EOFManager
 import os, ast
 
 NAME_RECV_QUEUE = os.environ.get("NAME_RECV_QUEUE")
+NAME_FILTERS_EXCHANGE = os.environ.get("NAME_FILTERS_EXCHANGE")
 NAME_FILTERS_QUEUE = os.environ.get("NAME_FILTERS_QUEUE")
 NAME_SEND_QUEUE = os.environ.get("NAME_SEND_QUEUE")
 NAME_STATUS_QUEUE = os.environ.get("NAME_STATUS_QUEUE")
