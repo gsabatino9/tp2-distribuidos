@@ -15,6 +15,3 @@ class WeatherData:
         end_weather = self._data.find_record((end_date,))
 
         return ",".join(trip + start_weather + end_weather)
-
-    def drop(self):
-        self._data.drop()
