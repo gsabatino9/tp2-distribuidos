@@ -1,29 +1,16 @@
-class StationsData:
-    def __init__(self, idx_code=0, idx_yearid=4, len_msg=5):
-        self.stations = {}
-        self.idx_code = idx_code
-        self.idx_yearid = idx_yearid
-        self.idxs_joined_data = []
+from server.joiners.common.join_data import JoinData
 
-        for i in range(len_msg):
-            if i != idx_code and i != idx_yearid:
-                self.idxs_joined_data.append(i)
+
+class StationsData:
+    def __init__(self, idx_code=0, idx_yearid=4, len_msg=5, storage=None):
+        self._data = JoinData((idx_code, idx_yearid), len_msg, backing_storage=storage)
 
     def add_data(self, station):
-        code, yearid = station[self.idx_code], station[self.idx_yearid]
-        self.stations[code, yearid] = [
-            elem for i, elem in enumerate(station) if i in self.idxs_joined_data
-        ]
+        self._data.add_data(station)
 
     def join_trip(self, trip):
-        try:
-            start_code, end_code, yearid = trip[1], trip[3], trip[6]
-            start_station = self.__join_trip(start_code, yearid)
-            end_station = self.__join_trip(end_code, yearid)
+        start_code, end_code, yearid = trip[1], trip[3], trip[6]
+        start_station = self._data.find_record((start_code, yearid))
+        end_station = self._data.find_record((end_code, yearid))
 
-            return ",".join(trip + start_station + end_station)
-        except:
-            return None
-
-    def __join_trip(self, code, yearid):
-        return self.stations[code, yearid]
+        return ",".join(trip + start_station + end_station)

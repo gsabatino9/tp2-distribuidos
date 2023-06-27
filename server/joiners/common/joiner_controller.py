@@ -35,6 +35,8 @@ class JoinerController:
         self.joiner = joiner
         self.size_workers_next_stage = size_workers_next_stage
         self.is_static_data = is_static_data
+        self.prefetch_limit = 1000
+        self.current_fetch_count = 0
         self.keep_alive = KeepAlive()
         print("action: joiner_started | result: success")
 
@@ -48,10 +50,14 @@ class JoinerController:
     ):
         try:
             self.queue_connection = Connection()
-            self.recv_queue = self.queue_connection.basic_queue(name_recv_queue)
+            self.recv_queue = self.queue_connection.basic_queue(
+                name_recv_queue, auto_ack=False
+            )
             self.trips_queue = self.queue_connection.basic_queue(name_trips_queue)
             self.em_queue = self.queue_connection.pubsub_queue(name_em_queue)
-            self.next_stage_queues = self.queue_connection.multiple_queues(name_next_stage_queues, self.size_workers_next_stage)
+            self.next_stage_queues = self.queue_connection.multiple_queues(
+                name_next_stage_queues, self.size_workers_next_stage
+            )
         except OSError as e:
             print(f"error: creating_queue_connection | log: {e}")
             self.stop()
@@ -61,7 +67,9 @@ class JoinerController:
         start receiving messages.
         """
         self.keep_alive.start()
-        self.recv_queue.receive(self.process_messages)
+        self.recv_queue.receive(
+            self.process_messages, prefetch_count=self.prefetch_limit
+        )
         try:
             self.queue_connection.start_receiving()
         except:
@@ -71,6 +79,10 @@ class JoinerController:
         self.keep_alive.join()
 
     def process_messages(self, body):
+        self.current_fetch_count += 1
+        if self.current_fetch_count * 10 // 8 > self.prefetch_limit:
+            self.__ack_messages()
+
         try:
             header, payload = decode(body)
             is_eof = False
@@ -79,10 +91,17 @@ class JoinerController:
 
         if is_eof:
             self.__last_trip_arrived(body)
+            self.__ack_messages()
         elif self.is_static_data(header):
             self.__static_data_arrived(header, payload)
         else:  # is_trip
             self.__request_join_arrived(header, payload)
+
+    def __ack_messages(self):
+        if self.current_fetch_count > 0:
+            self.joiner.write_checkpoints()
+            self.recv_queue.ack_all()
+            self.current_fetch_count = 0
 
     def __static_data_arrived(self, header, chunk_data):
         self.__add_chunk_data(header.id_client, chunk_data)
@@ -131,4 +150,3 @@ class JoinerController:
             print(
                 "action: close_resource | result: success | resource: rabbit_connection"
             )
-

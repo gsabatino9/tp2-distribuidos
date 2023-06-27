@@ -19,7 +19,7 @@ class JoinerWeather:
             name_em_queue,
             name_next_stage_queues,
             size_workers_next_stage,
-            JoinerState(lambda _: WeatherData()),
+            JoinerState(lambda bucket: WeatherData(storage=bucket)),
             lambda data: is_weather(data),
         )
 
