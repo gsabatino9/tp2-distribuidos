@@ -12,8 +12,6 @@ class ReceiverIds(Thread):
 
     def __init_receiver_ids(self, clients_connections, clients_queues):
         self.running = True
-        signal.signal(signal.SIGTERM, self.stop)
-
         self.clients_connections = clients_connections
         self.clients_queues = clients_queues
 
@@ -46,7 +44,8 @@ class ReceiverIds(Thread):
             f"action: id_arrived_client | result: success | id_client: {id_client}"
         )
 
-    def stop(self, *args):
+    def stop(self):
         if self.running:
-            self.queue_connection.close()
             self.running = False
+            self.queue_connection.stop_receiving()
+            

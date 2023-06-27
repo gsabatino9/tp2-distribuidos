@@ -24,7 +24,7 @@ def connect(addresses, suscriptions):
             )
             time.sleep(1)
 
-        return conn
+    return conn
 
 
 def __pick_address(addresses):
