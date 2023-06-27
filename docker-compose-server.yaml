@@ -115,7 +115,9 @@ services:
       - NAME_RECV_QUEUE=joiner_stations_q
       - NAME_TRIPS_QUEUE=join_trip_stations_q
       - NAME_EM_QUEUE=eof_manager_joiners_q
-      - NAME_NEXT_STAGE_QUEUE=filter_joined_stations_q
+      - NAME_NEXT_STAGE_EXCHANGE=filters_exchange
+      - NAME_NEXT_STAGE_QUEUE=['filter_year_q', 'filter_distance_q']
+      - SIZE_WORKERS=[1, 1]
     image: joiner_stations:latest
     networks:      
       - testing_net
@@ -132,7 +134,9 @@ services:
       - NAME_RECV_QUEUE=joiner_weather_q
       - NAME_TRIPS_QUEUE=join_trip_weather_q
       - NAME_EM_QUEUE=eof_manager_joiners_q
-      - NAME_NEXT_STAGE_QUEUE=filter_joined_weather_q
+      - NAME_NEXT_STAGE_EXCHANGE=filters_exchange
+      - NAME_NEXT_STAGE_QUEUE=['filter_pretoc_q']
+      - SIZE_WORKERS=[1]
     image: joiner_weather:latest
     networks:      
       - testing_net
@@ -147,7 +151,7 @@ services:
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
-      - NAME_RECV_EXCHANGE=filter_joined_weather_q
+      - NAME_RECV_EXCHANGE=filters_exchange
       - NAME_RECV_QUEUE=filter_pretoc_q
       - NAME_EM_QUEUE=eof_manager_filters_q
       - NAME_SEND_QUEUE=groupby_start_date_q
@@ -166,7 +170,7 @@ services:
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
-      - NAME_RECV_EXCHANGE=filter_joined_stations_q
+      - NAME_RECV_EXCHANGE=filters_exchange
       - NAME_RECV_QUEUE=filter_year_q
       - NAME_EM_QUEUE=eof_manager_filters_q
       - NAME_SEND_QUEUE=groupby_start_station_q
@@ -184,7 +188,7 @@ services:
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
-      - NAME_RECV_EXCHANGE=filter_joined_stations_q
+      - NAME_RECV_EXCHANGE=filters_exchange
       - NAME_RECV_QUEUE=filter_distance_q
       - NAME_EM_QUEUE=eof_manager_filters_q
       - NAME_SEND_QUEUE=groupby_end_station_q
@@ -207,7 +211,9 @@ services:
       - PYTHONUNBUFFERED=1
       - NAME_RECV_QUEUE=groupby_start_date_q
       - NAME_EM_QUEUE=eof_manager_groupby_q
+      - NAME_SEND_EXCHANGE=appliers_exchange
       - NAME_SEND_QUEUE=mean_duration_applier_1_q
+      - SIZE_WORKERS_SEND=1
       - CHUNK_SIZE=100
     image: groupby_start_date:latest
     networks:      
@@ -224,7 +230,9 @@ services:
       - PYTHONUNBUFFERED=1
       - NAME_RECV_QUEUE=groupby_start_station_q
       - NAME_EM_QUEUE=eof_manager_groupby_q
+      - NAME_SEND_EXCHANGE=appliers_exchange
       - NAME_SEND_QUEUE=double_year_applier_q
+      - SIZE_WORKERS_SEND=1
       - CHUNK_SIZE=100
     image: groupby_start_station:latest
     networks:      
@@ -241,7 +249,9 @@ services:
       - PYTHONUNBUFFERED=1
       - NAME_RECV_QUEUE=groupby_end_station_q
       - NAME_EM_QUEUE=eof_manager_groupby_q
+      - NAME_SEND_EXCHANGE=appliers_exchange
       - NAME_SEND_QUEUE=mean_distance_applier_q
+      - SIZE_WORKERS_SEND=1
       - CHUNK_SIZE=100
     image: groupby_end_station:latest
     networks:      
@@ -258,7 +268,9 @@ services:
       - PYTHONUNBUFFERED=1
       - NAME_RECV_QUEUE=groupby_all_elements_q
       - NAME_EM_QUEUE=eof_manager_groupby_q
+      - NAME_SEND_EXCHANGE=appliers_exchange
       - NAME_SEND_QUEUE=mean_duration_applier_4_q
+      - SIZE_WORKERS_SEND=1
       - ID_QUERY=4
       - CHUNK_SIZE=100
     image: groupby_all_elements:latest
@@ -275,6 +287,7 @@ services:
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
+      - NAME_RECV_EXCHANGE=appliers_exchange
       - NAME_RECV_QUEUE=mean_duration_applier_1_q
       - NAME_EM_QUEUE=eof_manager_applier_q
       - NAME_SEND_QUEUE=query_results_q
@@ -293,6 +306,7 @@ services:
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
+      - NAME_RECV_EXCHANGE=appliers_exchange
       - NAME_RECV_QUEUE=double_year_applier_q
       - NAME_EM_QUEUE=eof_manager_applier_q
       - NAME_SEND_QUEUE=query_results_q
@@ -310,6 +324,7 @@ services:
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
+      - NAME_RECV_EXCHANGE=appliers_exchange
       - NAME_RECV_QUEUE=mean_distance_applier_q
       - NAME_EM_QUEUE=eof_manager_applier_q
       - NAME_SEND_QUEUE=query_results_q
@@ -327,6 +342,7 @@ services:
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
+      - NAME_RECV_EXCHANGE=appliers_exchange
       - NAME_RECV_QUEUE=mean_duration_applier_4_q
       - NAME_EM_QUEUE=eof_manager_applier_q
       - NAME_SEND_QUEUE=query_results_q
@@ -389,6 +405,7 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
       - NAME_RECV_QUEUE=eof_manager_filters_q
+      - NAME_FILTERS_EXCHANGE=filters_exchange
       - NAME_FILTERS_QUEUE=['filter_year_q', 'filter_pretoc_q', 'filter_distance_q']
       - NAME_SEND_QUEUE=eof_manager_groupby_q
       - NAME_STATUS_QUEUE=new_clients_q
@@ -424,6 +441,7 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
       - NAME_RECV_QUEUE=eof_manager_applier_q
+      - NAME_APPLIERS_EXCHANGE=appliers_exchange
       - NAME_APPLIERS_QUEUES=['mean_duration_applier_1_q', 'double_year_applier_q', 'mean_distance_applier_q', 'mean_duration_applier_4_q']
       - NAME_SEND_QUEUE=eof_manager_query_result_q
       - NAME_STATUS_QUEUE=new_clients_q
@@ -459,7 +477,7 @@ services:
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
-      - MAX_CLIENTS=1
+      - MAX_CLIENTS=3
       - NAME_RECV_QUEUE=session_manager_q
       - NAME_SEND_QUEUE=accepter_q
       - NAME_END_SESSION_QUEUE=end_session_q

@@ -15,14 +15,13 @@ class ApplierController:
         id_query,
         operation,
         gen_result_msg,
-        id_applier
     ):
-        self.__init_applier(str(id_query), gen_result_msg, operation, id_applier)
+        self.__init_applier(str(id_query), gen_result_msg, operation)
 
         self.__connect(name_recv_queue, name_em_queue, name_send_queue)
         self.__run()
 
-    def __init_applier(self, id_query, gen_result_msg, operation, id_applier):
+    def __init_applier(self, id_query, gen_result_msg, operation):
         self.running = True
         signal.signal(signal.SIGTERM, self.stop)
 
@@ -30,15 +29,12 @@ class ApplierController:
         self.gen_result_msg = gen_result_msg
         self.applier = Applier(operation)
         self.keep_alive = KeepAlive()
-        self.id_applier = id_applier
         print("action: applier_started | result: success")
 
     def __connect(self, name_recv_queue, name_em_queue, name_send_queue):
         try:
             self.queue_connection = Connection()
-            self.recv_queue = self.queue_connection.pubsub_worker_queue(
-                name_recv_queue, name_recv_queue+self.id_applier
-            )
+            self.recv_queue = self.queue_connection.basic_queue(name_recv_queue)
             self.send_queue = self.queue_connection.routing_queue(name_send_queue)
 
             self.em_queue = self.queue_connection.pubsub_queue(name_em_queue)
@@ -68,6 +64,7 @@ class ApplierController:
 
     def __agroup_trips_arrived(self, body):
         header, agrouped_trips = decode(body)
+        print("llegó trip:", header)
 
         result_trips = self.__apply_condition_to_agrouped_trips(agrouped_trips)
         self.__send_result(header.id_client, result_trips)

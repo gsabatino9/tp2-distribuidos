@@ -134,16 +134,24 @@ class Client:
         return chunk
 
     def __get_results(self, addr_consult):
-        self.__connect_with_consults_server(addr_consult[0], addr_consult[1])
         results = {i: [] for i in self.suscriptions}
         ended = False
-
         while not ended:
-            header, payload = self.conn.recv_results()
-            if is_eof(header):
+            try:
+                self.__connect_with_consults_server(addr_consult[0], addr_consult[1])
+                while True:
+                    header, payload = self.conn.recv_results()
+                    if is_eof(header):
+                        break
+                    else:
+                        results[header.id_query].append(payload.data)
+
                 ended = True
-            else:
-                results[header.id_query].append(payload.data)
+            except:
+                print(
+                    f"action: id_client_received | result: failure | msg: retrying in 1sec"
+                )
+                time.sleep(1)
 
         print(f"action: results_obtained | result: success | results: {results}")
         self.__save_results(results)

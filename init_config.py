@@ -90,7 +90,9 @@ JOINER_STATIONS = """
       - NAME_RECV_QUEUE={}
       - NAME_TRIPS_QUEUE={}
       - NAME_EM_QUEUE={}
+      - NAME_NEXT_STAGE_EXCHANGE={}
       - NAME_NEXT_STAGE_QUEUE={}
+      - SIZE_WORKERS={}
     image: joiner_stations:latest
     networks:      
       - testing_net
@@ -108,7 +110,9 @@ JOINER_WEATHER = """
       - NAME_RECV_QUEUE={}
       - NAME_TRIPS_QUEUE={}
       - NAME_EM_QUEUE={}
+      - NAME_NEXT_STAGE_EXCHANGE={}
       - NAME_NEXT_STAGE_QUEUE={}
+      - SIZE_WORKERS={}
     image: joiner_weather:latest
     networks:      
       - testing_net
@@ -185,7 +189,9 @@ GROUPBY_QUERY1 = """
       - PYTHONUNBUFFERED=1
       - NAME_RECV_QUEUE={}
       - NAME_EM_QUEUE={}
+      - NAME_SEND_EXCHANGE={}
       - NAME_SEND_QUEUE={}
+      - SIZE_WORKERS_SEND={}
       - CHUNK_SIZE=100
     image: groupby_start_date:latest
     networks:      
@@ -203,7 +209,9 @@ GROUPBY_QUERY2 = """
       - PYTHONUNBUFFERED=1
       - NAME_RECV_QUEUE={}
       - NAME_EM_QUEUE={}
+      - NAME_SEND_EXCHANGE={}
       - NAME_SEND_QUEUE={}
+      - SIZE_WORKERS_SEND={}
       - CHUNK_SIZE=100
     image: groupby_start_station:latest
     networks:      
@@ -221,7 +229,9 @@ GROUPBY_QUERY3 = """
       - PYTHONUNBUFFERED=1
       - NAME_RECV_QUEUE={}
       - NAME_EM_QUEUE={}
+      - NAME_SEND_EXCHANGE={}
       - NAME_SEND_QUEUE={}
+      - SIZE_WORKERS_SEND={}
       - CHUNK_SIZE=100
     image: groupby_end_station:latest
     networks:      
@@ -239,7 +249,9 @@ GROUPBY_QUERY4 = """
       - PYTHONUNBUFFERED=1
       - NAME_RECV_QUEUE={}
       - NAME_EM_QUEUE={}
+      - NAME_SEND_EXCHANGE={}
       - NAME_SEND_QUEUE={}
+      - SIZE_WORKERS_SEND={}
       - ID_QUERY=4
       - CHUNK_SIZE=100
     image: groupby_all_elements:latest
@@ -256,6 +268,7 @@ APPLIER_QUERY1 = """
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
+      - NAME_RECV_EXCHANGE={}
       - NAME_RECV_QUEUE={}
       - NAME_EM_QUEUE={}
       - NAME_SEND_QUEUE={}
@@ -275,6 +288,7 @@ APPLIER_QUERY2 = """
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
+      - NAME_RECV_EXCHANGE={}
       - NAME_RECV_QUEUE={}
       - NAME_EM_QUEUE={}
       - NAME_SEND_QUEUE={}
@@ -293,6 +307,7 @@ APPLIER_QUERY3 = """
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
+      - NAME_RECV_EXCHANGE={}
       - NAME_RECV_QUEUE={}
       - NAME_EM_QUEUE={}
       - NAME_SEND_QUEUE={}
@@ -311,6 +326,7 @@ APPLIER_QUERY4 = """
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
+      - NAME_RECV_EXCHANGE={}
       - NAME_RECV_QUEUE={}
       - NAME_EM_QUEUE={}
       - NAME_SEND_QUEUE={}
@@ -331,6 +347,7 @@ EM_FILTERS = """
     environment:
       - PYTHONUNBUFFERED=1
       - NAME_RECV_QUEUE={}
+      - NAME_FILTERS_EXCHANGE={}
       - NAME_FILTERS_QUEUE={}
       - NAME_SEND_QUEUE={}
       - NAME_STATUS_QUEUE={}
@@ -389,6 +406,7 @@ EM_APPLIERS = """
     environment:
       - PYTHONUNBUFFERED=1
       - NAME_RECV_QUEUE={}
+      - NAME_APPLIERS_EXCHANGE={}
       - NAME_APPLIERS_QUEUES={}
       - NAME_SEND_QUEUE={}
       - NAME_STATUS_QUEUE={}

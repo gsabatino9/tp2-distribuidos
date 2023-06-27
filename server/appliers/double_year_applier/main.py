@@ -8,7 +8,7 @@ ID_APPLIER = os.environ.get("ID_APPLIER")
 
 
 def main():
-    a = DoubleYearApplier(NAME_RECV_QUEUE, NAME_EM_QUEUE, NAME_SEND_QUEUE, ID_APPLIER)
+    a = DoubleYearApplier(NAME_RECV_QUEUE+ID_APPLIER, NAME_EM_QUEUE, NAME_SEND_QUEUE)
     a.stop()
 
 

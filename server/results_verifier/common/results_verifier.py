@@ -4,6 +4,7 @@ from server.common.queue.connection import Connection
 from server.common.utils_messages_client import results_message, last_message
 from server.common.utils_messages_eof import ack_msg, get_id_client
 from server.common.utils_messages_group import decode, is_eof
+from server.common.utils_messages_results import decode_request_results, error_message, is_delete_message, decode_delete_client
 from server.common.keep_alive.keep_alive import KeepAlive
 
 
@@ -23,6 +24,7 @@ class ResultsVerifier:
         self.__init_results_verifier(
             address_consult_clients,
             name_session_manager_queue,
+            name_recv_queue,
             name_send_exchange,
             name_send_queue,
             amount_queries,
@@ -39,6 +41,7 @@ class ResultsVerifier:
         self,
         address_consult_clients,
         name_session_manager_queue,
+        name_recv_queue,
         name_send_exchange,
         name_send_queue,
         amount_queries,
@@ -50,11 +53,13 @@ class ResultsVerifier:
         self.queries_results = {}
         self.queries_ended = {}
         self.amount_queries = amount_queries
+
+        self.client_handlers_queues = [queue.Queue() for i in range(3)]
         self.sender = ResultsSender(
-            address_consult_clients,
             name_session_manager_queue,
-            name_send_exchange,
-            name_send_queue,
+            name_recv_queue,
+            address_consult_clients,
+            self.client_handlers_queues
         )
         self.keep_alive = KeepAlive()
         print("action: results_verifier_started | result: success")
@@ -71,7 +76,7 @@ class ResultsVerifier:
             self.queue_connection = Connection()
             self.recv_queue = self.queue_connection.routing_queue(
                 name_recv_queue,
-                routing_keys=[str(i) for i in range(1, amount_queries + 1)],
+                routing_keys=[str(i) for i in range(1, amount_queries + 1)]+['request_results'],
             )
 
             self.em_queue = self.queue_connection.pubsub_queue(name_em_queue)
@@ -100,12 +105,25 @@ class ResultsVerifier:
         self.keep_alive.join()
 
     def process_messages(self, body, id_query):
-        id_query = int(id_query)
-        if is_eof(body):
-            print("action: eof_trips_arrived")
-            self.__eof_arrived(id_query, body)
+        if id_query == 'request_results':
+            if is_delete_message(body):
+                id_client = decode_delete_client(body)
+                self.__delete_client(id_client)
+            else:
+                id_client_handler, id_client = decode_request_results(body)
+                self.__verify_client(id_client)
+
+                if self.__verify_last_result(id_client):
+                    self.__inform_results(id_client_handler, id_client)
+                else:
+                    self.__inform_error(id_client_handler)
         else:
-            self.__query_result_arrived(body, id_query)
+            id_query = int(id_query)
+            if is_eof(body):
+                print("action: eof_trips_arrived")
+                self.__eof_arrived(id_query, body)
+            else:
+                self.__query_result_arrived(body, id_query)
 
     def __query_result_arrived(self, body, id_query):
         """
@@ -151,23 +169,20 @@ class ResultsVerifier:
                 if not self.queries_ended[query]:
                     ended = False
 
-        if ended:
-            print(
-                f"action: results_ready | id_client: {id_client} | results: {self.queries_results}"
-            )
-            self.__inform_results(id_client)
-            self.__delete_client(id_client)
+        return ended
 
-    def __inform_results(self, id_client):
-        self.send_queue.bind_queue(str(id_client))
-        print("cliente bindeado:", id_client)
+    def __inform_results(self, id_client_handler, id_client):
+        queue = self.client_handlers_queues[id_client_handler]
 
         batches_to_send = self.__get_batches_to_send(id_client)
-        for batch in batches_to_send:
-            self.send_queue.send(batch, str(id_client))
-        self.send_queue.send(last_message(), str(id_client))
+        queue.put(batches_to_send)
 
         print(f"action: inform_results | result: success | id_client: {id_client}")
+
+    def __inform_error(self, id_client_handler):
+        queue = self.client_handlers_queues[id_client_handler]
+        queue.put(error_message())
+        print(f"action: inform_results | result: failure")
 
     def __get_batches_to_send(self, id_client):
         results_client = self.__get_results_client(id_client)

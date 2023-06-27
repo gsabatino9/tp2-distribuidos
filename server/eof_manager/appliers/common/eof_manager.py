@@ -16,7 +16,11 @@ class EOFManager:
     ):
         self.__init_eof_manager(size_workers)
         self.__connect(
-            name_recv_queue, name_appliers_queues, name_send_queue, name_status_queue
+            name_recv_queue, 
+            name_appliers_queues, 
+            name_send_queue, 
+            name_status_queue,
+            size_workers,
         )
         self.__run()
 
@@ -31,18 +35,17 @@ class EOFManager:
         print("action: eof_manager_started | result: success")
 
     def __connect(
-        self, name_recv_queue, name_appliers_queues, name_send_queue, name_status_queue
+        self, 
+        name_recv_queue, 
+        name_appliers_queues, 
+        name_send_queue, 
+        name_status_queue,
+        size_workers,
     ):
         try:
             self.queue_connection = Connection()
             self.recv_queue = self.queue_connection.pubsub_queue(name_recv_queue)
-            self.appliers_queues = []
-            for i, name_q in enumerate(name_appliers_queues):
-                for idx_applier in range(self.size_workers[i]):
-                    name_queue = name_q + str(idx_applier+1)
-                    self.appliers_queues.append(
-                        self.queue_connection.basic_queue(name_queue)
-                    )
+            self.appliers_queues = self.queue_connection.multiple_queues(name_appliers_queues, self.size_workers)
             self.send_queue = self.queue_connection.pubsub_queue(name_send_queue)
             self.status_queue = self.queue_connection.pubsub_queue(name_status_queue)
         except OSError as e:
@@ -86,8 +89,7 @@ class EOFManager:
         it sends EOF to each known worker.
         """
         print(f"action: send_eofs | result: success | msg: eof arrived")
-        for appliers_queue in self.appliers_queues:
-            appliers_queue.send(msg)
+        self.appliers_queues.broadcast(msg)
 
     def __recv_ack_trips(self, header, body):
         """

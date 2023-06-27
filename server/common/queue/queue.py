@@ -1,4 +1,4 @@
-import pika
+import pika, random
 
 
 class GenericQueue:
@@ -152,3 +152,47 @@ class RoutingBuildQueue(GenericQueue):
         self.channel.basic_publish(
             exchange=self.exchange_name, routing_key=routing_key, body=message
         )
+
+    def broadcast_workers(self, amount_nodes, msg):
+        for idx_worker in range(amount_nodes):
+            binding_key = self.queue_name + str(idx_worker)
+            self.send(msg, routing_key=binding_key)
+
+    def send_worker(self, amount_nodes, msg):
+        # se elige un worker de forma random para mandar el mensaje,
+        # dentro de todos los posibles workers.
+        # parecido a un round-robin.
+        idx_worker = random.choice(range(1, amount_nodes + 1))
+        binding_key = self.queue_name + str(idx_worker)
+        self.send(msg, routing_key=binding_key)
+
+class MultipleQueues(GenericQueue):
+    def __init__(self, channel, names_queues, amount_nodes, auto_ack=True):
+        super().__init__(channel, auto_ack)
+        self.names_queues = names_queues
+        self.amount_nodes = amount_nodes
+        self.list_workers = [0 for _ in self.amount_nodes]
+
+        self.__build_queues()
+
+    def __build_queues(self):
+        for i, name_queue in enumerate(self.names_queues):
+            for idx_worker in range(1, self.amount_nodes[i]+1):
+                name_queue += str(idx_worker)
+                self.channel.queue_declare(queue=name_queue)
+
+    def send(self, message):
+        for i, name_queue in enumerate(self.names_queues):
+            # we use round-robin
+            idx_worker = (self.list_workers[i] % self.amount_nodes[i])+1
+            self.channel.basic_publish(
+                exchange="", routing_key=name_queue+str(idx_worker), body=message
+            )
+            self.list_workers[i] += 1
+
+    def broadcast(self, message):
+        for i, name_queue in enumerate(self.names_queues):
+            for idx_worker in range(1, self.amount_nodes[i]+1):
+                self.channel.basic_publish(
+                    exchange="", routing_key=name_queue+str(idx_worker), body=message
+                )
