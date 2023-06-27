@@ -9,7 +9,6 @@ class EOFManager:
     def __init__(
         self,
         name_recv_queue,
-        name_appliers_exchange,
         name_appliers_queues,
         name_send_queue,
         name_status_queue,
@@ -18,7 +17,6 @@ class EOFManager:
         self.__init_eof_manager(size_workers)
         self.__connect(
             name_recv_queue, 
-            name_appliers_exchange,
             name_appliers_queues, 
             name_send_queue, 
             name_status_queue,
@@ -39,7 +37,6 @@ class EOFManager:
     def __connect(
         self, 
         name_recv_queue, 
-        name_appliers_exchange,
         name_appliers_queues, 
         name_send_queue, 
         name_status_queue,
@@ -48,15 +45,7 @@ class EOFManager:
         try:
             self.queue_connection = Connection()
             self.recv_queue = self.queue_connection.pubsub_queue(name_recv_queue)
-            self.appliers_queues = []
-            for i, name_queue in enumerate(name_appliers_queues):
-                queue = self.queue_connection.routing_building_queue(
-                    name_appliers_exchange, name_queue  # appliers_exchange  # applier_q1
-                )
-                for idx_applier in range(self.size_workers[i]):
-                    queue.bind_queue(name_queue + str(idx_applier))  # id_applier=7
-
-                self.appliers_queues.append(queue)
+            self.appliers_queues = self.queue_connection.multiple_queues(name_appliers_queues, self.size_workers)
             self.send_queue = self.queue_connection.pubsub_queue(name_send_queue)
             self.status_queue = self.queue_connection.pubsub_queue(name_status_queue)
         except OSError as e:
@@ -100,8 +89,7 @@ class EOFManager:
         it sends EOF to each known worker.
         """
         print(f"action: send_eofs | result: success | msg: eof arrived")
-        for i, applier_queue in enumerate(self.appliers_queues):
-            applier_queue.broadcast_workers(self.size_workers[i], msg)
+        self.appliers_queues.broadcast(msg)
 
     def __recv_ack_trips(self, header, body):
         """

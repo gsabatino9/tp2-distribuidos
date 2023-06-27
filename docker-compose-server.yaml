@@ -76,7 +76,7 @@ services:
       - LOGGING_LEVEL=INFO
       - ID_ELECTION=0
       - N_PROCESS_ELECTION=2
-      - CONTAINERS_KEEP_ALIVE=accepter_1,accepter_2,filter_year_1,filter_year_2,filter_pretoc_1,filter_pretoc_2,filter_distance_1,filter_distance_2,eof_manager_filters,mean_duration_applier_1_1,double_year_applier_1,mean_distance_applier_1,mean_duration_applier_4_1,eof_manager_appliers,groupby_start_date,groupby_end_station,groupby_start_station,groupby_all_elements,eof_manager_groupby,joiner_weather,joiner_stations,eof_manager_joiners,session_manager,results_verifier,eof_manager_query_results
+      - CONTAINERS_KEEP_ALIVE=accepter_1,accepter_2,filter_year_1,filter_year_2,filter_pretoc_1,filter_pretoc_2,filter_distance_1,filter_distance_2,eof_manager_filters,mean_duration_applier_1_1,mean_duration_applier_1_2,double_year_applier_1,double_year_applier_2,mean_distance_applier_1,mean_distance_applier_2,mean_duration_applier_4_1,mean_duration_applier_4_2,eof_manager_appliers,groupby_start_date,groupby_end_station,groupby_start_station,groupby_all_elements,eof_manager_groupby,joiner_weather,joiner_stations,eof_manager_joiners,session_manager,results_verifier,eof_manager_query_results
       - CONTAINER_RESTARTER_NAME=processes-restarter-
       - NETWORK_PROBLEMS=0
       - BASE_IP_ADDRESS=172.25.125.4
@@ -95,7 +95,7 @@ services:
       - LOGGING_LEVEL=INFO
       - ID_ELECTION=1
       - N_PROCESS_ELECTION=2
-      - CONTAINERS_KEEP_ALIVE=accepter_1,accepter_2,filter_year_1,filter_year_2,filter_pretoc_1,filter_pretoc_2,filter_distance_1,filter_distance_2,eof_manager_filters,mean_duration_applier_1_1,double_year_applier_1,mean_distance_applier_1,mean_duration_applier_4_1,eof_manager_appliers,groupby_start_date,groupby_end_station,groupby_start_station,groupby_all_elements,eof_manager_groupby,joiner_weather,joiner_stations,eof_manager_joiners,session_manager,results_verifier,eof_manager_query_results
+      - CONTAINERS_KEEP_ALIVE=accepter_1,accepter_2,filter_year_1,filter_year_2,filter_pretoc_1,filter_pretoc_2,filter_distance_1,filter_distance_2,eof_manager_filters,mean_duration_applier_1_1,mean_duration_applier_1_2,double_year_applier_1,double_year_applier_2,mean_distance_applier_1,mean_distance_applier_2,mean_duration_applier_4_1,mean_duration_applier_4_2,eof_manager_appliers,groupby_start_date,groupby_end_station,groupby_start_station,groupby_all_elements,eof_manager_groupby,joiner_weather,joiner_stations,eof_manager_joiners,session_manager,results_verifier,eof_manager_query_results
       - CONTAINER_RESTARTER_NAME=processes-restarter-
       - NETWORK_PROBLEMS=0
       - BASE_IP_ADDRESS=172.25.125.4
@@ -267,7 +267,7 @@ services:
       - NAME_EM_QUEUE=eof_manager_groupby_q
       - NAME_SEND_EXCHANGE=appliers_exchange
       - NAME_SEND_QUEUE=mean_duration_applier_1_q
-      - SIZE_WORKERS_SEND=1
+      - SIZE_WORKERS_SEND=2
       - CHUNK_SIZE=100
     image: groupby_start_date:latest
     networks:      
@@ -286,7 +286,7 @@ services:
       - NAME_EM_QUEUE=eof_manager_groupby_q
       - NAME_SEND_EXCHANGE=appliers_exchange
       - NAME_SEND_QUEUE=double_year_applier_q
-      - SIZE_WORKERS_SEND=1
+      - SIZE_WORKERS_SEND=2
       - CHUNK_SIZE=100
     image: groupby_start_station:latest
     networks:      
@@ -305,7 +305,7 @@ services:
       - NAME_EM_QUEUE=eof_manager_groupby_q
       - NAME_SEND_EXCHANGE=appliers_exchange
       - NAME_SEND_QUEUE=mean_distance_applier_q
-      - SIZE_WORKERS_SEND=1
+      - SIZE_WORKERS_SEND=2
       - CHUNK_SIZE=100
     image: groupby_end_station:latest
     networks:      
@@ -324,7 +324,7 @@ services:
       - NAME_EM_QUEUE=eof_manager_groupby_q
       - NAME_SEND_EXCHANGE=appliers_exchange
       - NAME_SEND_QUEUE=mean_duration_applier_4_q
-      - SIZE_WORKERS_SEND=1
+      - SIZE_WORKERS_SEND=2
       - ID_QUERY=4
       - CHUNK_SIZE=100
     image: groupby_all_elements:latest
@@ -354,6 +354,24 @@ services:
       rabbitmq:
         condition: service_healthy
 
+  mean_duration_applier_1_2:
+    container_name: mean_duration_applier_1_2
+    entrypoint: python3 /main.py
+    environment:
+      - PYTHONUNBUFFERED=1
+      - NAME_RECV_EXCHANGE=appliers_exchange
+      - NAME_RECV_QUEUE=mean_duration_applier_1_q
+      - NAME_EM_QUEUE=eof_manager_applier_q
+      - NAME_SEND_QUEUE=query_results_q
+      - ID_QUERY=1
+      - ID_APPLIER=2
+    image: mean_duration_applier:latest
+    networks:      
+      - testing_net
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
   
   double_year_applier_1:
     container_name: double_year_applier_1
@@ -365,6 +383,23 @@ services:
       - NAME_EM_QUEUE=eof_manager_applier_q
       - NAME_SEND_QUEUE=query_results_q
       - ID_APPLIER=1
+    image: double_year_applier:latest
+    networks:      
+      - testing_net
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+  double_year_applier_2:
+    container_name: double_year_applier_2
+    entrypoint: python3 /main.py
+    environment:
+      - PYTHONUNBUFFERED=1
+      - NAME_RECV_EXCHANGE=appliers_exchange
+      - NAME_RECV_QUEUE=double_year_applier_q
+      - NAME_EM_QUEUE=eof_manager_applier_q
+      - NAME_SEND_QUEUE=query_results_q
+      - ID_APPLIER=2
     image: double_year_applier:latest
     networks:      
       - testing_net
@@ -390,6 +425,23 @@ services:
       rabbitmq:
         condition: service_healthy
 
+  mean_distance_applier_2:
+    container_name: mean_distance_applier_2
+    entrypoint: python3 /main.py
+    environment:
+      - PYTHONUNBUFFERED=1
+      - NAME_RECV_EXCHANGE=appliers_exchange
+      - NAME_RECV_QUEUE=mean_distance_applier_q
+      - NAME_EM_QUEUE=eof_manager_applier_q
+      - NAME_SEND_QUEUE=query_results_q
+      - ID_APPLIER=2
+    image: mean_distance_applier:latest
+    networks:      
+      - testing_net
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
   
   mean_duration_applier_4_1:
     container_name: mean_duration_applier_4_1
@@ -402,6 +454,24 @@ services:
       - NAME_SEND_QUEUE=query_results_q
       - ID_QUERY=4
       - ID_APPLIER=1
+    image: mean_duration_applier:latest
+    networks:      
+      - testing_net
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+
+  mean_duration_applier_4_2:
+    container_name: mean_duration_applier_4_2
+    entrypoint: python3 /main.py
+    environment:
+      - PYTHONUNBUFFERED=1
+      - NAME_RECV_EXCHANGE=appliers_exchange
+      - NAME_RECV_QUEUE=mean_duration_applier_4_q
+      - NAME_EM_QUEUE=eof_manager_applier_q
+      - NAME_SEND_QUEUE=query_results_q
+      - ID_QUERY=4
+      - ID_APPLIER=2
     image: mean_duration_applier:latest
     networks:      
       - testing_net
@@ -499,7 +569,7 @@ services:
       - NAME_APPLIERS_QUEUES=['mean_duration_applier_1_q', 'double_year_applier_q', 'mean_distance_applier_q', 'mean_duration_applier_4_q']
       - NAME_SEND_QUEUE=eof_manager_query_result_q
       - NAME_STATUS_QUEUE=new_clients_q
-      - SIZE_WORKERS=[1, 1, 1, 1]
+      - SIZE_WORKERS=[2, 2, 2, 2]
     image: eof_manager_appliers:latest
     networks:      
       - testing_net

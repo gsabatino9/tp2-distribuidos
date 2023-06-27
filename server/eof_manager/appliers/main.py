@@ -15,7 +15,6 @@ def main():
 
     e = EOFManager(
         NAME_RECV_QUEUE,
-        NAME_APPLIERS_EXCHANGE,
         name_appliers_queues,
         NAME_SEND_QUEUE,
         NAME_STATUS_QUEUE,

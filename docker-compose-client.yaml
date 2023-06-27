@@ -59,6 +59,44 @@ services:
     - ./client/results:/results
     - ./data/client_3:/data
 
+  client_4:
+    container_name: client_4
+    entrypoint: python3 /main.py
+    environment:
+      - PYTHONUNBUFFERED=1
+      - ADDRESSES=[('accepter_1', 12345), ('accepter_2', 12346)]
+      - HOST_CONSULT=results_verifier
+      - PORT_CONSULT=13000
+      - CHUNK_SIZE=100
+      - MAX_RETRIES=50
+      - SUSCRIPTIONS=[1,2,3,4]
+      - FILE_PATH=data/
+    image: client:latest
+    networks:      
+      - testing_net
+    volumes:
+    - ./client/results:/results
+    - ./data/client_4:/data
+
+  client_5:
+    container_name: client_5
+    entrypoint: python3 /main.py
+    environment:
+      - PYTHONUNBUFFERED=1
+      - ADDRESSES=[('accepter_1', 12345), ('accepter_2', 12346)]
+      - HOST_CONSULT=results_verifier
+      - PORT_CONSULT=13000
+      - CHUNK_SIZE=100
+      - MAX_RETRIES=50
+      - SUSCRIPTIONS=[1,2,3,4]
+      - FILE_PATH=data/
+    image: client:latest
+    networks:      
+      - testing_net
+    volumes:
+    - ./client/results:/results
+    - ./data/client_5:/data
+
 networks:
     testing_net:
       name: tp2-distribuidos_testing_net

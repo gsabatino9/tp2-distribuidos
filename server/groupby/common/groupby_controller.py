@@ -12,7 +12,6 @@ class GroupbyController:
         self,
         name_recv_queue,
         name_em_queue,
-        name_send_exchange,
         name_send_queue,
         size_workers_send,
         operation,
@@ -24,7 +23,6 @@ class GroupbyController:
         self.__connect(
             name_recv_queue, 
             name_em_queue, 
-            name_send_exchange,
             name_send_queue,
             size_workers_send
         )
@@ -47,7 +45,6 @@ class GroupbyController:
         self, 
         name_recv_queue, 
         name_em_queue, 
-        name_send_exchange,
         name_send_queue,
         size_workers_send
     ):
@@ -56,12 +53,9 @@ class GroupbyController:
             self.recv_queue = self.queue_connection.basic_queue(
                 name_recv_queue, auto_ack=False
             )
-            self.send_queue = self.queue_connection.routing_building_queue(
-                name_send_exchange, name_send_queue  # appliers_exchange  # applier_q1
+            self.send_queue = self.queue_connection.multiple_queues(
+                [name_send_queue], [self.size_workers_send]
             )
-            for idx_applier in range(self.size_workers_send):
-                # id_applier=7
-                self.send_queue.bind_queue(name_send_queue + str(idx_applier))
 
             self.em_queue = self.queue_connection.pubsub_queue(name_em_queue)
         except OSError as e:
@@ -163,7 +157,7 @@ class GroupbyController:
         """
         if (i + 1) % self.chunk_size == 0 or i + 1 == self.state.len_data(id_client):
             msg = construct_msg(id_client, to_send)
-            self.send_queue.send_worker(self.size_workers_send, msg)
+            self.send_queue.send(msg)
 
             return True
         return False

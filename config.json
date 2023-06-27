@@ -50,9 +50,9 @@
 		},
 		"amount_nodes": {
 			"accepter": 2,
-			"filter_year": 2,
-			"filter_pretoc": 2,
-			"filter_distance": 2,
+			"filter_year": 1,
+			"filter_pretoc": 1,
+			"filter_distance": 1,
 			"applier_query1": 1,
 			"applier_query2": 1,
 			"applier_query3": 1,
