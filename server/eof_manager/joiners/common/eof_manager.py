@@ -12,9 +12,9 @@ class EOFManager:
         name_send_queue,
         name_stations_queue,
         name_weather_queue,
-        name_join_stations_queue,
-        name_join_weather_queue,
         name_status_queue,
+        size_stations,
+        size_weather,
     ):
         self.__init_eof_manager()
         self.__connect(
@@ -22,9 +22,9 @@ class EOFManager:
             name_send_queue,
             name_stations_queue,
             name_weather_queue,
-            name_join_stations_queue,
-            name_join_weather_queue,
             name_status_queue,
+            size_stations,
+            size_weather,
         )
         self.__run()
 
@@ -42,23 +42,20 @@ class EOFManager:
         name_send_queue,
         name_stations_queue,
         name_weather_queue,
-        name_join_stations_queue,
-        name_join_weather_queue,
         name_status_queue,
+        size_stations,
+        size_weather,
     ):
         try:
             self.queue_connection = Connection()
             self.send_queue = self.queue_connection.pubsub_queue(name_send_queue)
             self.recv_queue = self.queue_connection.pubsub_queue(name_recv_queue)
+            self.joiners_queue = self.queue_connection.multiple_queues(
+                [name_stations_queue, name_weather_queue],
+                [size_stations, size_weather]
+            )
             self.stations_queue = self.queue_connection.basic_queue(name_stations_queue)
             self.weather_queue = self.queue_connection.basic_queue(name_weather_queue)
-
-            self.join_stations_queue = self.queue_connection.basic_queue(
-                name_join_stations_queue
-            )
-            self.join_weather_queue = self.queue_connection.basic_queue(
-                name_join_weather_queue
-            )
 
             self.status_queue = self.queue_connection.pubsub_queue(name_status_queue)
 
@@ -77,7 +74,7 @@ class EOFManager:
             self.queue_connection.start_receiving()
         except:
             if self.running:
-                raise
+                raise  # gracefull quit
         self.keep_alive.stop()
         self.keep_alive.join()
 
@@ -103,13 +100,7 @@ class EOFManager:
         it sends EOF to each known worker, depends on the type of EOF.
         """
         print(f"action: send_eofs | result: success | msg: eof arrived")
-        if is_station(header):
-            self.stations_queue.send(msg)
-        elif is_weather(header):
-            self.weather_queue.send(msg)
-        else:
-            self.join_stations_queue.send(msg)
-            self.join_weather_queue.send(msg)
+        self.joiners_queue.broadcast(msg)
 
     def __recv_ack_trips(self, header, body):
         """
@@ -126,10 +117,10 @@ class EOFManager:
 
     def stop(self, *args):
         if self.running:
+            self.running = False
             self.queue_connection.stop_receiving()
             self.queue_connection.close()
             print(
                 "action: close_resource | result: success | resource: rabbit_connection"
             )
 
-            self.running = False

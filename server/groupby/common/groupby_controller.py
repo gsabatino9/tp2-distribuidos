@@ -13,16 +13,22 @@ class GroupbyController:
         name_recv_queue,
         name_em_queue,
         name_send_queue,
+        size_workers_send,
         operation,
         base_data,
         gen_key_value,
         chunk_size,
     ):
-        self.__init_groupby(chunk_size, operation, base_data, gen_key_value)
-        self.__connect(name_recv_queue, name_em_queue, name_send_queue)
+        self.__init_groupby(chunk_size, operation, base_data, gen_key_value, size_workers_send)
+        self.__connect(
+            name_recv_queue, 
+            name_em_queue, 
+            name_send_queue,
+            size_workers_send
+        )
         self.__run()
 
-    def __init_groupby(self, chunk_size, operation, base_data, gen_key_value):
+    def __init_groupby(self, chunk_size, operation, base_data, gen_key_value, size_workers_send):
         self.running = True
         signal.signal(signal.SIGTERM, self.stop)
 
@@ -30,17 +36,26 @@ class GroupbyController:
         self.state = StateManager(operation, base_data)
         self.current_fetch_count = 0
         self.prefetch_limit = 1000
+        self.size_workers_send = size_workers_send
         self.gen_key_value = gen_key_value
         self.keep_alive = KeepAlive()
         print("action: groupby_started | result: success")
 
-    def __connect(self, name_recv_queue, name_em_queue, name_send_queue):
+    def __connect(
+        self, 
+        name_recv_queue, 
+        name_em_queue, 
+        name_send_queue,
+        size_workers_send
+    ):
         try:
             self.queue_connection = Connection()
             self.recv_queue = self.queue_connection.basic_queue(
                 name_recv_queue, auto_ack=False
             )
-            self.send_queue = self.queue_connection.basic_queue(name_send_queue)
+            self.send_queue = self.queue_connection.multiple_queues(
+                [name_send_queue], [self.size_workers_send]
+            )
 
             self.em_queue = self.queue_connection.pubsub_queue(name_em_queue)
         except OSError as e:
@@ -59,7 +74,7 @@ class GroupbyController:
             self.queue_connection.start_receiving()
         except:
             if self.running:
-                raise # gracefull quit
+                raise  # gracefull quit # gracefull quit
 
         self.keep_alive.stop()
         self.keep_alive.join()
@@ -161,10 +176,10 @@ class GroupbyController:
 
     def stop(self, *args):
         if self.running:
+            self.running = False
             self.queue_connection.stop_receiving()
             self.queue_connection.close()
             print(
                 "action: close_resource | result: success | resource: rabbit_connection"
             )
 
-            self.running = False

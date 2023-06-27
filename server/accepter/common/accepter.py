@@ -1,4 +1,4 @@
-import socket, signal, sys, queue
+import socket, signal, sys, queue, random
 from protocol.communication_server import CommunicationServer
 from server.common.queue.connection import Connection
 from common.utils import is_eof
@@ -22,7 +22,10 @@ class Accepter:
         name_session_manager_queue,
         name_recv_ids_queue,
         amount_queries,
-        max_clients=5,
+        size_stations,
+        size_weather,
+        sharding_amount,
+        max_clients=3,
     ):
         self.running = True
         signal.signal(signal.SIGTERM, self.stop)
@@ -31,13 +34,14 @@ class Accepter:
         self.accepter_socket = self.__create_socket(host, port)
         self.clients_connections = {}
         self.max_clients = max_clients
-        self.recv_ids = ReceiverIds(name_recv_ids_queue, self.clients_connections)
 
         self.name_stations_queue = name_stations_queue
         self.name_weather_queue = name_weather_queue
         self.name_trips_queues = name_trips_queues
         self.name_session_manager_queue = name_session_manager_queue
         self.name_em_queue = name_em_queue
+        queues = self.__create_client_handlers(size_stations, size_weather, sharding_amount)
+        self.recv_ids = ReceiverIds(name_recv_ids_queue, self.clients_connections, queues)
         self.keep_alive = KeepAlive()
         print("action: accepter_started | result: success")
 
@@ -47,66 +51,74 @@ class Accepter:
 
         return skt
 
+    def __create_client_handlers(self, size_stations, size_weather, sharding_amount):
+        self.clients_handlers = []
+        self.accepter_queue = queue.Queue()
+        queues = [queue.Queue() for _ in range(self.max_clients)]
+
+        for i in range(self.max_clients):
+            client_handler = ClientHandler(
+                self.accepter_queue,
+                queues[i],
+                self.name_stations_queue,
+                self.name_weather_queue,
+                self.name_trips_queues,
+                self.name_session_manager_queue,
+                self.name_em_queue,
+                self.amount_queries,
+                size_stations,
+                size_weather,
+                sharding_amount
+            )
+            client_handler.start()
+            self.clients_handlers.append(client_handler)
+
+        return queues
+
     def run(self):
         self.keep_alive.start()
         self.recv_ids.start()
         self.accepter_socket.listen(self.max_clients)
         print(f"action: waiting_clients | result: success")
 
-        self.clients_handlers = []
         while self.running:
-            client_handler = self.__accept_client()
-            client_handler.start()
-            self.clients_handlers.append(client_handler)
+            self.__accept_client()
 
-        for client_handler in self.clients_handlers:
-            client_handler.join()
+        self.__free_resources()
 
+    def __accept_client(self):
+        try:
+            client_socket, _ = self.accepter_socket.accept()
+            client_connection = CommunicationServer(client_socket)
+            self.accepter_queue.put(client_connection)
+            print(
+                f"action: client_connected | result: success | msg: starting to receive data | client_address: {client_connection.getpeername()}"
+            )
+        except:
+            if self.running:
+                raise
+
+    def __free_resources(self):
+        print("sale del accept")
+        [client_handler.stop() for client_handler in self.clients_handlers]
+        [client_handler.join() for client_handler in self.clients_handlers]
+        print("sale del ch")
+
+        try:
+            while True:
+                client_connection = self.accepter_queue.get_nowait()
+                if client_connection:
+                    client_connection.stop()
+        except queue.Empty:
+            pass
+        self.recv_ids.stop()
         self.recv_ids.join()
+        print("sale del rid")
         self.keep_alive.stop()
         self.keep_alive.join()
 
-    def __accept_client(self):
-        client_socket, _ = self.accepter_socket.accept()
-        client_connection = CommunicationServer(client_socket)
-        client_address = client_connection.getpeername()[0]
-        print(
-            f"action: client_connected | result: success | msg: starting to receive data | client_address: {client_address}"
-        )
-
-        queue_client = queue.Queue()
-        self.clients_connections[client_address] = (
-            queue_client,
-            client_connection,
-        )
-        return ClientHandler(
-            client_address,
-            queue_client,
-            client_connection,
-            self.name_stations_queue,
-            self.name_weather_queue,
-            self.name_trips_queues,
-            self.name_session_manager_queue,
-            self.name_em_queue,
-            self.amount_queries,
-        )
-
     def stop(self, *args):
         if self.running:
-            self.queue_connection.close()
-            self.recv_ids.stop()
-            print(
-                "action: close_resource | result: success | resource: rabbit_connection"
-            )
-            if hasattr(self, "clients_connections"):
-                for _, client_connection in self.clients_connections.values():
-                    try:
-                        client_connection.stop()
-                        print(
-                            "action: close_resource | result: success | resource: client_connection"
-                        )
-                    except:
-                        # ya fue cerrada antes la conexión
-                        pass
-
             self.running = False
+            self.accepter_socket.shutdown(socket.SHUT_RDWR)
+

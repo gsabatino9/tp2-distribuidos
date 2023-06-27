@@ -1,41 +1,46 @@
 import queue
 from threading import Thread
-from server.common.utils_messages_client import is_eof, is_last_message
+from server.common.utils_messages_client import last_message
+from server.common.utils_messages_results import request_message, is_error, delete_message
 from server.common.queue.connection import Connection
 
 
 class ClientHandler(Thread):
     def __init__(
         self,
-        client_connection,
         name_session_manager_queue,
-        name_send_exchange,
-        name_send_queue,
+        name_request_queue,
+        queue_client_connections,
+        queue_results,
+        id_client_handler,
     ):
         super().__init__()
-        self.client_connection = client_connection
-        self.client_address = self.client_connection.getpeername()[0]
+        self.queue_client_connections = queue_client_connections
+        self.queue_results = queue_results
+        self.id_client_handler = id_client_handler
+
         self.name_session_manager_queue = name_session_manager_queue
-        self.name_send_exchange = name_send_exchange
-        self.name_send_queue = name_send_queue
+        self.name_request_queue = name_request_queue
 
     def run(self):
-        self.__connect_queues()
+        while True:
+            self.client_connection = self.queue_client_connections.get()
+            self.client_address = self.client_connection.getpeername()[0]
 
-        header, _ = self.client_connection.recv_data(decode_payload=False)
-        self.__connect_client(header.id_client)
+            header, _ = self.client_connection.recv_data(decode_payload=False)
+            self.__connect_queues()
+            self.__send_request_results_verifier(header.id_client)
+            results_batches = self.queue_results.get()
 
-        self.recv_queue.receive(self.process_batch)
-        self.queue_connection.start_receiving()
+            if not is_error(results_batches):
+                for batch in results_batches:
+                    self.client_connection.send_results(batch, is_last=False)
+                self.client_connection.send_results(last_message(), is_last=True)
 
-        self.queue_connection.close()
+                self.__stop_connection(header.id_client)
 
-    def process_batch(self, body):
-        if is_eof(body):
-            self.client_connection.send_results(body, is_last=True)
-            self.__stop_connection()
-        else:
-            self.client_connection.send_results(body, is_last=False)
+            self.client_connection.stop()
+            self.queue_connection.close()
 
     def __connect_queues(self):
         try:
@@ -43,16 +48,15 @@ class ClientHandler(Thread):
             self.session_manager_queue = self.queue_connection.pubsub_queue(
                 self.name_session_manager_queue
             )
-            self.recv_queue = self.queue_connection.routing_building_queue(
-                self.name_send_exchange, self.name_send_queue
-            )
+            self.request_queue = self.queue_connection.routing_queue(self.name_request_queue)
         except OSError as e:
             print(f"error: creating_queue_connection | log: {e}")
 
-    def __connect_client(self, id_client):
-        self.recv_queue.bind_queue(str(id_client))
+    def __send_request_results_verifier(self, id_client):
+        msg = request_message(self.id_client_handler, id_client)
+        self.request_queue.send(msg, routing_key="request_results")
 
-    def __stop_connection(self):
+    def __stop_connection(self, id_client):
+        self.request_queue.send(delete_message(id_client), routing_key="request_results")
         self.session_manager_queue.send(self.client_address)
-        self.queue_connection.stop_receiving()
-        self.client_connection.stop()
+        #self.client_connection.stop()

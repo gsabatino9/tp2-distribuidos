@@ -20,6 +20,10 @@ def is_weather(header):
     return header.data_type == MessageClient.WEATHER_DATA
 
 
+def is_trip(header):
+    return header.data_type == MessageClient.TRIP_DATA
+
+
 def results_message(id_query, id_batch, batch_results):
     return MessageServer.results_message(id_query, id_batch, batch_results)
 

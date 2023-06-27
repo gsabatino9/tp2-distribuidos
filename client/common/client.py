@@ -59,6 +59,7 @@ class Client:
     def __send_files(self, filepath, types_files):
         for file in types_files:
             self.__send_type_file(filepath, file)
+        self.__send_last(types_files[-1])
 
         print(f"action: ack_files | result: success | msg: all files sent to server")
         self.conn.stop()
@@ -75,7 +76,9 @@ class Client:
             next(reader)
             send_data += self.__send_file_in_chunks(type_file, reader)
 
-        self.__send_last(type_file, send_data)
+        print(
+            f"action: file_sent | result: success | type_file: {type_file} | amount_chunks: {send_data}"
+        )
 
     def __send_file_in_chunks(self, type_file, reader):
         """
@@ -93,11 +96,8 @@ class Client:
 
         return send_data
 
-    def __send_last(self, type_file, send_data):
+    def __send_last(self, type_file):
         self.__send_chunk(type_file, list(""), True)
-        print(
-            f"action: file_sent | result: success | type_file: {type_file} | amount_chunks: {send_data}"
-        )
 
     def __send_chunk(self, data_type, chunk, last_chunk):
         payload = construct_payload(chunk)
@@ -134,16 +134,24 @@ class Client:
         return chunk
 
     def __get_results(self, addr_consult):
-        self.__connect_with_consults_server(addr_consult[0], addr_consult[1])
         results = {i: [] for i in self.suscriptions}
         ended = False
-
         while not ended:
-            header, payload = self.conn.recv_results()
-            if is_eof(header):
+            try:
+                self.__connect_with_consults_server(addr_consult[0], addr_consult[1])
+                while True:
+                    header, payload = self.conn.recv_results()
+                    if is_eof(header):
+                        break
+                    else:
+                        results[header.id_query].append(payload.data)
+
                 ended = True
-            else:
-                results[header.id_query].append(payload.data)
+            except:
+                print(
+                    f"action: id_client_received | result: failure | msg: retrying in 1sec"
+                )
+                time.sleep(1)
 
         print(f"action: results_obtained | result: success | results: {results}")
         self.__save_results(results)
@@ -175,5 +183,3 @@ class Client:
                 print("action: close_resource | result: success | resource: connection")
 
             self.running = False
-
-        

@@ -5,7 +5,6 @@ class FilterPretoc:
     def __init__(
         self,
         id_query,
-        name_recv_exchange,
         name_recv_queue,
         name_em_queue,
         name_send_queue,
@@ -16,7 +15,6 @@ class FilterPretoc:
 
         self.filter_controller = FilterController(
             id_query,
-            name_recv_exchange,
             name_recv_queue,
             name_em_queue,
             name_send_queue,

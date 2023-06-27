@@ -22,10 +22,10 @@ class JoinerState:
         self.clients_updated = set()
 
     def delete_client(self, id_client):
-        if state := self.clients.pop(id_client):
-            state.drop()
-            self.clients_updated.discard(id_client)
-            self.clients_storage.pop(id_client)
+        self.clients.pop(id_client, None)
+        self.clients_updated.discard(id_client)
+        if bucket := self.clients_storage.pop(id_client, None):
+            bucket.drop()
 
     def __get_client(self, id_client):
         if id_client not in self.clients:

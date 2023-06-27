@@ -15,7 +15,6 @@ class FilterController:
     def __init__(
         self,
         id_query,
-        name_recv_exchange,
         name_recv_queue,
         name_em_queue,
         name_send_queue,
@@ -23,13 +22,26 @@ class FilterController:
         reduced_columns,
         func_filter,
     ):
-        self.__init_filter(id_query, columns_names, reduced_columns, func_filter)
+        self.__init_filter(
+            id_query,
+            columns_names,
+            reduced_columns,
+            func_filter,
+            name_recv_queue,
+        )
         self.__connect(
-            name_recv_exchange, name_recv_queue, name_em_queue, name_send_queue
+            name_recv_queue, name_em_queue, name_send_queue
         )
         self.__run()
 
-    def __init_filter(self, id_query, columns_names, reduced_columns, func_filter):
+    def __init_filter(
+        self,
+        id_query,
+        columns_names,
+        reduced_columns,
+        func_filter,
+        name_recv_queue,
+    ):
         self.running = True
         signal.signal(signal.SIGTERM, self.stop)
 
@@ -40,13 +52,11 @@ class FilterController:
         print("action: filter_started | result: success")
 
     def __connect(
-        self, name_recv_exchange, name_recv_queue, name_em_queue, name_send_queue
+        self, name_recv_queue, name_em_queue, name_send_queue
     ):
         try:
             self.queue_connection = Connection()
-            self.recv_queue = self.queue_connection.pubsub_worker_queue(
-                name_recv_exchange, name_recv_queue
-            )
+            self.recv_queue = self.queue_connection.basic_queue(name_recv_queue)
             self.send_queue = self.queue_connection.basic_queue(name_send_queue)
 
             self.em_queue = self.queue_connection.pubsub_queue(name_em_queue)
@@ -64,7 +74,7 @@ class FilterController:
             self.queue_connection.start_receiving()
         except:
             if self.running:
-                raise
+                raise  # gracefull quit
         self.keep_alive.stop()
         self.keep_alive.join()
 
@@ -101,16 +111,15 @@ class FilterController:
             self.send_queue.send(msg)
 
     def __eof_arrived(self, body):
-        # ch.stop_consuming()
         self.em_queue.send(ack_msg(body))
         print(f"action: eof_trips_arrived | not_filtered_trips: {self.not_filtered}")
 
     def stop(self, *args):
         if self.running:
+            self.running = False
             self.queue_connection.stop_receiving()
             self.queue_connection.close()
             print(
                 "action: close_resource | result: success | resource: rabbit_connection"
             )
 
-            self.running = False

@@ -9,14 +9,17 @@ class EOFManager:
     def __init__(
         self,
         name_recv_queue,
-        name_filters_queue,
+        name_filters_queues,
         name_send_queue,
         name_status_queue,
         size_workers,
     ):
         self.__init_eof_manager(size_workers)
         self.__connect(
-            name_recv_queue, name_filters_queue, name_send_queue, name_status_queue
+            name_recv_queue,
+            name_filters_queues,
+            name_send_queue,
+            name_status_queue,
         )
         self.__run()
 
@@ -31,15 +34,17 @@ class EOFManager:
         print("action: eof_manager_started | result: success")
 
     def __connect(
-        self, name_recv_queue, name_filters_queue, name_send_queue, name_status_queue
+        self,
+        name_recv_queue,
+        name_filters_queues,
+        name_send_queue,
+        name_status_queue,
     ):
         try:
             self.queue_connection = Connection()
             self.recv_queue = self.queue_connection.pubsub_queue(name_recv_queue)
-            self.filters_queues = [
-                self.queue_connection.basic_queue(q) for q in name_filters_queue
-            ]
             self.send_queue = self.queue_connection.pubsub_queue(name_send_queue)
+            self.filters_queues = self.queue_connection.multiple_queues(name_filters_queues, self.size_workers)
             self.status_queue = self.queue_connection.pubsub_queue(name_status_queue)
         except OSError as e:
             print(f"error: creating_queue_connection | log: {e}")
@@ -56,7 +61,7 @@ class EOFManager:
             self.queue_connection.start_receiving()
         except:
             if self.running:
-                raise
+                raise  # gracefull quit
         self.keep_alive.stop()
         self.keep_alive.join()
 
@@ -82,9 +87,7 @@ class EOFManager:
         it sends EOF to each known worker.
         """
         print(f"action: send_eofs | result: success | msg: eof arrived")
-        for i, size_w in enumerate(self.size_workers):
-            for _ in range(size_w):
-                self.filters_queues[i].send(msg)
+        self.filters_queues.broadcast(msg)
 
     def __recv_ack_trips(self, header, body):
         """
@@ -101,10 +104,10 @@ class EOFManager:
 
     def stop(self, *args):
         if self.running:
+            self.running = False
             self.queue_connection.stop_receiving()
             self.queue_connection.close()
             print(
                 "action: close_resource | result: success | resource: rabbit_connection"
             )
 
-            self.running = False

@@ -70,6 +70,9 @@ ACCEPTER = """
       - NAME_STATUS_QUEUE={}
       - NAME_SM_QUEUE={}
       - NAME_RECV_QUEUE={}
+      - SIZE_STATIONS={}
+      - SIZE_WEATHER={}
+      - SHARDING_AMOUNT={}
       - AMOUNT_QUERIES=3
     image: accepter:latest
     ports:
@@ -82,15 +85,18 @@ ACCEPTER = """
 """
 
 JOINER_STATIONS = """
-  joiner_stations:
-    container_name: joiner_stations
+  joiner_stations_{}:
+    container_name: joiner_stations_{}
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
       - NAME_RECV_QUEUE={}
       - NAME_TRIPS_QUEUE={}
       - NAME_EM_QUEUE={}
+      - NAME_NEXT_STAGE_EXCHANGE={}
       - NAME_NEXT_STAGE_QUEUE={}
+      - SIZE_WORKERS={}
+      - ID_JOINER={}
     image: joiner_stations:latest
     networks:      
       - testing_net
@@ -100,15 +106,18 @@ JOINER_STATIONS = """
 """
 
 JOINER_WEATHER = """
-  joiner_weather:
-    container_name: joiner_weather
+  joiner_weather_{}:
+    container_name: joiner_weather_{}
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
       - NAME_RECV_QUEUE={}
       - NAME_TRIPS_QUEUE={}
       - NAME_EM_QUEUE={}
+      - NAME_NEXT_STAGE_EXCHANGE={}
       - NAME_NEXT_STAGE_QUEUE={}
+      - SIZE_WORKERS={}
+      - ID_JOINER={}
     image: joiner_weather:latest
     networks:      
       - testing_net
@@ -128,6 +137,7 @@ FILTER_PRETOC = """
       - NAME_EM_QUEUE={}
       - NAME_SEND_QUEUE={}
       - ID_QUERY=1
+      - ID_FILTER={}
     image: filter_pretoc:latest
     networks:      
       - testing_net
@@ -147,6 +157,7 @@ FILTER_YEAR = """
       - NAME_EM_QUEUE={}
       - NAME_SEND_QUEUE={}
       - ID_QUERY=2
+      - ID_FILTER={}
     image: filter_year:latest
     networks:      
       - testing_net
@@ -166,6 +177,7 @@ FILTER_DISTANCE = """
       - NAME_EM_QUEUE={}
       - NAME_SEND_QUEUE={}
       - ID_QUERY=3
+      - ID_FILTER={}
     image: filter_distance:latest
     networks:      
       - testing_net
@@ -182,7 +194,9 @@ GROUPBY_QUERY1 = """
       - PYTHONUNBUFFERED=1
       - NAME_RECV_QUEUE={}
       - NAME_EM_QUEUE={}
+      - NAME_SEND_EXCHANGE={}
       - NAME_SEND_QUEUE={}
+      - SIZE_WORKERS_SEND={}
       - CHUNK_SIZE=100
     image: groupby_start_date:latest
     networks:      
@@ -200,7 +214,9 @@ GROUPBY_QUERY2 = """
       - PYTHONUNBUFFERED=1
       - NAME_RECV_QUEUE={}
       - NAME_EM_QUEUE={}
+      - NAME_SEND_EXCHANGE={}
       - NAME_SEND_QUEUE={}
+      - SIZE_WORKERS_SEND={}
       - CHUNK_SIZE=100
     image: groupby_start_station:latest
     networks:      
@@ -218,7 +234,9 @@ GROUPBY_QUERY3 = """
       - PYTHONUNBUFFERED=1
       - NAME_RECV_QUEUE={}
       - NAME_EM_QUEUE={}
+      - NAME_SEND_EXCHANGE={}
       - NAME_SEND_QUEUE={}
+      - SIZE_WORKERS_SEND={}
       - CHUNK_SIZE=100
     image: groupby_end_station:latest
     networks:      
@@ -236,7 +254,9 @@ GROUPBY_QUERY4 = """
       - PYTHONUNBUFFERED=1
       - NAME_RECV_QUEUE={}
       - NAME_EM_QUEUE={}
+      - NAME_SEND_EXCHANGE={}
       - NAME_SEND_QUEUE={}
+      - SIZE_WORKERS_SEND={}
       - ID_QUERY=4
       - CHUNK_SIZE=100
     image: groupby_all_elements:latest
@@ -253,10 +273,12 @@ APPLIER_QUERY1 = """
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
+      - NAME_RECV_EXCHANGE={}
       - NAME_RECV_QUEUE={}
       - NAME_EM_QUEUE={}
       - NAME_SEND_QUEUE={}
       - ID_QUERY=1
+      - ID_APPLIER={}
     image: mean_duration_applier:latest
     networks:      
       - testing_net
@@ -271,9 +293,11 @@ APPLIER_QUERY2 = """
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
+      - NAME_RECV_EXCHANGE={}
       - NAME_RECV_QUEUE={}
       - NAME_EM_QUEUE={}
       - NAME_SEND_QUEUE={}
+      - ID_APPLIER={}
     image: double_year_applier:latest
     networks:      
       - testing_net
@@ -288,9 +312,11 @@ APPLIER_QUERY3 = """
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
+      - NAME_RECV_EXCHANGE={}
       - NAME_RECV_QUEUE={}
       - NAME_EM_QUEUE={}
       - NAME_SEND_QUEUE={}
+      - ID_APPLIER={}
     image: mean_distance_applier:latest
     networks:      
       - testing_net
@@ -305,10 +331,12 @@ APPLIER_QUERY4 = """
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
+      - NAME_RECV_EXCHANGE={}
       - NAME_RECV_QUEUE={}
       - NAME_EM_QUEUE={}
       - NAME_SEND_QUEUE={}
       - ID_QUERY=4
+      - ID_APPLIER={}
     image: mean_duration_applier:latest
     networks:      
       - testing_net
@@ -324,6 +352,7 @@ EM_FILTERS = """
     environment:
       - PYTHONUNBUFFERED=1
       - NAME_RECV_QUEUE={}
+      - NAME_FILTERS_EXCHANGE={}
       - NAME_FILTERS_QUEUE={}
       - NAME_SEND_QUEUE={}
       - NAME_STATUS_QUEUE={}
@@ -349,6 +378,8 @@ EM_JOINERS = """
       - NAME_JOIN_STATIONS_QUEUE={}
       - NAME_JOIN_WEATHER_QUEUE={}
       - NAME_STATUS_QUEUE={}
+      - SIZE_STATIONS={}
+      - SIZE_WEATHER={}
     image: eof_manager_joiners:latest
     networks:      
       - testing_net
@@ -382,6 +413,7 @@ EM_APPLIERS = """
     environment:
       - PYTHONUNBUFFERED=1
       - NAME_RECV_QUEUE={}
+      - NAME_APPLIERS_EXCHANGE={}
       - NAME_APPLIERS_QUEUES={}
       - NAME_SEND_QUEUE={}
       - NAME_STATUS_QUEUE={}

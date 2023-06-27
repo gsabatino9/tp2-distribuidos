@@ -52,7 +52,7 @@ class ApplierController:
             self.queue_connection.start_receiving()
         except:
             if self.running:
-                raise
+                raise  # gracefull quit
         self.keep_alive.stop()
         self.keep_alive.join()
 
@@ -64,6 +64,7 @@ class ApplierController:
 
     def __agroup_trips_arrived(self, body):
         header, agrouped_trips = decode(body)
+        print("llegó trip:", header)
 
         result_trips = self.__apply_condition_to_agrouped_trips(agrouped_trips)
         self.__send_result(header.id_client, result_trips)
@@ -99,10 +100,10 @@ class ApplierController:
 
     def stop(self, *args):
         if self.running:
+            self.running = False
             self.queue_connection.stop_receiving()
             self.queue_connection.close()
             print(
                 "action: close_resource | result: success | resource: rabbit_connection"
             )
 
-            self.running = False

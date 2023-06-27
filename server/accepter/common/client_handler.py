@@ -1,4 +1,4 @@
-import struct
+import struct, socket
 from threading import Thread
 from server.common.queue.connection import Connection
 from server.common.utils_messages_eof import eof_msg
@@ -9,32 +9,49 @@ from common.utils import is_get_id, is_eof
 class ClientHandler(Thread):
     def __init__(
         self,
-        client_address,
+        accepter_queue,
         queue_client,
-        client_connection,
         name_stations_queue,
         name_weather_queue,
         name_trips_queues,
         name_session_manager_queue,
         name_em_queue,
         amount_queries,
+        size_stations,
+        size_weather,
+        sharding_amount
     ):
         super().__init__()
-        self.client_address = client_address
+        self.running = True
+
+        self.accepter_queue = accepter_queue
         self.queue_client = queue_client
-        self.client_connection = client_connection
         self.name_stations_queue = name_stations_queue
         self.name_weather_queue = name_weather_queue
         self.name_trips_queues = name_trips_queues
         self.name_session_manager_queue = name_session_manager_queue
         self.name_em_queue = name_em_queue
         self.amount_queries = amount_queries
+        self.size_stations = size_stations
+        self.size_weather = size_weather
+        self.sharding_amount = sharding_amount
+        self.active = False
 
     def run(self):
-        self.__connect_queues()
 
-        client_running = True
-        while client_running:
+        while self.running:
+            self.client_connection = self.accepter_queue.get()
+            if not self.client_connection or not self.running:
+                break
+            self.__connect_queues()
+            self.__handle_client()
+            self.queue_connection.close()
+        print("termina el client handler")
+
+    def __handle_client(self):
+        self.client_address = self.client_connection.getpeername()[0]
+        self.active = True
+        while self.active and self.running:
             try:
                 header, payload_bytes = self.client_connection.recv_data(
                     decode_payload=False
@@ -45,19 +62,28 @@ class ClientHandler(Thread):
                 elif is_eof(header):
                     self.__send_eof(header)
                     self.__send_ack_client(header.id_batch)
+                    self.active = False
                 else:
                     self.__route_message(header, payload_bytes)
                     self.__send_ack_client(header.id_batch)
-            except struct.error:
+            except:
                 print("action: client_clossed")
-                client_running = False
+                self.active = False
 
-        self.stop()
+        self.client_connection.stop()
 
     def __assign_id_to_client(self):
         self.session_manager_queue.send(self.client_address)
-        # TODO: try-except por si tarda 1min en popear de la cola
-        id_client = self.queue_client.get()
+        
+        id_client = -1
+        while True:
+            id_client, client_address = self.queue_client.get()
+            if not self.running:
+                return
+            
+            if client_address == self.client_address:
+                break
+
         if id_client == 0:
             self.client_connection.send_error_message()
         else:
@@ -73,13 +99,15 @@ class ClientHandler(Thread):
         msg = encode_header(header) + payload_bytes
 
         if is_station(header):
-            self.stations_queue.send(msg)
+            self.stations_queue.send_static(msg, header.id_client)
         elif is_weather(header):
-            self.weather_queue.send(msg)
+            self.weather_queue.send_static(msg, header.id_client)
         else:
-            self.__send_msg_to_trips(msg)
+            self.__send_msg_to_trips(msg, header.id_client)
 
-    def __send_msg_to_trips(self, msg):
+    def __send_msg_to_trips(self, msg, id_client):
+        self.stations_queue.send_workers(msg, id_client)
+        self.weather_queue.send_workers(msg, id_client)
         [trips_queue.send(msg) for trips_queue in self.trips_queues]
 
     def __send_ack_client(self, id_batch):
@@ -91,11 +119,11 @@ class ClientHandler(Thread):
     def __connect_queues(self):
         try:
             self.queue_connection = Connection()
-            self.stations_queue = self.queue_connection.basic_queue(
-                self.name_stations_queue
+            self.stations_queue = self.queue_connection.sharding_queue(
+                self.name_stations_queue, self.size_stations, self.sharding_amount
             )
-            self.weather_queue = self.queue_connection.basic_queue(
-                self.name_weather_queue
+            self.weather_queue = self.queue_connection.sharding_queue(
+                self.name_weather_queue, self.size_weather, self.sharding_amount
             )
             self.trips_queues = [
                 self.queue_connection.basic_queue(q) for q in self.name_trips_queues
@@ -108,7 +136,12 @@ class ClientHandler(Thread):
             print(f"error: creating_queue_connection | log: {e}")
 
     def stop(self):
-        self.client_connection.stop()
-        self.queue_connection.close()
-
-        print("finalizando cliente")
+        if self.running:
+            self.running = False
+            if self.active:
+                try:
+                    self.client_connection.comm.socket.shutdown(socket.SHUT_RDWR)
+                except:
+                    print("error: shutdown_client_connection_failed")
+            self.queue_client.put((None, None))
+            self.accepter_queue.put(None)

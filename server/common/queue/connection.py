@@ -5,6 +5,8 @@ from server.common.queue.queue import (
     RoutingQueue,
     RoutingBuildQueue,
     PubsubWorkerQueue,
+    MultipleQueues,
+    ShardingQueue
 )
 
 
@@ -31,6 +33,12 @@ class Connection:
 
     def routing_building_queue(self, exchange_name, queue_name):
         return RoutingBuildQueue(self.channel, exchange_name, queue_name)
+
+    def multiple_queues(self, names_queues, amount_nodes):
+        return MultipleQueues(self.channel, names_queues, amount_nodes)
+
+    def sharding_queue(self, name_queue, amount_nodes, sharding_amount):
+        return ShardingQueue(self.channel, name_queue, amount_nodes, sharding_amount)
 
     def start_receiving(self):
         self.channel.start_consuming()
