@@ -56,7 +56,7 @@ server-up: server-image
 .PHONY: server-up
 
 server-down:
-	docker compose -f docker-compose-server.yaml stop -t 15
+	docker compose -f docker-compose-server.yaml stop -t 1
 	docker compose -f docker-compose-server.yaml down
 .PHONY: server-down
 

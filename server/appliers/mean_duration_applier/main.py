@@ -10,7 +10,7 @@ ID_APPLIER = os.environ.get("ID_APPLIER")
 
 def main():
     a = MeanDurationApplier(
-        NAME_RECV_QUEUE+ID_APPLIER, NAME_EM_QUEUE, NAME_SEND_QUEUE, ID_QUERY
+        NAME_RECV_QUEUE + ID_APPLIER, NAME_EM_QUEUE, NAME_SEND_QUEUE, ID_QUERY
     )
     a.stop()
 

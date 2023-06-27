@@ -40,8 +40,12 @@ class Accepter:
         self.name_trips_queues = name_trips_queues
         self.name_session_manager_queue = name_session_manager_queue
         self.name_em_queue = name_em_queue
-        queues = self.__create_client_handlers(size_stations, size_weather, sharding_amount)
-        self.recv_ids = ReceiverIds(name_recv_ids_queue, self.clients_connections, queues)
+        queues = self.__create_client_handlers(
+            size_stations, size_weather, sharding_amount
+        )
+        self.recv_ids = ReceiverIds(
+            name_recv_ids_queue, self.clients_connections, queues
+        )
         self.keep_alive = KeepAlive()
         print("action: accepter_started | result: success")
 
@@ -68,7 +72,7 @@ class Accepter:
                 self.amount_queries,
                 size_stations,
                 size_weather,
-                sharding_amount
+                sharding_amount,
             )
             client_handler.start()
             self.clients_handlers.append(client_handler)
@@ -121,4 +125,3 @@ class Accepter:
         if self.running:
             self.running = False
             self.accepter_socket.shutdown(socket.SHUT_RDWR)
-

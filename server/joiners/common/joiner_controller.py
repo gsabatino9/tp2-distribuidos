@@ -51,7 +51,9 @@ class JoinerController:
             self.recv_queue = self.queue_connection.basic_queue(name_recv_queue)
             self.trips_queue = self.queue_connection.basic_queue(name_trips_queue)
             self.em_queue = self.queue_connection.pubsub_queue(name_em_queue)
-            self.next_stage_queues = self.queue_connection.multiple_queues(name_next_stage_queues, self.size_workers_next_stage)
+            self.next_stage_queues = self.queue_connection.multiple_queues(
+                name_next_stage_queues, self.size_workers_next_stage
+            )
         except OSError as e:
             print(f"error: creating_queue_connection | log: {e}")
             self.stop()
@@ -131,4 +133,3 @@ class JoinerController:
             print(
                 "action: close_resource | result: success | resource: rabbit_connection"
             )
-

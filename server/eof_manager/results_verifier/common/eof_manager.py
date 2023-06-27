@@ -94,4 +94,3 @@ class EOFManager:
             print(
                 "action: close_resource | result: success | resource: rabbit_connection"
             )
-

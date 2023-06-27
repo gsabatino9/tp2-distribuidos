@@ -59,7 +59,13 @@
 			"applier_query1": 1,
 			"applier_query2": 1,
 			"applier_query3": 1,
-			"applier_query4": 1
+			"applier_query4": 1,
+			"groupby": {
+				"groupby_query1": 2,
+				"groupby_query2": 3,
+				"groupby_query3": 4,
+				"groupby_query4": 2
+			}
 		},
 		"max_clients": 3
 	}

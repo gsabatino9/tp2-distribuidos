@@ -10,7 +10,7 @@ class ResultsSender(Thread):
         name_session_manager_queue,
         name_request_queue,
         address,
-        client_handlers_queues
+        client_handlers_queues,
     ):
         super().__init__()
         self.running = True
@@ -24,9 +24,9 @@ class ResultsSender(Thread):
             client_handler = ClientHandler(
                 name_session_manager_queue,
                 name_request_queue,
-                self.clients_handlers_queue, 
+                self.clients_handlers_queue,
                 queue_results,
-                i
+                i,
             )
             client_handler.start()
             self.clients_handlers.append(client_handler)

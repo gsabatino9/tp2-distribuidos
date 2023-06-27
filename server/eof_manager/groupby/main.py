@@ -2,16 +2,16 @@ from common.eof_manager import EOFManager
 import os, ast
 
 NAME_RECV_QUEUE = os.environ.get("NAME_RECV_QUEUE")
-NAME_GROUPBY_QUEUE = os.environ.get("NAME_GROUPBY_QUEUE")
+NODES_GROUPBY = os.environ.get("NODES_GROUPBY")
 NAME_SEND_QUEUE = os.environ.get("NAME_SEND_QUEUE")
 NAME_STATUS_QUEUE = os.environ.get("NAME_STATUS_QUEUE")
 
 
 def main():
-    name_groupby_queue = ast.literal_eval(NAME_GROUPBY_QUEUE)
+    nodes_groupby = ast.literal_eval(NODES_GROUPBY)
 
     e = EOFManager(
-        NAME_RECV_QUEUE, name_groupby_queue, NAME_SEND_QUEUE, NAME_STATUS_QUEUE
+        NAME_RECV_QUEUE, nodes_groupby, NAME_SEND_QUEUE, NAME_STATUS_QUEUE
     )
     e.stop()
 

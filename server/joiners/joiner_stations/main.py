@@ -13,7 +13,7 @@ def main():
     name_filters_queue = ast.literal_eval(NAME_NEXT_STAGE_QUEUE)
     size_workers = ast.literal_eval(SIZE_WORKERS)
     j = JoinerStations(
-        NAME_RECV_QUEUE+ID_JOINER,
+        NAME_RECV_QUEUE + ID_JOINER,
         NAME_TRIPS_QUEUE,
         NAME_EM_QUEUE,
         name_filters_queue,
