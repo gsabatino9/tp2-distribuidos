@@ -14,9 +14,7 @@ class SessionManagerState:
             self.sessions = aux[0][1]
 
     def add_client(self, id_client):
-        self.sessions.append(
-            [id_client, time.time(), False]
-        )
+        self.sessions.append([id_client, time.time(), False])
         self.bucket.set("sessions", self.sessions)
 
     def get_expired_sessions(self, limit_time):

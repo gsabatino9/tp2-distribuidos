@@ -33,8 +33,7 @@ class SessionManager:
         try:
             self.queue_connection = Connection()
             self.recv_queue = self.queue_connection.pubsub_queue(
-                name_recv_queue,
-                auto_ack=False
+                name_recv_queue, auto_ack=False
             )
             self.send_queue = self.queue_connection.pubsub_queue(name_send_queue)
             self.em_queue = self.queue_connection.pubsub_queue(name_em_queue)

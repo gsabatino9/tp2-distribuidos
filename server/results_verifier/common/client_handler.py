@@ -69,4 +69,3 @@ class ClientHandler(Thread):
         )
 
         self.session_manager_queue.send(delete_client(id_client))
-        # self.client_connection.stop()
