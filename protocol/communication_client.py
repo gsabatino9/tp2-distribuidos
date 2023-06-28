@@ -9,7 +9,7 @@ class CommunicationClient:
     Represents a communication client for sending and receiving messages to/from the server.
     """
 
-    def __init__(self, socket, suscriptions):
+    def __init__(self, socket, id_client, suscriptions):
         """
         Initializes a new CommunicationClient object.
 
@@ -18,13 +18,11 @@ class CommunicationClient:
         """
         self.comm = Communication(socket)
         self.queries_suscriptions = suscriptions_to_number(suscriptions)
-        self.msg = MessageClient(self.queries_suscriptions)
+        self.id_client = id_client
+        self.id_batch = 0
 
     def getpeername(self):
         return self.comm.getpeername()
-
-    def set_id_client(self, id_client):
-        self.msg.set_id_client(id_client)
 
     def send(self, data_type, data, is_last=False):
         if data_type == "stations":
@@ -34,28 +32,39 @@ class CommunicationClient:
         else:
             self.__send_trips(data, is_last)
 
-    def send_get_id(self):
-        msg = self.msg.get_id_message()
+    def send_init_session(self):
+        msg = MessageClient.init_session_message(self.id_client)
         self.comm.send_message(msg)
 
     def send_get_results(self):
-        msg = self.msg.get_results_message()
+        msg = MessageClient.get_results_message(self.id_client)
         self.comm.send_message(msg)
 
     def __send_stations(self, stations, is_last=False):
-        msg = self.msg.station_message(stations, is_last)
-        self.comm.send_message(msg)
+        msg = MessageClient.station_message(
+            self.id_client, self.id_batch, self.queries_suscriptions, stations, is_last
+        )
+        self.__send_data(msg)
 
     def __send_weathers(self, weathers, is_last=False):
-        msg = self.msg.weather_message(weathers, is_last)
-        self.comm.send_message(msg)
+        msg = MessageClient.weather_message(
+            self.id_client, self.id_batch, self.queries_suscriptions, weathers, is_last
+        )
+        self.__send_data(msg)
 
     def __send_trips(self, trips, is_last=False):
-        msg = self.msg.trip_message(trips, is_last)
-        self.comm.send_message(msg)
+        msg = MessageClient.trip_message(
+            self.id_client, self.id_batch, self.queries_suscriptions, trips, is_last
+        )
+        self.__send_data(msg)
 
-    def recv_id_client(self):
-        return self.__recv_message(decode_payload=True)
+    def __send_data(self, msg):
+        self.comm.send_message(msg)
+        self.id_batch += 1
+
+    def recv_status_session(self):
+        header, _ = self.__recv_message(decode_payload=True)
+        return header.msg_type == MessageServer.SESSION_ACCEPTED
 
     def recv_ack(self):
         return self.__recv_message()

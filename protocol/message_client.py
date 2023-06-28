@@ -11,7 +11,7 @@ class MessageClient:
     # Constants for message types
     SEND_DATA = 0
     SEND_LAST = 1
-    GET_ID = 2
+    INIT_SESSION = 2
     GET_RESULTS = 3
 
     # Struct format for message header
@@ -39,54 +39,39 @@ class MessageClient:
     )
     Payload = namedtuple("Payload", "data")
 
-    def __init__(self, queries_suscriptions, id_client=0):
-        self.id_client = id_client
-        self.queries_suscriptions = queries_suscriptions
-        self.id_batch = 0
-
-    def set_id_client(self, id_client):
-        self.id_client = id_client
-
-    def new_message(self, data_type, msg_type, payload, id_batch=None):
+    def __init__(
+        self,
+        data_type,
+        msg_type,
+        id_client,
+        id_batch,
+        queries_suscriptions,
+        payload=None,
+    ):
         if payload is None:
             payload = []
-        payload_bytes = self._pack_payload(payload)
-        id_batch = self.id_batch if id_batch is None else id_batch
 
-        header = self.Header(
-            data_type,
-            msg_type,
-            self.id_client,
-            id_batch,
-            self.queries_suscriptions,
-            len(payload_bytes),
-        )
-        self.id_batch += 1
-        payload = self.Payload(payload_bytes)
-
-        return self.encode(header, payload)
-
-    """
-    def __init__(self, data_type, msg_type, queries_suscriptions, payload):
-        if payload is None:
-            payload = []
         payload_bytes = self._pack_payload(payload)
 
         self.header = self.Header(
-            data_type, msg_type, queries_suscriptions, len(payload_bytes)
+            data_type,
+            msg_type,
+            id_client,
+            id_batch,
+            queries_suscriptions,
+            len(payload_bytes),
         )
         self.payload = self.Payload(payload_bytes)
-    """
 
-    def encode(self, header, payload):
+    def encode(self):
         """
         Encode the message as bytes to be sent over the network.
 
         Returns:
                 bytes: The encoded message as bytes.
         """
-        encoded_header = self.encode_header(header)
-        encoded_payload = self.encode_payload(header.len, payload)
+        encoded_header = self.encode_header(self.header)
+        encoded_payload = self.encode_payload(self.header.len, self.payload)
 
         return encoded_header + encoded_payload
 
@@ -159,26 +144,43 @@ class MessageClient:
         payload = payload_bytes.decode("utf-8").split("\0")
         return MessageClient.Payload(payload)
 
-    def station_message(self, payload, is_last=False):
-        data_type = self.STATION_DATA
-        msg_type = self.SEND_LAST if is_last else self.SEND_DATA
+    @classmethod
+    def station_message(
+        cls, id_client, id_batch, queries_suscriptions, payload, is_last=False
+    ):
+        data_type = cls.STATION_DATA
+        msg_type = cls.SEND_LAST if is_last else cls.SEND_DATA
 
-        return self.new_message(data_type, msg_type, payload)
+        return cls(
+            data_type, msg_type, id_client, id_batch, queries_suscriptions, payload
+        ).encode()
 
-    def weather_message(self, payload, is_last=False):
-        data_type = self.WEATHER_DATA
-        msg_type = self.SEND_LAST if is_last else self.SEND_DATA
-        return self.new_message(data_type, msg_type, payload)
+    @classmethod
+    def weather_message(
+        cls, id_client, id_batch, queries_suscriptions, payload, is_last=False
+    ):
+        data_type = cls.WEATHER_DATA
+        msg_type = cls.SEND_LAST if is_last else cls.SEND_DATA
 
-    def trip_message(self, payload, is_last=False):
-        data_type = self.TRIP_DATA
-        msg_type = self.SEND_LAST if is_last else self.SEND_DATA
-        return self.new_message(data_type, msg_type, payload)
+        return cls(
+            data_type, msg_type, id_client, id_batch, queries_suscriptions, payload
+        ).encode()
 
-    def get_id_message(self):
-        msg_type = self.GET_ID
-        return self.new_message(self.TRIP_DATA, msg_type, list(""))
+    @classmethod
+    def trip_message(
+        cls, id_client, id_batch, queries_suscriptions, payload, is_last=False
+    ):
+        data_type = cls.TRIP_DATA
+        msg_type = cls.SEND_LAST if is_last else cls.SEND_DATA
 
-    def get_results_message(self):
-        msg_type = self.GET_RESULTS
-        return self.new_message(self.TRIP_DATA, msg_type, list(""))
+        return cls(
+            data_type, msg_type, id_client, id_batch, queries_suscriptions, payload
+        ).encode()
+
+    @classmethod
+    def init_session_message(cls, id_client):
+        return cls(cls.TRIP_DATA, cls.INIT_SESSION, id_client, 0, 0, list("")).encode()
+
+    @classmethod
+    def get_results_message(cls, id_client):
+        return cls(cls.TRIP_DATA, cls.GET_RESULTS, id_client, 0, 0, list("")).encode()

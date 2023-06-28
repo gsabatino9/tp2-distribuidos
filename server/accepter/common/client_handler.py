@@ -3,7 +3,8 @@ from threading import Thread
 from server.common.queue.connection import Connection
 from server.common.utils_messages_eof import eof_msg
 from server.common.utils_messages_client import is_station, is_weather, encode_header
-from common.utils import is_get_id, is_eof
+from server.common.utils_messages_new_client import request_init_session
+from common.utils import is_init_session, is_eof
 
 
 class ClientHandler(Thread):
@@ -48,7 +49,6 @@ class ClientHandler(Thread):
         print("termina el client handler")
 
     def __handle_client(self):
-        self.client_address = self.client_connection.get_addr()
         self.active = True
         while self.active and self.running:
             try:
@@ -56,9 +56,11 @@ class ClientHandler(Thread):
                     decode_payload=False
                 )
 
-                if is_get_id(header):
-                    self.__assign_id_to_client()
+                if is_init_session(header):
+                    self.__request_init_session(header.id_client)
                 elif is_eof(header):
+                    # el eof se lo envío directo al session_manager y listo.
+                    # o tengo que ver por el último ack.
                     self.__send_eof(header)
                     self.__send_ack_client(header.id_batch)
                     self.active = False
@@ -66,27 +68,29 @@ class ClientHandler(Thread):
                     self.__route_message(header, payload_bytes)
                     self.__send_ack_client(header.id_batch)
             except:
-                print("action: client_clossed")
-                self.active = False
+                raise
+                #print("action: client_clossed")
+                #self.active = False
 
+        # acá tengo que mandar mensaje de empezar delete al session_manager
         self.client_connection.stop()
 
-    def __assign_id_to_client(self):
-        self.session_manager_queue.send(self.client_address)
+    def __request_init_session(self, id_client):
+        self.session_manager_queue.send(request_init_session(id_client))
 
-        id_client = -1
+        is_session_accepted = False
         while True:
-            id_client, client_address = self.queue_client.get()
+            (id_client_recv, is_session_accepted) = self.queue_client.get()
             if not self.running:
                 return
 
-            if client_address == self.client_address:
+            if id_client_recv == id_client:
                 break
 
-        if id_client == 0:
-            self.client_connection.send_error_message()
+        if is_session_accepted:
+            self.client_connection.send_accepted_connection()
         else:
-            self.client_connection.send_id_client(id_client)
+            self.client_connection.send_error_message()
 
     def __send_eof(self, header):
         self.em_queue.send(eof_msg(header))

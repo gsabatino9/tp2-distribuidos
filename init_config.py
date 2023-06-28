@@ -512,6 +512,7 @@ CLIENT = """
       - MAX_RETRIES=50
       - SUSCRIPTIONS=[1,2,3,4]
       - FILE_PATH=data/
+      - ID_CLIENT={}
     image: client:latest
     networks:      
       - testing_net

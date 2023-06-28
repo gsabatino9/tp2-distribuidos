@@ -2,7 +2,7 @@ import random, time, socket, signal
 from protocol.communication_client import CommunicationClient
 
 
-def connect(addresses, suscriptions):
+def connect(addresses, id_client, suscriptions):
     not_connected = True
     conn = None
 
@@ -11,7 +11,7 @@ def connect(addresses, suscriptions):
             address = __pick_address(addresses)
             client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             client_socket.connect(address)
-            conn = CommunicationClient(client_socket, suscriptions)
+            conn = CommunicationClient(client_socket, id_client, suscriptions)
 
             print(
                 f"action: client_connected | result: success | addr: {conn.getpeername()} | suscriptions: {suscriptions}"

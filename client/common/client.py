@@ -13,11 +13,12 @@ from common.middleware_communication import connect
 
 
 class Client:
-    def __init__(self, addresses, chunk_size, max_retries, suscriptions):
+    def __init__(self, addresses, chunk_size, max_retries, id_client, suscriptions):
         self.running = True
         signal.signal(signal.SIGTERM, self.stop)
 
         self.addresses = addresses
+        self.id_client = id_client
         self.suscriptions = suscriptions
         self.chunk_size = chunk_size
         self.max_retries = max_retries
@@ -32,21 +33,17 @@ class Client:
         )
 
     def run(self, filepath, types_files, addr_consult):
-        self.conn = connect(self.addresses, self.suscriptions)
-        self.__receive_id()
+        self.conn = connect(self.addresses, self.id_client, self.suscriptions)
+        self.__init_session()
         self.__send_files(filepath, types_files)
         self.__get_results(addr_consult)
 
-    def __receive_id(self):
-        id_not_assigned = True
-        while id_not_assigned:
-            self.conn.send_get_id()
-            header, payload = self.conn.recv_id_client()
-            if is_id_client(header):
-                self.id_client = get_id_client(payload)
-                self.conn.set_id_client(self.id_client)
-                id_not_assigned = False
-
+    def __init_session(self):
+        session_accepted = False
+        while not session_accepted:
+            self.conn.send_init_session()
+            session_accepted = self.conn.recv_status_session()
+            if session_accepted:
                 print(
                     f"action: id_client_received | result: success | id_client: {self.id_client}"
                 )
@@ -79,6 +76,8 @@ class Client:
         print(
             f"action: file_sent | result: success | type_file: {type_file} | amount_chunks: {send_data}"
         )
+
+        return id_batch
 
     def __send_file_in_chunks(self, type_file, reader):
         """

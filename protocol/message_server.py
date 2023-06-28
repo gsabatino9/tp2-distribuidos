@@ -7,7 +7,7 @@ class MessageServer:
     BATCH_RECEIVED = 0
     SEND_RESULT = 1
     SEND_LAST_RESULT = 2
-    SEND_ID_CLIENT = 3
+    ACCEPTED_CONNECTION = 3
     ERROR_MESSAGE = 4
 
     # Struct format for message header
@@ -121,9 +121,8 @@ class MessageServer:
         return cls(cls.SEND_LAST_RESULT, 0, 0, list("")).encode()
 
     @classmethod
-    def id_client_message(cls, id_client):
-        payload = [str(id_client)]
-        return cls(cls.SEND_ID_CLIENT, 0, 0, payload).encode()
+    def accepted_connection_message(cls):
+        return cls(cls.ACCEPTED_CONNECTION, 0, 0, list("")).encode()
 
     @classmethod
     def error_message(cls):
