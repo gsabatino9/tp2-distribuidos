@@ -156,7 +156,7 @@ class ResultsVerifier:
                 f"action: data_arrived | result: batch_already_processed | batch_id: {header.id_batch}"
             )
             return
-        
+
         id_client = header.id_client
         self.__verify_client(id_client)
         self.state.add_results(id_client, id_query, results)

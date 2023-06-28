@@ -59,7 +59,9 @@ class ClientState:
         self.dup_filter = {}
         # TODO: ponerle 5 := amount_queries+1
         for id_query in range(1, 5):
-            self.dup_filter[id_query] = DuplicateFilter(bucket.collection(f"dup_filter#{id_query}"))
+            self.dup_filter[id_query] = DuplicateFilter(
+                bucket.collection(f"dup_filter#{id_query}")
+            )
 
         self.bucket = bucket
         self.was_modified = False
