@@ -14,7 +14,6 @@ class ResultsSender(Thread):
     ):
         super().__init__()
         self.running = True
-        signal.signal(signal.SIGTERM, self.stop)
 
         self.accepter_socket = self.__create_socket(address)
         self.clients_handlers = []
@@ -52,13 +51,18 @@ class ResultsSender(Thread):
             self.__accept_client()
 
     def __join_clients(self):
-        for client_handler in self.clients_handlers:
-            client_handler.join()
+        [client_handler.stop() for client_handler in self.clients_handlers]
+        [client_handler.join() for client_handler in self.clients_handlers]
 
         self.accepter_socket.close()
 
     def __accept_client(self):
-        client_socket, client_address = self.accepter_socket.accept()
+        try:
+            client_socket, client_address = self.accepter_socket.accept()
+        except:
+            if self.running:
+                raise
+            return
         client_connection = CommunicationServer(client_socket)
 
         print(
@@ -67,10 +71,10 @@ class ResultsSender(Thread):
 
         self.clients_handlers_queue.put(client_connection)
 
-    def stop(self, *args):
+    def stop(self):
         if self.running:
-            self.accepter_socket.close()
+            self.running = False
+            self.accepter_socket.shutdown(socket.SHUT_RDWR)
             print(
                 "action: close_resource | result: success | resource: accepter_socket"
             )
-            self.running = False
