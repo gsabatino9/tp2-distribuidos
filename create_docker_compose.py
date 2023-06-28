@@ -3,6 +3,14 @@ from init_config import *
 
 
 def main():
+    if len(sys.argv) != 2:
+        print("Error: Missing random_fails")
+        return
+    try:
+        random_fails = bool(int(sys.argv[1]))
+    except ValueError:
+        print("Error: random_fails must be 1 or 0.")
+    
     with open("config.json") as f:
         json_config = json.load(f)
 
@@ -43,6 +51,8 @@ def main():
 
     process_restarter = init_process_restarters(restarter_config, amount_nodes)
 
+    process_stopper = init_process_stopper(random_fails, amount_nodes, restarter_config["n_processes"])
+
     compose = (
         INIT_DOCKER.format()
         .replace("<ACCEPTER>", accepters)
@@ -67,6 +77,7 @@ def main():
         .replace("<RESULTS_VERIFIER>", results_verifier)
         .replace("<EM_RESULTS>", em_results)
         .replace("<SESSION_MANAGER>", session_manager)
+        .replace("<PROCESS_STOPPER>", process_stopper)
     )
 
     with open("docker-compose-server.yaml", "w") as compose_file:
@@ -453,6 +464,16 @@ def get_containers_keep_alive(amount_nodes):
     containers_keep_alive.append("eof_manager_query_results")
 
     return ",".join(containers_keep_alive)
+
+
+def init_process_stopper(random_fails, amount_nodes, n_restarters):
+    if not random_fails:
+        return ""
+    process_stopper = ""
+    processes_to_stop = get_containers_keep_alive(amount_nodes)
+    processes_to_stop += ",".join(["processes-restarter-"+str(i) for i in range(n_restarters)])
+    return PROCESS_STOPPER.format(processes_to_stop)
+    
 
 
 if __name__ == "__main__":
