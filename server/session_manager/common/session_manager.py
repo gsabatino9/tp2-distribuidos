@@ -3,6 +3,7 @@ from uuid import uuid4
 from server.common.utils_messages_new_client import error_message, assigned_id_message
 from server.common.queue.connection import Connection
 from server.common.keep_alive.keep_alive import KeepAlive
+from common.state import SessionManagerState
 
 
 class SessionManager:
@@ -17,17 +18,19 @@ class SessionManager:
         signal.signal(signal.SIGTERM, self.stop)
 
         self.max_clients = max_clients
-        self.active_clients = {}
+        self.state = SessionManagerState()
         self.keep_alive = KeepAlive()
         print("action: session_manager_started | result: success")
 
     def __connect_queue(self, name_recv_queue, name_send_queue, name_end_session_queue):
         try:
             self.queue_connection = Connection()
-            self.recv_queue = self.queue_connection.pubsub_queue(name_recv_queue)
+            self.recv_queue = self.queue_connection.pubsub_queue(
+                name_recv_queue, auto_ack=False
+            )
             self.send_queue = self.queue_connection.pubsub_queue(name_send_queue)
             self.end_session_queue = self.queue_connection.pubsub_queue(
-                name_end_session_queue
+                name_end_session_queue, auto_ack=False
             )
         except OSError as e:
             print(f"error: creating_queue_connection | log: {e}")
@@ -56,33 +59,33 @@ class SessionManager:
         - cliente ya se encuentra asignado: devuelve el id asignado.
         """
         print(f"action: new_client_request | client_address: {client_address}")
-        if client_address in self.active_clients:
-            msg = assigned_id_message(
-                self.active_clients[client_address], client_address
-            )
-        elif len(self.active_clients) < self.max_clients:
+        if id_client := self.state.get_client(client_address):
+            msg = assigned_id_message(id_client, client_address)
+        elif self.state.clients_count() < self.max_clients:
             id_client = self.__assign_id_to_client(client_address)
             msg = assigned_id_message(id_client, client_address)
         else:
             msg = error_message(client_address)
             print("action: id_assigned | result: failure")
 
+        self.state.write_checkpoint()
+        self.recv_queue.ack_all()
         self.send_queue.send(msg)
 
     def __assign_id_to_client(self, address):
         id_client = uuid4().int >> 64
-        self.active_clients[address] = id_client
+        self.state.add_client(address, id_client)
         print(f"action: id_assigned | result: success | id: {id_client}")
 
         return id_client
 
     def end_session(self, body):
         client_address = body
-        if client_address in self.active_clients:
-            print(
-                f"action: end_session | result: success | id_client: {self.active_clients[client_address]}"
-            )
-            del self.active_clients[client_address]
+        if id_client := self.state.delete_client(client_address):
+            print(f"action: end_session | result: success | id_client: {id_client}")
+
+        self.state.write_checkpoint()
+        self.end_session_queue.ack_all()
 
     def stop(self, *args):
         if self.running:

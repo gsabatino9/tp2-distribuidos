@@ -33,6 +33,9 @@ class AtomicBucket:
     def set(self, key, values):
         self.data[key] = values
 
+    def discard(self, key):
+        self.data.pop(key, None)
+
     def drop(self):
         try:
             os.remove(self._get_bucket_path())
