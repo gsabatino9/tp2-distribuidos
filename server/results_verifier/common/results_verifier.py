@@ -150,9 +150,18 @@ class ResultsVerifier:
         stores the results by query.
         """
         header, results = decode(body)
+
+        if self.state.has_batch_been_processed(id_query, id_query, header.id_batch):
+            print(
+                f"action: data_arrived | result: batch_already_processed | batch_id: {header.id_batch}"
+            )
+            return
+        
         id_client = header.id_client
         self.__verify_client(id_client)
         self.state.add_results(id_client, id_query, results)
+
+        self.state.mark_batch_as_processed(header.id_client, id_query, header.id_batch)
 
     def __eof_arrived(self, id_query, body):
         """

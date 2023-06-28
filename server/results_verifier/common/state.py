@@ -34,11 +34,11 @@ class ResultsVerifierState:
     def mark_query_as_ended(self, id_client, id_query):
         self.__get_client(id_client).mark_query_as_finished(id_query)
 
-    # def mark_batch_as_processed(self, id_client, id_batch):
-    #     self.__get_client(id_client).mark_batch_as_processed(id_batch)
+    def mark_batch_as_processed(self, id_client, id_query, id_batch):
+        self.__get_client(id_client).mark_batch_as_processed(id_query, id_batch)
 
-    # def has_batch_been_processed(self, id_client, id_batch):
-    #     return self.__get_client(id_client).has_batch_been_processed(id_batch)
+    def has_batch_been_processed(self, id_client, id_query, id_batch):
+        return self.__get_client(id_client).has_batch_been_processed(id_query, id_batch)
 
     def delete_client(self, id_client):
         if client := self.clients.pop(id_client, None):
@@ -56,7 +56,10 @@ class ClientState:
 
         self.results_bucket = bucket.collection("results")
         self.finished_queries_bucket = bucket.collection("finished_queries")
-        self.dup_filter = DuplicateFilter(bucket.collection("dup_filter"))
+        self.dup_filter = {}
+        # TODO: ponerle 5 := amount_queries+1
+        for id_query in range(1, 5):
+            self.dup_filter[id_query] = DuplicateFilter(bucket.collection(f"dup_filter#{id_query}"))
 
         self.bucket = bucket
         self.was_modified = False
@@ -83,9 +86,9 @@ class ClientState:
         self.finished_queries.add(id_query)
         self.finished_queries_bucket.set(id_query, 1)
 
-    # def mark_batch_as_processed(self, id_batch):
-    #     self.was_modified = True
-    #     self.dup_filter.mark_as_seen(id_batch)
+    def mark_batch_as_processed(self, id_query, id_batch):
+        self.was_modified = True
+        self.dup_filter[id_query].mark_as_seen(id_batch)
 
     def get_results(self):
         return self.results.items()
@@ -93,8 +96,8 @@ class ClientState:
     def count_finished_queries(self):
         return len(self.finished_queries)
 
-    # def has_batch_been_processed(self, id_batch):
-    #     return self.dup_filter.has_been_seen(id_batch)
+    def has_batch_been_processed(self, id_query, id_batch):
+        return self.dup_filter[id_query].has_been_seen(id_batch)
 
     def write_checkpoint(self):
         if self.was_modified:
