@@ -140,20 +140,22 @@ class GroupbyController:
         build chunk to send each message.
         """
         to_send = []
+        id_batch = 0
 
         for i, key in enumerate(self.state.iter_data(id_client)):
             to_send.append(self.__str_from_key(id_client, key))
 
-            if self.__finish_chunk_to_send(id_client, i, to_send):
+            if self.__finish_chunk_to_send(id_client, i, id_batch, to_send):
+                id_batch += 1
                 to_send = []
 
-    def __finish_chunk_to_send(self, id_client, i, to_send):
+    def __finish_chunk_to_send(self, id_client, i, id_batch, to_send):
         """
         stop building the message if the maximum number of data in a chunk has been reached,
         or if is the last data group.
         """
         if (i + 1) % self.chunk_size == 0 or i + 1 == self.state.len_data(id_client):
-            msg = construct_msg(id_client, i, to_send)
+            msg = construct_msg(id_client, id_batch, to_send)
             self.send_queue.send(msg)
 
             return True

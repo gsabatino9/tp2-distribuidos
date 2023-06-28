@@ -1,5 +1,6 @@
 import socket, signal, sys, threading, queue
 from common.results_sender import ResultsSender
+from common.state import ResultsVerifierState
 from server.common.queue.connection import Connection
 from server.common.utils_messages_client import results_message, last_message
 from server.common.utils_messages_eof import ack_msg, get_id_client
@@ -54,11 +55,9 @@ class ResultsVerifier:
         self.running = True
         signal.signal(signal.SIGTERM, self.stop)
 
-        self.ids_clients = set()
-        self.queries_results = {}
-        self.queries_ended = {}
-        self.amount_queries = amount_queries
-
+        self.state = ResultsVerifierState(amount_queries)
+        self.prefetch_limit = 1000
+        self.current_fetch_count = 0
         self.client_handlers_queues = [queue.Queue() for i in range(3)]
         self.sender = ResultsSender(
             name_session_manager_queue,
@@ -83,6 +82,7 @@ class ResultsVerifier:
                 name_recv_queue,
                 routing_keys=[str(i) for i in range(1, amount_queries + 1)]
                 + ["request_results"],
+                auto_ack=False,
             )
 
             self.em_queue = self.queue_connection.pubsub_queue(name_em_queue)
@@ -99,22 +99,28 @@ class ResultsVerifier:
         """
         self.keep_alive.start()
         self.sender.start()
-        self.recv_queue.receive(self.process_messages)
+        self.recv_queue.receive(
+            self.process_messages, prefetch_count=self.prefetch_limit
+        )
         try:
             self.queue_connection.start_receiving()
         except:
             if self.running:
-                raise  # gracefull quit
+                raise  # rethrow ex if not graceful quitting
 
         self.sender.join()
         self.keep_alive.stop()
         self.keep_alive.join()
 
     def process_messages(self, body, id_query):
+        self.current_fetch_count += 1
+        if self.current_fetch_count * 10 // 8 > self.prefetch_limit:
+            self.__ack_messages()
         if id_query == "request_results":
             if is_delete_message(body):
                 id_client = decode_delete_client(body)
                 self.__delete_client(id_client)
+                self.__ack_messages()
             else:
                 id_client_handler, id_client = decode_request_results(body)
                 self.__verify_client(id_client)
@@ -123,30 +129,39 @@ class ResultsVerifier:
                     self.__inform_results(id_client_handler, id_client)
                 else:
                     self.__inform_error(id_client_handler)
+                self.__ack_messages()
         else:
             id_query = int(id_query)
             if is_eof(body):
                 print("action: eof_trips_arrived")
                 self.__eof_arrived(id_query, body)
+                self.__ack_messages()
             else:
                 self.__query_result_arrived(body, id_query)
+
+    def __ack_messages(self):
+        if self.current_fetch_count > 0:
+            self.state.write_checkpoints()
+            self.recv_queue.ack_all()
+            self.current_fetch_count = 0
 
     def __query_result_arrived(self, body, id_query):
         """
         stores the results by query.
         """
         header, results = decode(body)
+
+        if self.state.has_batch_been_processed(id_query, id_query, header.id_batch):
+            print(
+                f"action: data_arrived | result: batch_already_processed | batch_id: {header.id_batch}"
+            )
+            return
+
         id_client = header.id_client
         self.__verify_client(id_client)
-        self.queries_results[id_client, id_query] += results
+        self.state.add_results(id_client, id_query, results)
 
-    def __add_client(self, id_client):
-        print(f"action: add_client | result: success | id_client: {id_client}")
-        self.ids_clients.add(id_client)
-
-        for id_query in range(1, self.amount_queries + 1):
-            self.queries_ended[id_client, id_query] = False
-            self.queries_results[id_client, id_query] = []
+        self.state.mark_batch_as_processed(header.id_client, id_query, header.id_batch)
 
     def __eof_arrived(self, id_query, body):
         """
@@ -156,26 +171,20 @@ class ResultsVerifier:
         id_client = get_id_client(body)
         self.__verify_client(id_client)
         self.em_queue.send(ack_msg(body))
-        self.queries_ended[id_client, id_query] = True
+        self.state.mark_query_as_ended(id_client, id_query)
 
         self.__verify_last_result(id_client)
 
     def __verify_client(self, id_client):
-        if id_client not in self.ids_clients:
-            self.__add_client(id_client)
+        if self.state.add_client(id_client):
+            print(f"action: add_client | result: success | id_client: {id_client}")
 
     def __verify_last_result(self, id_client):
         """
         check if all the queries have ended or if it needs to continue waiting for the EOF, otherwise.
         if it finishes, report the results to the client.
         """
-        ended = True
-        for query in self.queries_ended:
-            if query[0] == id_client:
-                if not self.queries_ended[query]:
-                    ended = False
-
-        return ended
+        return self.state.verify_last_result(id_client)
 
     def __inform_results(self, id_client_handler, id_client):
         queue = self.client_handlers_queues[id_client_handler]
@@ -195,7 +204,7 @@ class ResultsVerifier:
         batches_to_send = []
         id_batch = 0
 
-        for id_query, results_query in enumerate(results_client, start=1):
+        for id_query, results_query in results_client:
             for result in results_query:
                 batch = results_message(id_query, id_batch, result)
                 batches_to_send.append(batch)
@@ -205,9 +214,10 @@ class ResultsVerifier:
 
     def __get_results_client(self, id_client):
         results_client = []
-        for key, results_query in self.queries_results.items():
-            if id_client == key[0]:
-                results_client.append(self.__partition_into_batches(results_query))
+        for id_query, results_query in self.state.get_results(id_client):
+            results_client.append(
+                (id_query, self.__partition_into_batches(results_query))
+            )
 
         return results_client
 
@@ -222,15 +232,8 @@ class ResultsVerifier:
         return batches
 
     def __delete_client(self, id_client):
-        self.__delete_from_dict(self.queries_ended, id_client)
-        self.__delete_from_dict(self.queries_results, id_client)
-        self.ids_clients.discard(id_client)
+        self.state.delete_client(id_client)
         print(f"action: delete_client | result: success | id_client: {id_client}")
-
-    def __delete_from_dict(self, dict_clients, id_client):
-        keys_to_delete = [key for key in dict_clients.keys() if key[0] == id_client]
-        for key in keys_to_delete:
-            del dict_clients[key]
 
     def stop(self, *args):
         if self.running:
