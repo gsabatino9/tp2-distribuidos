@@ -25,10 +25,12 @@ class SessionManager:
     def __connect_queue(self, name_recv_queue, name_send_queue, name_end_session_queue):
         try:
             self.queue_connection = Connection()
-            self.recv_queue = self.queue_connection.pubsub_queue(name_recv_queue)
+            self.recv_queue = self.queue_connection.pubsub_queue(
+                name_recv_queue, auto_ack=False
+            )
             self.send_queue = self.queue_connection.pubsub_queue(name_send_queue)
             self.end_session_queue = self.queue_connection.pubsub_queue(
-                name_end_session_queue
+                name_end_session_queue, auto_ack=False
             )
         except OSError as e:
             print(f"error: creating_queue_connection | log: {e}")
@@ -66,6 +68,8 @@ class SessionManager:
             msg = error_message(client_address)
             print("action: id_assigned | result: failure")
 
+        self.state.write_checkpoint()
+        self.recv_queue.ack_all()
         self.send_queue.send(msg)
 
     def __assign_id_to_client(self, address):
@@ -79,6 +83,9 @@ class SessionManager:
         client_address = body
         if id_client := self.state.delete_client(client_address):
             print(f"action: end_session | result: success | id_client: {id_client}")
+
+        self.state.write_checkpoint()
+        self.end_session_queue.ack_all()
 
     def stop(self, *args):
         if self.running:
