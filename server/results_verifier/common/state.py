@@ -34,6 +34,12 @@ class ResultsVerifierState:
     def mark_query_as_ended(self, id_client, id_query):
         self.__get_client(id_client).mark_query_as_finished(id_query)
 
+    # def mark_batch_as_processed(self, id_client, id_batch):
+    #     self.__get_client(id_client).mark_batch_as_processed(id_batch)
+
+    # def has_batch_been_processed(self, id_client, id_batch):
+    #     return self.__get_client(id_client).has_batch_been_processed(id_batch)
+
     def delete_client(self, id_client):
         if client := self.clients.pop(id_client, None):
             client.drop()
