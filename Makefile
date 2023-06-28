@@ -87,6 +87,16 @@ format:
 	black protocol/
 .PHONY: format
 
+server-restart:
+	make server-down
+	make server-run
+.PHONY: server-restart
+
+client-restart:
+	make client-down
+	make client-run amount_clients=$(amount_clients)
+.PHONY: client-restart
+
 testing-run: testing-image
 	python3 testing/create_docker_compose.py
 	docker compose -f ./testing/docker-compose-testing-restarters.yaml up -d --build

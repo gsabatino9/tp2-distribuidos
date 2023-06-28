@@ -118,8 +118,9 @@ class RoutingQueue(GenericQueue):
         if self.auto_ack:
             self.channel.basic_ack(delivery_tag=self.last_delivery_tag)
 
-    def receive(self, callback):
+    def receive(self, callback, prefetch_count=1):
         self.callback = callback
+        self.channel.basic_qos(prefetch_count=prefetch_count)
         self.channel.basic_consume(
             queue=self.queue_name, on_message_callback=self.__callback, auto_ack=False
         )
