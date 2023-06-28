@@ -113,13 +113,9 @@ class ResultsVerifier:
         self.keep_alive.join()
 
     def process_messages(self, body, id_query):
-<<<<<<< HEAD
         self.current_fetch_count += 1
         if self.current_fetch_count * 10 // 8 > self.prefetch_limit:
             self.__ack_messages()
-
-=======
->>>>>>> b6b6bae5e2e8901b559db934e111cfafc1140f5b
         if id_query == "request_results":
             if is_delete_message(body):
                 id_client = decode_delete_client(body)
