@@ -43,10 +43,12 @@ def request_init_session(id_client):
 
 
 def eof_sent(id_client):
-    return MessageStatusSession(MessageStatusSession.EOF_SENT, id_client).encode()    
+    return MessageStatusSession(MessageStatusSession.EOF_SENT, id_client).encode()
+
 
 def delete_client(id_client):
-    return MessageStatusSession(MessageStatusSession.DELETE_CLIENT, id_client).encode()    
+    return MessageStatusSession(MessageStatusSession.DELETE_CLIENT, id_client).encode()
+
 
 def decode_msg_session(msg):
     return MessageStatusSession.decode(msg)
@@ -76,8 +78,10 @@ class MessageStatusSession:
             unpack(MessageStatusSession.HEADER_CODE, msg)
         )
 
+
 def is_request_session(header):
     return header.msg_type == MessageStatusSession.INIT_SESSION
+
 
 def is_eof_sent(header):
     return header.msg_type == MessageStatusSession.EOF_SENT

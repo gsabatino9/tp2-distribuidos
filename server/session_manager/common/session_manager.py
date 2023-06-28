@@ -6,7 +6,7 @@ from server.common.utils_messages_new_client import (
     assigned_id_message,
     decode_msg_session,
     is_request_session,
-    is_eof_sent
+    is_eof_sent,
 )
 from server.common.queue.connection import Connection
 from server.common.keep_alive.keep_alive import KeepAlive
@@ -16,9 +16,7 @@ from common.state import SessionManagerState
 class SessionManager:
     LIMIT_WAIT = 3600.0
 
-    def __init__(
-        self, max_clients, name_recv_queue, name_send_queue, name_em_queue
-    ):
+    def __init__(self, max_clients, name_recv_queue, name_send_queue, name_em_queue):
         self.__init_session_manager(max_clients)
         self.__connect_queue(name_recv_queue, name_send_queue, name_em_queue)
 
@@ -60,8 +58,6 @@ class SessionManager:
         self.keep_alive.join()
 
     def process_messages(self, msg_bytes):
-        print("recibí mensaje")
-
         msg = decode_msg_session(msg_bytes)
         if is_request_session(msg):
             self.init_session(msg.id_client)
@@ -111,14 +107,12 @@ class SessionManager:
         return datetime.timestamp(dt)
 
     def end_session(self, id_client):
-        #client_address = body
-        #if id_client := self.state.delete_client(client_address):
+        # client_address = body
+        # if id_client := self.state.delete_client(client_address):
         #    print(f"action: end_session | result: success | id_client: {id_client}")
 
-        #self.state.write_checkpoint()
-        #self.end_session_queue.ack_all()
-
-        print("intentando borrar un cliente")
+        # self.state.write_checkpoint()
+        # self.end_session_queue.ack_all()
 
         for i, (id_client_tmp, tmp, is_deleting) in enumerate(self.sessions):
             if (id_client_tmp == id_client) and is_deleting:

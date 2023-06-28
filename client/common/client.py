@@ -26,7 +26,9 @@ class Client:
     def __connect(self, host, port):
         client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         client_socket.connect((host, port))
-        self.conn = CommunicationClient(client_socket, self.id_client, self.suscriptions)
+        self.conn = CommunicationClient(
+            client_socket, self.id_client, self.suscriptions
+        )
 
         print(
             f"action: client_connected | result: success | addr: {self.conn.getpeername()} | suscriptions: {self.suscriptions}"
