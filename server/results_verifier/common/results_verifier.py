@@ -196,7 +196,7 @@ class ResultsVerifier:
         batches_to_send = []
         id_batch = 0
 
-        for id_query, results_query in enumerate(results_client, start=1):
+        for id_query, results_query in results_client:
             for result in results_query:
                 batch = results_message(id_query, id_batch, result)
                 batches_to_send.append(batch)
@@ -206,8 +206,10 @@ class ResultsVerifier:
 
     def __get_results_client(self, id_client):
         results_client = []
-        for results_query in self.state.get_results(id_client):
-            results_client.append(self.__partition_into_batches(results_query))
+        for id_query, results_query in self.state.get_results(id_client):
+            results_client.append(
+                (id_query, self.__partition_into_batches(results_query))
+            )
 
         return results_client
 

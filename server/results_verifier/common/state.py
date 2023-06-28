@@ -3,61 +3,62 @@ from server.common.duplicate_filter import DuplicateFilter
 
 class ResultsVerifierState:
     def __init__(self, amount_queries):
-        self.ids_clients = set()
-        self.queries_results = {}
-        self.queries_ended = {}
         self.amount_queries = amount_queries
+        self.clients = {}
+
+    def __get_client(self, id_client):
+        if id_client not in self.clients:
+            self.clients[id_client] = ClientState()
+
+        return self.clients[id_client]
 
     def add_client(self, id_client):
-        if id_client not in self.ids_clients:
-            self.__add_client(id_client)
-            return True
-
-        return False
+        return id_client not in self.clients
 
     def add_results(self, id_client, id_query, results):
-        self.queries_results[id_client, id_query] += results
+        self.__get_client(id_client).add_results(id_query, results)
 
     def get_results(self, id_client):
-        return map(
-            lambda e: e[1],
-            filter(lambda e: e[0][0] == id_client, self.queries_results.items()),
-        )
+        return self.__get_client(id_client).get_results()
 
     def verify_last_result(self, id_client):
-        ended = True
-        for query in self.queries_ended:
-            if query[0] == id_client:
-                if not self.queries_ended[query]:
-                    ended = False
-
-        return ended
+        return (
+            self.__get_client(id_client).count_finished_queries() == self.amount_queries
+        )
 
     def mark_query_as_ended(self, id_client, id_query):
-        self.queries_ended[id_client, id_query] = True
+        self.__get_client(id_client).mark_query_as_finished(id_query)
 
     def delete_client(self, id_client):
-        self.__delete_from_dict(self.queries_ended, id_client)
-        self.__delete_from_dict(self.queries_results, id_client)
-        self.ids_clients.discard(id_client)
+        self.clients.pop(id_client, None)
 
     def write_checkpoints(self):
         pass  # Not impld yet
-
-    def __add_client(self, id_client):
-        self.ids_clients.add(id_client)
-
-        for id_query in range(1, self.amount_queries + 1):
-            self.queries_ended[id_client, id_query] = False
-            self.queries_results[id_client, id_query] = []
-
-    def __delete_from_dict(self, dict_clients, id_client):
-        keys_to_delete = [key for key in dict_clients.keys() if key[0] == id_client]
-        for key in keys_to_delete:
-            del dict_clients[key]
 
 
 class ClientState:
     def __init__(self):
         self.results = {}
+        self.finished_queries = set()
         self.dup_filter = DuplicateFilter()
+
+    def add_results(self, id_query, results):
+        if id_query not in self.results:
+            self.results[id_query] = []
+
+        self.results[id_query].extend(results)
+
+    def get_results(self):
+        return self.results.items()
+
+    def count_finished_queries(self):
+        return len(self.finished_queries)
+
+    def mark_query_as_finished(self, id_query):
+        self.finished_queries.add(id_query)
+
+    def mark_batch_as_processed(self, id_batch):
+        self.dup_filter.mark_as_seen(id_batch)
+
+    def has_batch_been_processed(self, id_batch):
+        return self.dup_filter.has_been_seen(id_batch)
