@@ -64,7 +64,7 @@ class CommunicationClient:
 
     def recv_status_session(self):
         header, _ = self.__recv_message(decode_payload=True)
-        return header.msg_type == MessageServer.SESSION_ACCEPTED
+        return header.msg_type == MessageServer.ACCEPTED_CONNECTION
 
     def recv_ack(self):
         return self.__recv_message()

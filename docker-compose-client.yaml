@@ -14,7 +14,7 @@ services:
       - MAX_RETRIES=50
       - SUSCRIPTIONS=[1,2,3,4]
       - FILE_PATH=data/
-      - ID_CLIENT=4223010514420976893
+      - ID_CLIENT=17597842824740818722
     image: client:latest
     networks:      
       - testing_net

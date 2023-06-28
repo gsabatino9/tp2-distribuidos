@@ -77,8 +77,6 @@ class Client:
             f"action: file_sent | result: success | type_file: {type_file} | amount_chunks: {send_data}"
         )
 
-        return id_batch
-
     def __send_file_in_chunks(self, type_file, reader):
         """
         it sends a file with grouped rows (chunk).
@@ -148,7 +146,7 @@ class Client:
                 ended = True
             except:
                 print(
-                    f"action: id_client_received | result: failure | msg: retrying in 1sec"
+                    f"action: results_obtained | result: failure | msg: retrying in 1sec"
                 )
                 time.sleep(1)
 
