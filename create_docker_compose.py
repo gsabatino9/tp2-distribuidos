@@ -39,7 +39,7 @@ def main():
         queues, em_queues, status_queues
     )
 
-    session_manager = init_session_manager(queues, max_clients)
+    session_manager = init_session_manager(queues, max_clients, em_queues)
 
     process_restarter = init_process_restarters(restarter_config, amount_nodes)
 
@@ -381,12 +381,12 @@ def init_results_verifier(queues, em_queues, status_queues):
     return results_verifier, em_results
 
 
-def init_session_manager(queues, max_clients):
+def init_session_manager(queues, max_clients, em_queues):
     return SESSION_MANAGER.format(
         max_clients,
         queues["session_manager"]["init_session"],
         queues["accepter"],
-        queues["session_manager"]["end_session"],
+        em_queues["joiners"],
     )
 
 

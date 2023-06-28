@@ -9,6 +9,8 @@ def decode(header_bytes):
 def eof_msg(header):
     return MessageEOF(MessageEOF.EOF, header.data_type, header.id_client).encode()
 
+def eof_msg_from_id(id_client):
+    return MessageEOF(MessageEOF.EOF, MessageEOF.TRIP, id_client).encode()
 
 def is_eof(header):
     return header.msg_type == MessageEOF.EOF

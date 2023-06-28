@@ -4,12 +4,12 @@ import os
 MAX_CLIENTS = int(os.environ.get("MAX_CLIENTS"))
 NAME_RECV_QUEUE = os.environ.get("NAME_RECV_QUEUE")
 NAME_SEND_QUEUE = os.environ.get("NAME_SEND_QUEUE")
-NAME_END_SESSION_QUEUE = os.environ.get("NAME_END_SESSION_QUEUE")
+NAME_EM_QUEUE = os.environ.get("NAME_EM_QUEUE")
 
 
 def main():
     session_manager = SessionManager(
-        MAX_CLIENTS, NAME_RECV_QUEUE, NAME_SEND_QUEUE, NAME_END_SESSION_QUEUE
+        MAX_CLIENTS, NAME_RECV_QUEUE, NAME_SEND_QUEUE, NAME_EM_QUEUE
     )
     session_manager.run()
     session_manager.stop()

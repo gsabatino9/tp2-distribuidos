@@ -480,7 +480,7 @@ SESSION_MANAGER = """
       - MAX_CLIENTS={}
       - NAME_RECV_QUEUE={}
       - NAME_SEND_QUEUE={}
-      - NAME_END_SESSION_QUEUE={}
+      - NAME_EM_QUEUE={}
     image: session_manager:latest
     networks:      
       - testing_net

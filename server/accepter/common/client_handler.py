@@ -3,7 +3,7 @@ from threading import Thread
 from server.common.queue.connection import Connection
 from server.common.utils_messages_eof import eof_msg
 from server.common.utils_messages_client import is_station, is_weather, encode_header
-from server.common.utils_messages_new_client import request_init_session
+from server.common.utils_messages_new_client import request_init_session, eof_sent
 from common.utils import is_init_session, is_eof
 
 
@@ -16,7 +16,6 @@ class ClientHandler(Thread):
         name_weather_queue,
         nodes_to_send_trips_direct,
         name_session_manager_queue,
-        name_em_queue,
         amount_queries,
         size_stations,
         size_weather,
@@ -31,7 +30,6 @@ class ClientHandler(Thread):
         self.name_weather_queue = name_weather_queue
         self.nodes_to_send_trips_direct = nodes_to_send_trips_direct
         self.name_session_manager_queue = name_session_manager_queue
-        self.name_em_queue = name_em_queue
         self.amount_queries = amount_queries
         self.size_stations = size_stations
         self.size_weather = size_weather
@@ -59,8 +57,6 @@ class ClientHandler(Thread):
                 if is_init_session(header):
                     self.__request_init_session(header.id_client)
                 elif is_eof(header):
-                    # el eof se lo envío directo al session_manager y listo.
-                    # o tengo que ver por el último ack.
                     self.__send_eof(header)
                     self.__send_ack_client(header.id_batch)
                     self.active = False
@@ -68,11 +64,10 @@ class ClientHandler(Thread):
                     self.__route_message(header, payload_bytes)
                     self.__send_ack_client(header.id_batch)
             except:
-                raise
-                #print("action: client_clossed")
-                #self.active = False
+                print("action: client_clossed")
+                self.active = False
+                self.__send_eof(header)
 
-        # acá tengo que mandar mensaje de empezar delete al session_manager
         self.client_connection.stop()
 
     def __request_init_session(self, id_client):
@@ -93,7 +88,7 @@ class ClientHandler(Thread):
             self.client_connection.send_error_message()
 
     def __send_eof(self, header):
-        self.em_queue.send(eof_msg(header))
+        self.session_manager_queue.send(eof_sent(header.id_client))
 
     def __route_message(self, header, payload_bytes):
         """
@@ -135,7 +130,6 @@ class ClientHandler(Thread):
             self.session_manager_queue = self.queue_connection.pubsub_queue(
                 self.name_session_manager_queue
             )
-            self.em_queue = self.queue_connection.pubsub_queue(self.name_em_queue)
         except OSError as e:
             print(f"error: creating_queue_connection | log: {e}")
 

@@ -1,5 +1,6 @@
 import signal, sys
 from datetime import datetime
+from server.common.utils_messages_eof import eof_msg_from_id
 from server.common.utils_messages_new_client import (
     error_message,
     assigned_id_message,
@@ -13,11 +14,13 @@ from common.state import SessionManagerState
 
 
 class SessionManager:
+    LIMIT_WAIT = 3600.0
+
     def __init__(
-        self, max_clients, name_recv_queue, name_send_queue, name_end_session_queue
+        self, max_clients, name_recv_queue, name_send_queue, name_em_queue
     ):
         self.__init_session_manager(max_clients)
-        self.__connect_queue(name_recv_queue, name_send_queue, name_end_session_queue)
+        self.__connect_queue(name_recv_queue, name_send_queue, name_em_queue)
 
     def __init_session_manager(self, max_clients):
         self.running = True
@@ -29,7 +32,7 @@ class SessionManager:
         self.keep_alive = KeepAlive()
         print("action: session_manager_started | result: success")
 
-    def __connect_queue(self, name_recv_queue, name_send_queue, name_end_session_queue):
+    def __connect_queue(self, name_recv_queue, name_send_queue, name_em_queue):
         try:
             self.queue_connection = Connection()
             self.recv_queue = self.queue_connection.pubsub_queue(
@@ -37,9 +40,7 @@ class SessionManager:
                 # auto_ack=False
             )
             self.send_queue = self.queue_connection.pubsub_queue(name_send_queue)
-            self.end_session_queue = self.queue_connection.pubsub_queue(
-                name_end_session_queue, auto_ack=False
-            )
+            self.em_queue = self.queue_connection.pubsub_queue(name_em_queue)
         except OSError as e:
             print(f"error: creating_queue_connection | log: {e}")
             self.stop()
@@ -63,17 +64,17 @@ class SessionManager:
         if is_request_session(msg):
             self.init_session(msg.id_client)
         elif is_eof_sent(msg):
-            self.eof_sent(msg.id_client)
+            self.send_eof_client(msg.id_client)
         else:
             self.end_session(msg.id_client)
 
     def init_session(self, id_client):
-        #self.__verify_timestamps()
+        self.__verify_timestamps()
 
         print(f"action: new_session_request | id_client: {id_client}")
         if self.__server_not_full(id_client):
             self.sessions.append(
-                # id_client     timestamp               is_deleting_client
+                # id_client     timestamp           is_deleting_client
                 (id_client, self.__get_timestamp(), False)
             )
 
@@ -87,6 +88,18 @@ class SessionManager:
         # self.recv_queue.ack_all()
         self.send_queue.send(msg)
 
+    def __verify_timestamps(self):
+        time_now = self.__get_timestamp()
+        for id_client, tmp, is_deleting in self.sessions:
+            if (time_now - tmp) > self.LIMIT_WAIT and (not is_deleting):
+                self.send_eof_client(id_client)
+
+    def send_eof_client(self, id_client):
+        for i, (id_client_tmp, tmp, is_deleting) in enumerate(self.sessions):
+            if (id_client_tmp == id_client) and (not is_deleting):
+                self.em_queue.send(eof_msg_from_id(id_client))
+                self.sessions[i] = (id_client_tmp, tmp, True)
+
     def __server_not_full(self, id_client):
         # TODO: verificar si el cliente está
         return len(self.sessions) < self.max_clients
@@ -96,12 +109,18 @@ class SessionManager:
         return datetime.timestamp(dt)
 
     def end_session(self, id_client):
-        client_address = body
-        if id_client := self.state.delete_client(client_address):
-            print(f"action: end_session | result: success | id_client: {id_client}")
+        #client_address = body
+        #if id_client := self.state.delete_client(client_address):
+        #    print(f"action: end_session | result: success | id_client: {id_client}")
 
-        self.state.write_checkpoint()
-        self.end_session_queue.ack_all()
+        #self.state.write_checkpoint()
+        #self.end_session_queue.ack_all()
+
+        for i, (id_client_tmp, tmp, is_deleting) in enumerate(self.sessions):
+            if (id_client_tmp == id_client) and is_deleting:
+                del self.sessions[i]
+                print(f"action: end_session | result: success | id_client: {id_client}")
+                return
 
     def stop(self, *args):
         if self.running:

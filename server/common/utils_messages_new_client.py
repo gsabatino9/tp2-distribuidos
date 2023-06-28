@@ -42,6 +42,12 @@ def request_init_session(id_client):
     return MessageStatusSession(MessageStatusSession.INIT_SESSION, id_client).encode()
 
 
+def eof_sent(id_client):
+    return MessageStatusSession(MessageStatusSession.EOF_SENT, id_client).encode()    
+
+def delete_client(id_client):
+    return MessageStatusSession(MessageStatusSession.DELETE_CLIENT, id_client).encode()    
+
 def decode_msg_session(msg):
     return MessageStatusSession.decode(msg)
 

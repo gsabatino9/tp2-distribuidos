@@ -1,6 +1,7 @@
 import queue
 from threading import Thread
 from server.common.utils_messages_client import last_message
+from server.common.utils_messages_new_client import delete_client
 from server.common.utils_messages_results import (
     request_message,
     is_error,
@@ -66,5 +67,5 @@ class ClientHandler(Thread):
         self.request_queue.send(
             delete_message(id_client), routing_key="request_results"
         )
-        self.session_manager_queue.send(self.client_address)
+        self.session_manager_queue.send(delete_client(id_client))
         # self.client_connection.stop()

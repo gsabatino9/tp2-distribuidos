@@ -494,7 +494,7 @@ services:
       - MAX_CLIENTS=3
       - NAME_RECV_QUEUE=session_manager_q
       - NAME_SEND_QUEUE=accepter_q
-      - NAME_END_SESSION_QUEUE=end_session_q
+      - NAME_EM_QUEUE=eof_manager_joiners_q
     image: session_manager:latest
     networks:      
       - testing_net
