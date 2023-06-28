@@ -26,7 +26,7 @@ class Client:
     def __connect(self, host, port):
         client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         client_socket.connect((host, port))
-        self.conn = CommunicationClient(client_socket, self.suscriptions)
+        self.conn = CommunicationClient(client_socket, self.id_client, self.suscriptions)
 
         print(
             f"action: client_connected | result: success | addr: {self.conn.getpeername()} | suscriptions: {self.suscriptions}"
@@ -158,7 +158,6 @@ class Client:
 
     def __connect_with_consults_server(self, host, port):
         self.__connect(host, port)
-        self.conn.set_id_client(self.id_client)
         print("action: connection_consult_server | result: success")
         self.__send_request_results()
 
