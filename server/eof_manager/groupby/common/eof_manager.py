@@ -7,11 +7,11 @@ from server.common.keep_alive.keep_alive import KeepAlive
 
 class EOFManager:
     def __init__(
-        self, name_recv_queue, name_groupby_queues, name_send_queue, name_status_queue
+        self, name_recv_queue, nodes_groupby, name_send_queue, name_status_queue
     ):
         self.__init_eof_manager()
         self.__connect(
-            name_recv_queue, name_groupby_queues, name_send_queue, name_status_queue
+            name_recv_queue, nodes_groupby, name_send_queue, name_status_queue
         )
         self.__run()
 
@@ -24,13 +24,14 @@ class EOFManager:
         print("action: eof_manager_started | result: success")
 
     def __connect(
-        self, name_recv_queue, name_groupby_queues, name_send_queue, name_status_queue
+        self, name_recv_queue, nodes_groupby, name_send_queue, name_status_queue
     ):
         try:
             self.queue_connection = Connection()
             self.recv_queue = self.queue_connection.pubsub_queue(name_recv_queue)
             self.groupby_queues = [
-                self.queue_connection.basic_queue(q) for q in name_groupby_queues
+                self.queue_connection.sharding_queue(queue_name, amount_nodes, 1)
+                for queue_name, amount_nodes in nodes_groupby
             ]
             self.send_queue = self.queue_connection.pubsub_queue(name_send_queue)
             self.status_queue = self.queue_connection.pubsub_queue(name_status_queue)
@@ -76,7 +77,7 @@ class EOFManager:
         """
         print(f"action: send_eofs | result: success | msg: eof arrived")
         for q in self.groupby_queues:
-            q.send(msg)
+            q.send_static(msg, header.id_client)
 
     def __recv_ack_trips(self, header, body):
         """
@@ -99,4 +100,3 @@ class EOFManager:
             print(
                 "action: close_resource | result: success | resource: rabbit_connection"
             )
-

@@ -67,7 +67,7 @@ class ApplierController:
         print("llegó trip:", header)
 
         result_trips = self.__apply_condition_to_agrouped_trips(agrouped_trips)
-        self.__send_result(header.id_client, result_trips)
+        self.__send_result(header.id_client, header.id_batch, result_trips)
 
     def __apply_condition_to_agrouped_trips(self, agrouped_trips):
         """
@@ -89,9 +89,9 @@ class ApplierController:
 
         return result_trips
 
-    def __send_result(self, id_client, trips_to_next_stage):
+    def __send_result(self, id_client, id_batch, trips_to_next_stage):
         if len(trips_to_next_stage) > 0:
-            msg = construct_msg(id_client, trips_to_next_stage)
+            msg = construct_msg(id_client, id_batch, trips_to_next_stage)
             self.send_queue.send(msg, routing_key=self.id_query)
 
     def __eof_arrived(self, body):
@@ -106,4 +106,3 @@ class ApplierController:
             print(
                 "action: close_resource | result: success | resource: rabbit_connection"
             )
-

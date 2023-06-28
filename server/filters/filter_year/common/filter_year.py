@@ -7,7 +7,7 @@ class FilterYear:
         id_query,
         name_recv_queue,
         name_em_queue,
-        name_send_queue,
+        node_to_send_trips,
     ):
         columns_names = """start_date,start_station_code,end_date,end_station_code,duration_sec,is_member,yearid,name_start_station,lat_start_station,long_start_station,name_end_station,lat_end_station,long_end_station"""
         reduced_columns = "yearid,name_start_station"
@@ -17,7 +17,7 @@ class FilterYear:
             id_query,
             name_recv_queue,
             name_em_queue,
-            name_send_queue,
+            node_to_send_trips,
             columns_names,
             reduced_columns,
             func_filter,

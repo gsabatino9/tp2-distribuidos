@@ -16,9 +16,9 @@ class EOFManager:
     ):
         self.__init_eof_manager(size_workers)
         self.__connect(
-            name_recv_queue, 
-            name_appliers_queues, 
-            name_send_queue, 
+            name_recv_queue,
+            name_appliers_queues,
+            name_send_queue,
             name_status_queue,
             size_workers,
         )
@@ -35,17 +35,19 @@ class EOFManager:
         print("action: eof_manager_started | result: success")
 
     def __connect(
-        self, 
-        name_recv_queue, 
-        name_appliers_queues, 
-        name_send_queue, 
+        self,
+        name_recv_queue,
+        name_appliers_queues,
+        name_send_queue,
         name_status_queue,
         size_workers,
     ):
         try:
             self.queue_connection = Connection()
             self.recv_queue = self.queue_connection.pubsub_queue(name_recv_queue)
-            self.appliers_queues = self.queue_connection.multiple_queues(name_appliers_queues, self.size_workers)
+            self.appliers_queues = self.queue_connection.multiple_queues(
+                name_appliers_queues, self.size_workers
+            )
             self.send_queue = self.queue_connection.pubsub_queue(name_send_queue)
             self.status_queue = self.queue_connection.pubsub_queue(name_status_queue)
         except OSError as e:
@@ -112,4 +114,3 @@ class EOFManager:
             print(
                 "action: close_resource | result: success | resource: rabbit_connection"
             )
-

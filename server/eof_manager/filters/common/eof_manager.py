@@ -44,7 +44,9 @@ class EOFManager:
             self.queue_connection = Connection()
             self.recv_queue = self.queue_connection.pubsub_queue(name_recv_queue)
             self.send_queue = self.queue_connection.pubsub_queue(name_send_queue)
-            self.filters_queues = self.queue_connection.multiple_queues(name_filters_queues, self.size_workers)
+            self.filters_queues = self.queue_connection.multiple_queues(
+                name_filters_queues, self.size_workers
+            )
             self.status_queue = self.queue_connection.pubsub_queue(name_status_queue)
         except OSError as e:
             print(f"error: creating_queue_connection | log: {e}")
@@ -110,4 +112,3 @@ class EOFManager:
             print(
                 "action: close_resource | result: success | resource: rabbit_connection"
             )
-

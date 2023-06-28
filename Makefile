@@ -56,7 +56,7 @@ server-up: server-image
 .PHONY: server-up
 
 server-down:
-	docker compose -f docker-compose-server.yaml stop -t 15
+	docker compose -f docker-compose-server.yaml stop -t 1
 	docker compose -f docker-compose-server.yaml down
 .PHONY: server-down
 
@@ -81,6 +81,11 @@ client-down:
 	docker compose -f docker-compose-client.yaml down
 .PHONY: client-down
 
+format:
+	black server/
+	black client/
+	black protocol/
+.PHONY: format
 
 testing-run: testing-image
 	python3 testing/create_docker_compose.py
