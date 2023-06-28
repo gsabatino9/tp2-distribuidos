@@ -51,8 +51,7 @@ class EOFManager:
             self.send_queue = self.queue_connection.pubsub_queue(name_send_queue)
             self.recv_queue = self.queue_connection.pubsub_queue(name_recv_queue)
             self.joiners_queue = self.queue_connection.multiple_queues(
-                [name_stations_queue, name_weather_queue],
-                [size_stations, size_weather]
+                [name_stations_queue, name_weather_queue], [size_stations, size_weather]
             )
             self.stations_queue = self.queue_connection.basic_queue(name_stations_queue)
             self.weather_queue = self.queue_connection.basic_queue(name_weather_queue)
@@ -123,4 +122,3 @@ class EOFManager:
             print(
                 "action: close_resource | result: success | resource: rabbit_connection"
             )
-

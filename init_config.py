@@ -65,7 +65,7 @@ ACCEPTER = """
       - PORT={}
       - NAME_STATIONS_QUEUE={}
       - NAME_WEATHER_QUEUE={}
-      - NAME_TRIPS_QUEUES={}
+      - NODES_TO_SEND_TRIPS={}
       - NAME_EM_QUEUE={}
       - NAME_STATUS_QUEUE={}
       - NAME_SM_QUEUE={}
@@ -135,7 +135,7 @@ FILTER_PRETOC = """
       - NAME_RECV_EXCHANGE={}
       - NAME_RECV_QUEUE={}
       - NAME_EM_QUEUE={}
-      - NAME_SEND_QUEUE={}
+      - NODE_TO_SEND_TRIPS={}
       - ID_QUERY=1
       - ID_FILTER={}
     image: filter_pretoc:latest
@@ -155,7 +155,7 @@ FILTER_YEAR = """
       - NAME_RECV_EXCHANGE={}
       - NAME_RECV_QUEUE={}
       - NAME_EM_QUEUE={}
-      - NAME_SEND_QUEUE={}
+      - NODE_TO_SEND_TRIPS={}
       - ID_QUERY=2
       - ID_FILTER={}
     image: filter_year:latest
@@ -175,7 +175,7 @@ FILTER_DISTANCE = """
       - NAME_RECV_EXCHANGE={}
       - NAME_RECV_QUEUE={}
       - NAME_EM_QUEUE={}
-      - NAME_SEND_QUEUE={}
+      - NODE_TO_SEND_TRIPS={}
       - ID_QUERY=3
       - ID_FILTER={}
     image: filter_distance:latest
@@ -187,8 +187,8 @@ FILTER_DISTANCE = """
 """
 
 GROUPBY_QUERY1 = """
-  groupby_start_date:
-    container_name: groupby_start_date
+  groupby_start_date_{}:
+    container_name: groupby_start_date_{}
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
@@ -197,6 +197,7 @@ GROUPBY_QUERY1 = """
       - NAME_SEND_EXCHANGE={}
       - NAME_SEND_QUEUE={}
       - SIZE_WORKERS_SEND={}
+      - ID_WORKER={}
       - CHUNK_SIZE=100
     image: groupby_start_date:latest
     networks:      
@@ -207,8 +208,8 @@ GROUPBY_QUERY1 = """
 """
 
 GROUPBY_QUERY2 = """
-  groupby_start_station:
-    container_name: groupby_start_station
+  groupby_start_station_{}:
+    container_name: groupby_start_station_{}
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
@@ -217,6 +218,7 @@ GROUPBY_QUERY2 = """
       - NAME_SEND_EXCHANGE={}
       - NAME_SEND_QUEUE={}
       - SIZE_WORKERS_SEND={}
+      - ID_WORKER={}
       - CHUNK_SIZE=100
     image: groupby_start_station:latest
     networks:      
@@ -227,8 +229,8 @@ GROUPBY_QUERY2 = """
 """
 
 GROUPBY_QUERY3 = """
-  groupby_end_station:
-    container_name: groupby_end_station
+  groupby_end_station_{}:
+    container_name: groupby_end_station_{}
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
@@ -237,6 +239,7 @@ GROUPBY_QUERY3 = """
       - NAME_SEND_EXCHANGE={}
       - NAME_SEND_QUEUE={}
       - SIZE_WORKERS_SEND={}
+      - ID_WORKER={}
       - CHUNK_SIZE=100
     image: groupby_end_station:latest
     networks:      
@@ -247,8 +250,8 @@ GROUPBY_QUERY3 = """
 """
 
 GROUPBY_QUERY4 = """
-  groupby_all_elements:
-    container_name: groupby_all_elements
+  groupby_all_elements_{}:
+    container_name: groupby_all_elements_{}
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
@@ -257,6 +260,7 @@ GROUPBY_QUERY4 = """
       - NAME_SEND_EXCHANGE={}
       - NAME_SEND_QUEUE={}
       - SIZE_WORKERS_SEND={}
+      - ID_WORKER={}
       - ID_QUERY=4
       - CHUNK_SIZE=100
     image: groupby_all_elements:latest
@@ -395,7 +399,7 @@ EM_GROUPBY = """
     environment:
       - PYTHONUNBUFFERED=1
       - NAME_RECV_QUEUE={}
-      - NAME_GROUPBY_QUEUE={}
+      - NODES_GROUPBY={}
       - NAME_SEND_QUEUE={}
       - NAME_STATUS_QUEUE={}
     image: eof_manager_groupby:latest

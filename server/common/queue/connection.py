@@ -6,7 +6,7 @@ from server.common.queue.queue import (
     RoutingBuildQueue,
     PubsubWorkerQueue,
     MultipleQueues,
-    ShardingQueue
+    ShardingQueue,
 )
 
 

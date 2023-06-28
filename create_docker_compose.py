@@ -86,7 +86,10 @@ def init_accepters(queues, em_queues, status_queues, amount_nodes):
             queues["joiners"]["stations"],
             queues["joiners"]["weather"],
             [
-                queues["groupby_query4"],
+                (
+                    queues["groupby_query4"], 
+                    amount_nodes["groupby"]["groupby_query4"]
+                ),
             ],
             em_queues["joiners"],
             status_queues["new_clients"],
@@ -166,7 +169,10 @@ def init_filters(queues, em_queues, status_queues, amount_nodes):
             filters_q["exchange"],
             filters_q["filter_pretoc"],
             em_queues["filters"],
-            queues["groupby_query1"],
+            [
+                queues["groupby_query1"], 
+                amount_nodes["groupby"]["groupby_query1"]
+            ],
             i,
         )
 
@@ -178,7 +184,10 @@ def init_filters(queues, em_queues, status_queues, amount_nodes):
             filters_q["exchange"],
             filters_q["filter_year"],
             em_queues["filters"],
-            queues["groupby_query2"],
+            [
+                queues["groupby_query2"], 
+                amount_nodes["groupby"]["groupby_query2"]
+            ],
             i,
         )
 
@@ -190,7 +199,10 @@ def init_filters(queues, em_queues, status_queues, amount_nodes):
             filters_q["exchange"],
             filters_q["filter_distance"],
             em_queues["filters"],
-            queues["groupby_query3"],
+            [
+                queues["groupby_query3"], 
+                amount_nodes["groupby"]["groupby_query3"]
+            ],
             i,
         )
 
@@ -285,42 +297,66 @@ def init_appliers(queues, em_queues, status_queues, amount_nodes):
 
 
 def init_groupby(queues, em_queues, status_queues, amount_nodes):
-    groupby1 = GROUPBY_QUERY1.format(
-        queues["groupby_query1"], 
-        em_queues["groupby"], 
-        queues["appliers"]["exchange"],
-        queues["appliers"]["applier_query1"],
-        amount_nodes["applier_query1"]
-    )
-    groupby2 = GROUPBY_QUERY2.format(
-        queues["groupby_query2"], 
-        em_queues["groupby"], 
-        queues["appliers"]["exchange"],
-        queues["appliers"]["applier_query2"],
-        amount_nodes["applier_query2"]
-    )
-    groupby3 = GROUPBY_QUERY3.format(
-        queues["groupby_query3"], 
-        em_queues["groupby"], 
-        queues["appliers"]["exchange"],
-        queues["appliers"]["applier_query3"],
-        amount_nodes["applier_query3"]
-    )
-    groupby4 = GROUPBY_QUERY4.format(
-        queues["groupby_query4"], 
-        em_queues["groupby"], 
-        queues["appliers"]["exchange"],
-        queues["appliers"]["applier_query4"],
-        amount_nodes["applier_query4"]
-    )
+    groupby1 = ""
+    for i in range(1, amount_nodes["groupby"]["groupby_query1"] + 1):
+        groupby1 += GROUPBY_QUERY1.format(
+            i,
+            i,
+            queues["groupby_query1"], 
+            em_queues["groupby"], 
+            queues["appliers"]["exchange"],
+            queues["appliers"]["applier_query1"],
+            amount_nodes["applier_query1"],
+            i
+        )
+
+    groupby2 = ""
+    for i in range(1, amount_nodes["groupby"]["groupby_query2"] + 1):
+        groupby2 += GROUPBY_QUERY2.format(
+            i,
+            i,
+            queues["groupby_query2"], 
+            em_queues["groupby"], 
+            queues["appliers"]["exchange"],
+            queues["appliers"]["applier_query2"],
+            amount_nodes["applier_query2"],
+            i
+        )
+
+
+    groupby3 = ""
+    for i in range(1, amount_nodes["groupby"]["groupby_query3"] + 1):
+        groupby3 += GROUPBY_QUERY3.format(
+            i,
+            i,
+            queues["groupby_query3"], 
+            em_queues["groupby"], 
+            queues["appliers"]["exchange"],
+            queues["appliers"]["applier_query3"],
+            amount_nodes["applier_query3"],
+            i
+        )
+
+    groupby4 = ""
+    for i in range(1, amount_nodes["groupby"]["groupby_query4"] + 1):
+        groupby4 += GROUPBY_QUERY4.format(
+            i,
+            i,
+            queues["groupby_query4"], 
+            em_queues["groupby"], 
+            queues["appliers"]["exchange"],
+            queues["appliers"]["applier_query4"],
+            amount_nodes["applier_query4"],
+            i
+        )
 
     em_groupby = EM_GROUPBY.format(
         em_queues["groupby"],
         [
-            queues["groupby_query1"],
-            queues["groupby_query2"],
-            queues["groupby_query3"],
-            queues["groupby_query4"],
+            (queues["groupby_query1"], amount_nodes["groupby"]["groupby_query1"]),
+            (queues["groupby_query2"], amount_nodes["groupby"]["groupby_query2"]),
+            (queues["groupby_query3"], amount_nodes["groupby"]["groupby_query3"]),
+            (queues["groupby_query4"], amount_nodes["groupby"]["groupby_query4"]),
         ],
         em_queues["appliers"],
         status_queues["new_clients"],
@@ -395,10 +431,14 @@ def get_containers_keep_alive(amount_nodes):
         containers_keep_alive.append("mean_duration_applier_4_" + str(i + 1))
     containers_keep_alive.append("eof_manager_appliers")
 
-    containers_keep_alive.append("groupby_start_date")
-    containers_keep_alive.append("groupby_end_station")
-    containers_keep_alive.append("groupby_start_station")
-    containers_keep_alive.append("groupby_all_elements")
+    for i in range(amount_nodes["groupby"]["groupby_query1"]):
+        containers_keep_alive.append("groupby_start_date_" + str(i + 1))
+    for i in range(amount_nodes["groupby"]["groupby_query2"]):
+        containers_keep_alive.append("groupby_start_station_" + str(i + 1))
+    for i in range(amount_nodes["groupby"]["groupby_query3"]):
+        containers_keep_alive.append("groupby_end_station_" + str(i + 1))
+    for i in range(amount_nodes["groupby"]["groupby_query4"]):
+        containers_keep_alive.append("groupby_all_elements_" + str(i + 1))
     containers_keep_alive.append("eof_manager_groupby")
 
     for i in range(amount_nodes["joiner_weather"]):

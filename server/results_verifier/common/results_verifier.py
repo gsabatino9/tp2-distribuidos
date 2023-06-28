@@ -4,7 +4,12 @@ from server.common.queue.connection import Connection
 from server.common.utils_messages_client import results_message, last_message
 from server.common.utils_messages_eof import ack_msg, get_id_client
 from server.common.utils_messages_group import decode, is_eof
-from server.common.utils_messages_results import decode_request_results, error_message, is_delete_message, decode_delete_client
+from server.common.utils_messages_results import (
+    decode_request_results,
+    error_message,
+    is_delete_message,
+    decode_delete_client,
+)
 from server.common.keep_alive.keep_alive import KeepAlive
 
 
@@ -59,7 +64,7 @@ class ResultsVerifier:
             name_session_manager_queue,
             name_recv_queue,
             address_consult_clients,
-            self.client_handlers_queues
+            self.client_handlers_queues,
         )
         self.keep_alive = KeepAlive()
         print("action: results_verifier_started | result: success")
@@ -76,7 +81,8 @@ class ResultsVerifier:
             self.queue_connection = Connection()
             self.recv_queue = self.queue_connection.routing_queue(
                 name_recv_queue,
-                routing_keys=[str(i) for i in range(1, amount_queries + 1)]+['request_results'],
+                routing_keys=[str(i) for i in range(1, amount_queries + 1)]
+                + ["request_results"],
             )
 
             self.em_queue = self.queue_connection.pubsub_queue(name_em_queue)
@@ -105,7 +111,7 @@ class ResultsVerifier:
         self.keep_alive.join()
 
     def process_messages(self, body, id_query):
-        if id_query == 'request_results':
+        if id_query == "request_results":
             if is_delete_message(body):
                 id_client = decode_delete_client(body)
                 self.__delete_client(id_client)
@@ -234,4 +240,3 @@ class ResultsVerifier:
             print(
                 "action: close_resource | result: success | resource: rabbit_connection"
             )
-

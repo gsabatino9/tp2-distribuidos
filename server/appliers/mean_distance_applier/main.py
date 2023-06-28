@@ -8,7 +8,9 @@ ID_APPLIER = os.environ.get("ID_APPLIER")
 
 
 def main():
-    a = MeanDistanceApplier(NAME_RECV_QUEUE+ID_APPLIER, NAME_EM_QUEUE, NAME_SEND_QUEUE)
+    a = MeanDistanceApplier(
+        NAME_RECV_QUEUE + ID_APPLIER, NAME_EM_QUEUE, NAME_SEND_QUEUE
+    )
     a.stop()
 
 

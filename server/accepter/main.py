@@ -5,7 +5,7 @@ HOST = os.environ.get("HOST")
 PORT = int(os.environ.get("PORT"))
 NAME_STATIONS_QUEUE = os.environ.get("NAME_STATIONS_QUEUE")
 NAME_WEATHER_QUEUE = os.environ.get("NAME_WEATHER_QUEUE")
-NAME_TRIPS_QUEUES = os.environ.get("NAME_TRIPS_QUEUES")
+NODES_TO_SEND_TRIPS = os.environ.get("NODES_TO_SEND_TRIPS")
 NAME_EM_QUEUE = os.environ.get("NAME_EM_QUEUE")
 NAME_STATUS_QUEUE = os.environ.get("NAME_STATUS_QUEUE")
 NAME_SM_QUEUE = os.environ.get("NAME_SM_QUEUE")
@@ -17,13 +17,13 @@ SHARDING_AMOUNT = int(os.environ.get("SHARDING_AMOUNT"))
 
 
 def main():
-    name_trips_queues = ast.literal_eval(NAME_TRIPS_QUEUES)
+    nodes_to_send_trips = ast.literal_eval(NODES_TO_SEND_TRIPS)
     accepter = Accepter(
         HOST,
         PORT,
         NAME_STATIONS_QUEUE,
         NAME_WEATHER_QUEUE,
-        name_trips_queues,
+        nodes_to_send_trips,
         NAME_EM_QUEUE,
         NAME_STATUS_QUEUE,
         NAME_SM_QUEUE,

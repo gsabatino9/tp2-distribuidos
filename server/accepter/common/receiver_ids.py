@@ -39,13 +39,10 @@ class ReceiverIds(Thread):
         id_client, client_address = decode(body)
         for queue_client in self.clients_queues:
             queue_client.put((id_client, client_address))
-        
-        print(
-            f"action: id_arrived_client | result: success | id_client: {id_client}"
-        )
+
+        print(f"action: id_arrived_client | result: success | id_client: {id_client}")
 
     def stop(self):
         if self.running:
             self.running = False
             self.queue_connection.stop_receiving()
-            

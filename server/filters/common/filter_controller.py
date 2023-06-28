@@ -17,7 +17,7 @@ class FilterController:
         id_query,
         name_recv_queue,
         name_em_queue,
-        name_send_queue,
+        node_to_send_trips,
         columns_names,
         reduced_columns,
         func_filter,
@@ -29,9 +29,7 @@ class FilterController:
             func_filter,
             name_recv_queue,
         )
-        self.__connect(
-            name_recv_queue, name_em_queue, name_send_queue
-        )
+        self.__connect(name_recv_queue, name_em_queue, node_to_send_trips)
         self.__run()
 
     def __init_filter(
@@ -51,13 +49,14 @@ class FilterController:
         self.keep_alive = KeepAlive()
         print("action: filter_started | result: success")
 
-    def __connect(
-        self, name_recv_queue, name_em_queue, name_send_queue
-    ):
+    def __connect(self, name_recv_queue, name_em_queue, node_to_send_trips):
         try:
             self.queue_connection = Connection()
             self.recv_queue = self.queue_connection.basic_queue(name_recv_queue)
-            self.send_queue = self.queue_connection.basic_queue(name_send_queue)
+            queue_name, size_node = node_to_send_trips
+            self.send_queue = self.queue_connection.sharding_queue(
+                queue_name, size_node, 1
+            )
 
             self.em_queue = self.queue_connection.pubsub_queue(name_em_queue)
         except OSError as e:
@@ -108,7 +107,7 @@ class FilterController:
     def __send_to_next_stage(self, header, trips_to_next_stage):
         if len(trips_to_next_stage) > 0:
             msg = construct_msg(header, trips_to_next_stage)
-            self.send_queue.send(msg)
+            self.send_queue.send_static(msg, header.id_client)
 
     def __eof_arrived(self, body):
         self.em_queue.send(ack_msg(body))
@@ -122,4 +121,3 @@ class FilterController:
             print(
                 "action: close_resource | result: success | resource: rabbit_connection"
             )
-

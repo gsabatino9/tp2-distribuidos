@@ -19,16 +19,17 @@ class GroupbyController:
         gen_key_value,
         chunk_size,
     ):
-        self.__init_groupby(chunk_size, operation, base_data, gen_key_value, size_workers_send)
+        self.__init_groupby(
+            chunk_size, operation, base_data, gen_key_value, size_workers_send
+        )
         self.__connect(
-            name_recv_queue, 
-            name_em_queue, 
-            name_send_queue,
-            size_workers_send
+            name_recv_queue, name_em_queue, name_send_queue, size_workers_send
         )
         self.__run()
 
-    def __init_groupby(self, chunk_size, operation, base_data, gen_key_value, size_workers_send):
+    def __init_groupby(
+        self, chunk_size, operation, base_data, gen_key_value, size_workers_send
+    ):
         self.running = True
         signal.signal(signal.SIGTERM, self.stop)
 
@@ -42,11 +43,7 @@ class GroupbyController:
         print("action: groupby_started | result: success")
 
     def __connect(
-        self, 
-        name_recv_queue, 
-        name_em_queue, 
-        name_send_queue,
-        size_workers_send
+        self, name_recv_queue, name_em_queue, name_send_queue, size_workers_send
     ):
         try:
             self.queue_connection = Connection()
@@ -182,4 +179,3 @@ class GroupbyController:
             print(
                 "action: close_resource | result: success | resource: rabbit_connection"
             )
-

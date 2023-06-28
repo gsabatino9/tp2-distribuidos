@@ -166,6 +166,7 @@ class RoutingBuildQueue(GenericQueue):
         binding_key = self.queue_name + str(idx_worker)
         self.send(msg, routing_key=binding_key)
 
+
 class MultipleQueues(GenericQueue):
     def __init__(self, channel, names_queues, amount_nodes, auto_ack=True):
         super().__init__(channel, auto_ack)
@@ -177,24 +178,24 @@ class MultipleQueues(GenericQueue):
 
     def __build_queues(self):
         for i, name_queue in enumerate(self.names_queues):
-            for idx_worker in range(1, self.amount_nodes[i]+1):
+            for idx_worker in range(1, self.amount_nodes[i] + 1):
                 name_queue += str(idx_worker)
                 self.channel.queue_declare(queue=name_queue)
 
     def send(self, message):
         for i, name_queue in enumerate(self.names_queues):
             # we use round-robin
-            idx_worker = (self.list_workers[i] % self.amount_nodes[i])+1
+            idx_worker = (self.list_workers[i] % self.amount_nodes[i]) + 1
             self.channel.basic_publish(
-                exchange="", routing_key=name_queue+str(idx_worker), body=message
+                exchange="", routing_key=name_queue + str(idx_worker), body=message
             )
             self.list_workers[i] += 1
 
     def broadcast(self, message):
         for i, name_queue in enumerate(self.names_queues):
-            for idx_worker in range(1, self.amount_nodes[i]+1):
+            for idx_worker in range(1, self.amount_nodes[i] + 1):
                 self.channel.basic_publish(
-                    exchange="", routing_key=name_queue+str(idx_worker), body=message
+                    exchange="", routing_key=name_queue + str(idx_worker), body=message
                 )
 
 
@@ -206,7 +207,9 @@ class ShardingQueue(GenericQueue):
     Luego, elegimos, sobre ese subconjunto, 1 de ellos (al azar) en cada envío.
     """
 
-    def __init__(self, channel, name_queue, amount_nodes, sharding_amount, auto_ack=True):
+    def __init__(
+        self, channel, name_queue, amount_nodes, sharding_amount, auto_ack=True
+    ):
         super().__init__(channel, auto_ack)
         self.name_queue = name_queue
         self.amount_nodes = amount_nodes
@@ -215,15 +218,15 @@ class ShardingQueue(GenericQueue):
         self.__build_queues()
 
     def __build_queues(self):
-        for idx_worker in range(1, self.amount_nodes+1):
-            self.channel.queue_declare(queue=self.name_queue+str(idx_worker))
+        for idx_worker in range(1, self.amount_nodes + 1):
+            self.channel.queue_declare(queue=self.name_queue + str(idx_worker))
 
     def __get_shards(self, id_client):
         start_idx = id_client % self.amount_nodes
         list_idxs = []
 
-        for i in range(start_idx, start_idx+self.sharding_amount):
-            name_queue = self.name_queue + str((i % self.amount_nodes)+1)
+        for i in range(start_idx, start_idx + self.sharding_amount):
+            name_queue = self.name_queue + str((i % self.amount_nodes) + 1)
             list_idxs.append(name_queue)
 
         return list_idxs
@@ -231,9 +234,7 @@ class ShardingQueue(GenericQueue):
     def send_static(self, msg, id_client):
         list_shards = self.__get_shards(id_client)
         for name_queue in list_shards:
-            self.channel.basic_publish(
-                exchange="", routing_key=name_queue, body=msg
-            )
+            self.channel.basic_publish(exchange="", routing_key=name_queue, body=msg)
 
     def send_workers(self, msg, id_client):
         list_shards = self.__get_shards(id_client)

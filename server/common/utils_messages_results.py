@@ -1,12 +1,12 @@
 from collections import namedtuple
 from struct import pack, unpack
 
+
 def request_message(id_client_handler, id_client):
     return MessageResults(
-        MessageResults.REQUEST_RESULTS,
-        id_client_handler, 
-        id_client
+        MessageResults.REQUEST_RESULTS, id_client_handler, id_client
     ).encode()
+
 
 def is_error(message_bytes):
     try:
@@ -15,27 +15,24 @@ def is_error(message_bytes):
     except:
         return False
 
+
 def error_message():
-    return MessageResults(
-        MessageResults.ERROR,
-        0, 
-        0
-    ).encode()
+    return MessageResults(MessageResults.ERROR, 0, 0).encode()
+
 
 def decode_request_results(message_bytes):
     msg = MessageResults.decode(message_bytes)
     return msg.id_client_handler, msg.id_client
 
+
 def decode_delete_client(message_bytes):
     msg = MessageResults.decode(message_bytes)
     return msg.id_client
 
+
 def delete_message(id_client):
-    return MessageResults(
-        MessageResults.DELETE_CLIENT,
-        0, 
-        id_client
-    ).encode()
+    return MessageResults(MessageResults.DELETE_CLIENT, 0, id_client).encode()
+
 
 def is_delete_message(message_bytes):
     try:
@@ -43,6 +40,7 @@ def is_delete_message(message_bytes):
         return MessageResults.DELETE_CLIENT == msg.code
     except:
         return False
+
 
 class MessageResults:
     # msg types

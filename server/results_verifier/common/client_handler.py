@@ -1,7 +1,11 @@
 import queue
 from threading import Thread
 from server.common.utils_messages_client import last_message
-from server.common.utils_messages_results import request_message, is_error, delete_message
+from server.common.utils_messages_results import (
+    request_message,
+    is_error,
+    delete_message,
+)
 from server.common.queue.connection import Connection
 
 
@@ -48,7 +52,9 @@ class ClientHandler(Thread):
             self.session_manager_queue = self.queue_connection.pubsub_queue(
                 self.name_session_manager_queue
             )
-            self.request_queue = self.queue_connection.routing_queue(self.name_request_queue)
+            self.request_queue = self.queue_connection.routing_queue(
+                self.name_request_queue
+            )
         except OSError as e:
             print(f"error: creating_queue_connection | log: {e}")
 
@@ -57,6 +63,8 @@ class ClientHandler(Thread):
         self.request_queue.send(msg, routing_key="request_results")
 
     def __stop_connection(self, id_client):
-        self.request_queue.send(delete_message(id_client), routing_key="request_results")
+        self.request_queue.send(
+            delete_message(id_client), routing_key="request_results"
+        )
         self.session_manager_queue.send(self.client_address)
-        #self.client_connection.stop()
+        # self.client_connection.stop()
