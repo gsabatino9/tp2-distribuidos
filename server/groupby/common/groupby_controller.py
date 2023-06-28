@@ -153,7 +153,7 @@ class GroupbyController:
         or if is the last data group.
         """
         if (i + 1) % self.chunk_size == 0 or i + 1 == self.state.len_data(id_client):
-            msg = construct_msg(id_client, to_send)
+            msg = construct_msg(id_client, i, to_send)
             self.send_queue.send(msg)
 
             return True
