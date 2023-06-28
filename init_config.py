@@ -46,6 +46,7 @@ services:
   <EM_RESULTS>
 
   <SESSION_MANAGER>
+  <PROCESS_STOPPER>
 
 networks:
   testing_net:
@@ -539,4 +540,19 @@ PROCESS_RESTARTER = """
     networks:
       testing_net:
         ipv4_address: {}
+"""
+
+PROCESS_STOPPER = """
+  processes-stopper:
+    container_name: processes-stopper
+    image: processes_stopper:latest
+    entrypoint: python3 /main.py
+    environment:
+      - PYTHONUNBUFFERED=1
+      - LOGGING_LEVEL=INFO
+      - CONTAINERS_TO_STOP={}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - testing_net
 """

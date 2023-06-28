@@ -3,6 +3,7 @@ PWD := $(shell pwd)
 
 GIT_REMOTE = github.com/7574-sistemas-distribuidos/docker-compose-init
 amount_clients ?= 1
+random_fails ?= 0
 
 default: build
 
@@ -18,6 +19,8 @@ testing-image:
 .PHONY: testing-image
 
 server-image:
+	docker build -f ./testing/processes_stopper/Dockerfile -t "processes_stopper:latest" .
+	
 	docker build -f ./server/base_image/python-base.Dockerfile -t "rabbitmq-python-server-base:latest" .
 
 	docker build -f ./server/accepter/Dockerfile -t "accepter:latest" .
@@ -65,7 +68,7 @@ server-logs:
 .PHONY: server-logs
 
 server-run: server-image
-	python3 create_docker_compose.py
+	python3 create_docker_compose.py $(random_fails)
 	docker compose -f docker-compose-server.yaml up -d --build
 	docker compose -f docker-compose-server.yaml logs -f
 .PHONY: server-run
