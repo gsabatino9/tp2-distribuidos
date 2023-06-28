@@ -41,6 +41,9 @@ class ResultsVerifierState:
         self.__delete_from_dict(self.queries_results, id_client)
         self.ids_clients.discard(id_client)
 
+    def write_checkpoints(self):
+        pass  # Not impld yet
+
     def __add_client(self, id_client):
         self.ids_clients.add(id_client)
 

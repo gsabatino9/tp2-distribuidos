@@ -56,7 +56,8 @@ class ResultsVerifier:
         signal.signal(signal.SIGTERM, self.stop)
 
         self.state = ResultsVerifierState(amount_queries)
-
+        self.prefetch_limit = 1000
+        self.current_fetch_count = 0
         self.client_handlers_queues = [queue.Queue() for i in range(3)]
         self.sender = ResultsSender(
             name_session_manager_queue,
@@ -81,6 +82,7 @@ class ResultsVerifier:
                 name_recv_queue,
                 routing_keys=[str(i) for i in range(1, amount_queries + 1)]
                 + ["request_results"],
+                auto_ack=False,
             )
 
             self.em_queue = self.queue_connection.pubsub_queue(name_em_queue)
@@ -97,7 +99,9 @@ class ResultsVerifier:
         """
         self.keep_alive.start()
         self.sender.start()
-        self.recv_queue.receive(self.process_messages)
+        self.recv_queue.receive(
+            self.process_messages, prefetch_count=self.prefetch_limit
+        )
         try:
             self.queue_connection.start_receiving()
         except:
@@ -109,10 +113,15 @@ class ResultsVerifier:
         self.keep_alive.join()
 
     def process_messages(self, body, id_query):
+        self.current_fetch_count += 1
+        if self.current_fetch_count * 10 // 8 > self.prefetch_limit:
+            self.__ack_messages()
+
         if id_query == "request_results":
             if is_delete_message(body):
                 id_client = decode_delete_client(body)
                 self.__delete_client(id_client)
+                self.__ack_messages()
             else:
                 id_client_handler, id_client = decode_request_results(body)
                 self.__verify_client(id_client)
@@ -121,13 +130,21 @@ class ResultsVerifier:
                     self.__inform_results(id_client_handler, id_client)
                 else:
                     self.__inform_error(id_client_handler)
+                self.__ack_messages()
         else:
             id_query = int(id_query)
             if is_eof(body):
                 print("action: eof_trips_arrived")
                 self.__eof_arrived(id_query, body)
+                self.__ack_messages()
             else:
                 self.__query_result_arrived(body, id_query)
+
+    def __ack_messages(self):
+        if self.current_fetch_count > 0:
+            self.state.write_checkpoints()
+            self.recv_queue.ack_all()
+            self.current_fetch_count = 0
 
     def __query_result_arrived(self, body, id_query):
         """
