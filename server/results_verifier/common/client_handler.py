@@ -29,7 +29,7 @@ class ClientHandler(Thread):
     def run(self):
         while True:
             self.client_connection = self.queue_client_connections.get()
-            self.client_address = self.client_connection.getpeername()[0]
+            self.client_address = self.client_connection.get_addr()
 
             header, _ = self.client_connection.recv_data(decode_payload=False)
             self.__connect_queues()

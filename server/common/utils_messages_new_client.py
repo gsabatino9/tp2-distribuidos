@@ -26,7 +26,7 @@ class MessageNewClient:
     ERROR = 1
 
     # Struct format for message header
-    HEADER_CODE = "!BQ20s"
+    HEADER_CODE = "!BQ22s"
     # Size of header in bytes
 
     # Define the named tuples used in the protocol

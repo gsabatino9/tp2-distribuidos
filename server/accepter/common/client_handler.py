@@ -48,7 +48,7 @@ class ClientHandler(Thread):
         print("termina el client handler")
 
     def __handle_client(self):
-        self.client_address = self.client_connection.getpeername()[0]
+        self.client_address = self.client_connection.get_addr()
         self.active = True
         while self.active and self.running:
             try:
