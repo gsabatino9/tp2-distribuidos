@@ -30,7 +30,7 @@ class EOFManager:
             self.queue_connection = Connection()
             self.recv_queue = self.queue_connection.pubsub_queue(name_recv_queue)
             self.groupby_queues = [
-                self.queue_connection.sharding_queue(queue_name, amount_nodes, 1) 
+                self.queue_connection.sharding_queue(queue_name, amount_nodes, 1)
                 for queue_name, amount_nodes in nodes_groupby
             ]
             self.send_queue = self.queue_connection.pubsub_queue(name_send_queue)

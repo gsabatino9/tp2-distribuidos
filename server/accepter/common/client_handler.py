@@ -125,9 +125,7 @@ class ClientHandler(Thread):
                 self.name_weather_queue, self.size_weather, self.sharding_amount
             )
             self.trips_queues = [
-                self.queue_connection.sharding_queue(
-                    queue_name, size_node, 1
-                )
+                self.queue_connection.sharding_queue(queue_name, size_node, 1)
                 for queue_name, size_node in self.nodes_to_send_trips_direct
             ]
             self.session_manager_queue = self.queue_connection.pubsub_queue(

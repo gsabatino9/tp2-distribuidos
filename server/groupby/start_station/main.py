@@ -11,7 +11,11 @@ ID_WORKER = os.environ.get("ID_WORKER")
 
 def main():
     g = GroupbyStartStation(
-        NAME_RECV_QUEUE + ID_WORKER, NAME_EM_QUEUE, NAME_SEND_QUEUE, SIZE_WORKERS_SEND, CHUNK_SIZE
+        NAME_RECV_QUEUE + ID_WORKER,
+        NAME_EM_QUEUE,
+        NAME_SEND_QUEUE,
+        SIZE_WORKERS_SEND,
+        CHUNK_SIZE,
     )
     g.stop()
 

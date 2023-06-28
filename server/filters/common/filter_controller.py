@@ -54,7 +54,9 @@ class FilterController:
             self.queue_connection = Connection()
             self.recv_queue = self.queue_connection.basic_queue(name_recv_queue)
             queue_name, size_node = node_to_send_trips
-            self.send_queue = self.queue_connection.sharding_queue(queue_name, size_node, 1)
+            self.send_queue = self.queue_connection.sharding_queue(
+                queue_name, size_node, 1
+            )
 
             self.em_queue = self.queue_connection.pubsub_queue(name_em_queue)
         except OSError as e:

@@ -10,9 +10,7 @@ NAME_STATUS_QUEUE = os.environ.get("NAME_STATUS_QUEUE")
 def main():
     nodes_groupby = ast.literal_eval(NODES_GROUPBY)
 
-    e = EOFManager(
-        NAME_RECV_QUEUE, nodes_groupby, NAME_SEND_QUEUE, NAME_STATUS_QUEUE
-    )
+    e = EOFManager(NAME_RECV_QUEUE, nodes_groupby, NAME_SEND_QUEUE, NAME_STATUS_QUEUE)
     e.stop()
 
 

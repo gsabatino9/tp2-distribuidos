@@ -81,6 +81,11 @@ client-down:
 	docker compose -f docker-compose-client.yaml down
 .PHONY: client-down
 
+format:
+	black server/
+	black client/
+	black protocol/
+.PHONY: format
 
 testing-run: testing-image
 	python3 testing/create_docker_compose.py
