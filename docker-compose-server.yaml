@@ -376,7 +376,7 @@ services:
       - PYTHONUNBUFFERED=1
       - NAME_RECV_QUEUE=query_results_q
       - NAME_EM_QUEUE=eof_manager_query_result_q
-      - NAME_SM_QUEUE=end_session_q
+      - NAME_SM_QUEUE=session_manager_q
       - AMOUNT_QUERIES=4
       - HOST=results_verifier
       - PORT=13000

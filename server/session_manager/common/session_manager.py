@@ -60,6 +60,8 @@ class SessionManager:
         self.keep_alive.join()
 
     def process_messages(self, msg_bytes):
+        print("recibí mensaje")
+
         msg = decode_msg_session(msg_bytes)
         if is_request_session(msg):
             self.init_session(msg.id_client)
@@ -115,6 +117,8 @@ class SessionManager:
 
         #self.state.write_checkpoint()
         #self.end_session_queue.ack_all()
+
+        print("intentando borrar un cliente")
 
         for i, (id_client_tmp, tmp, is_deleting) in enumerate(self.sessions):
             if (id_client_tmp == id_client) and is_deleting:

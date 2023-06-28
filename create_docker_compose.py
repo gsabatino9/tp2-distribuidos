@@ -369,7 +369,7 @@ def init_results_verifier(queues, em_queues, status_queues):
     results_verifier = RESULTS_VERIFIER.format(
         queues["results_verifier"],
         em_queues["results_verifier"],
-        queues["session_manager"]["end_session"],
+        queues["session_manager"]["init_session"],
     )
 
     em_results = EM_RESULTS.format(

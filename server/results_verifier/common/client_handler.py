@@ -67,5 +67,7 @@ class ClientHandler(Thread):
         self.request_queue.send(
             delete_message(id_client), routing_key="request_results"
         )
+
+        print("mensaje enviado a session_manager")
         self.session_manager_queue.send(delete_client(id_client))
         # self.client_connection.stop()
