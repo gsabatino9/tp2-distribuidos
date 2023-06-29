@@ -24,6 +24,8 @@ class JoinData:
 
     def find_record(self, key):
         if key not in self.data:
-            print(f"key {key} not in {self.data}")
-            raise ValueError()
+            print(f"key: {key} not find")
+            # TODO: ver esta excepción.
+            # por nuestros datos, hay algunos joins que no se realizan.
+            # raise ValueError()
         return self.data.get(key)

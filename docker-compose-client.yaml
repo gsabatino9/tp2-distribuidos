@@ -14,53 +14,13 @@ services:
       - MAX_RETRIES=50
       - SUSCRIPTIONS=[1,2,3,4]
       - FILE_PATH=data/
-      - ID_CLIENT=7152960878084244872
+      - ID_CLIENT=14201337523399050198
     image: client:latest
     networks:      
       - testing_net
     volumes:
     - ./client/results:/results
-    - ./data/client_1:/data
-
-  client_2:
-    container_name: client_2
-    entrypoint: python3 /main.py
-    environment:
-      - PYTHONUNBUFFERED=1
-      - ADDRESSES=[('accepter_1', 12345), ('accepter_2', 12346)]
-      - HOST_CONSULT=results_verifier
-      - PORT_CONSULT=13000
-      - CHUNK_SIZE=100
-      - MAX_RETRIES=50
-      - SUSCRIPTIONS=[1,2,3,4]
-      - FILE_PATH=data/
-      - ID_CLIENT=8875045358233732545
-    image: client:latest
-    networks:      
-      - testing_net
-    volumes:
-    - ./client/results:/results
-    - ./data/client_2:/data
-
-  client_3:
-    container_name: client_3
-    entrypoint: python3 /main.py
-    environment:
-      - PYTHONUNBUFFERED=1
-      - ADDRESSES=[('accepter_1', 12345), ('accepter_2', 12346)]
-      - HOST_CONSULT=results_verifier
-      - PORT_CONSULT=13000
-      - CHUNK_SIZE=100
-      - MAX_RETRIES=50
-      - SUSCRIPTIONS=[1,2,3,4]
-      - FILE_PATH=data/
-      - ID_CLIENT=15668143555753951342
-    image: client:latest
-    networks:      
-      - testing_net
-    volumes:
-    - ./client/results:/results
-    - ./data/client_3:/data
+    - ./data/client_5:/data
 
 networks:
     testing_net:

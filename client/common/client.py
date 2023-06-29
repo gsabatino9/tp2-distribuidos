@@ -22,6 +22,7 @@ class Client:
         self.suscriptions = suscriptions
         self.chunk_size = chunk_size
         self.max_retries = max_retries
+        self.id_batch = 0
 
     def __connect(self, host, port):
         client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -35,7 +36,7 @@ class Client:
         )
 
     def run(self, filepath, types_files, addr_consult):
-        self.conn = connect(self.addresses, self.id_client, self.suscriptions)
+        self.conn = connect(self.addresses, self.id_client, self.suscriptions, self.id_batch)
         self.__init_session()
         self.__send_files(filepath, types_files)
         self.__get_results(addr_consult)
@@ -43,17 +44,26 @@ class Client:
     def __init_session(self):
         session_accepted = False
         while not session_accepted:
-            self.conn.send_init_session()
-            session_accepted = self.conn.recv_status_session()
-            if session_accepted:
-                print(
-                    f"action: id_client_received | result: success | id_client: {self.id_client}"
-                )
-            else:
-                print(
-                    f"action: id_client_received | result: failure | msg: retrying in 1sec"
-                )
-                time.sleep(1)
+            try:
+                self.conn.send_init_session()
+                session_accepted = self.conn.recv_status_session()
+                if session_accepted:
+                    print(
+                        f"action: id_client_received | result: success | id_client: {self.id_client}"
+                    )
+                else:
+                    print(
+                        f"action: id_client_received | result: failure | msg: retrying in 1sec"
+                    )
+                    time.sleep(1)
+            except struct.error:
+                self.__reconnect()
+
+    def __reconnect(self):
+        print(
+            f"action: error_server | msg: connection closed from server"
+        )
+        self.conn = connect(self.addresses, self.id_client, self.suscriptions, self.id_batch)
 
     def __send_files(self, filepath, types_files):
         for file in types_files:
@@ -99,13 +109,19 @@ class Client:
         self.__send_chunk(type_file, list(""), True)
 
     def __send_chunk(self, data_type, chunk, last_chunk):
-        payload = construct_payload(chunk)
-        self.conn.send(data_type, payload, last_chunk)
+        ack_received = False
+        while not ack_received:
+            try:
+                payload = construct_payload(chunk)
+                self.conn.send(data_type, payload, last_chunk)
 
-        self.__recv_ack_chunk()
+                self.__recv_ack_chunk()
+                ack_received = True
+            except struct.error:
+                self.__reconnect()
 
     def __recv_ack_chunk(self):
-        self.conn.recv_ack()
+        self.id_batch = self.conn.recv_ack()
 
     def __preprocess_chunk(self, type_file, chunk):
         if type_file == "trips":

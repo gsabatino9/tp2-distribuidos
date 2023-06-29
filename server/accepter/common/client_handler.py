@@ -62,12 +62,10 @@ class ClientHandler(Thread):
                 else:
                     self.__route_message(header, payload_bytes)
                     self.__send_ack_client(header.id_batch)
-            except:
+            except struct.error:
                 print("action: client_clossed")
                 self.active = False
-                self.__send_eof(header)
-
-        self.client_connection.stop()
+                #self.__send_eof(header)
 
     def __request_init_session(self, id_client):
         self.session_manager_queue.send(request_init_session(id_client))

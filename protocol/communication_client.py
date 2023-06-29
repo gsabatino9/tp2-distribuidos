@@ -9,7 +9,7 @@ class CommunicationClient:
     Represents a communication client for sending and receiving messages to/from the server.
     """
 
-    def __init__(self, socket, id_client, suscriptions):
+    def __init__(self, socket, id_client, suscriptions, id_batch=0):
         """
         Initializes a new CommunicationClient object.
 
@@ -19,7 +19,7 @@ class CommunicationClient:
         self.comm = Communication(socket)
         self.queries_suscriptions = suscriptions_to_number(suscriptions)
         self.id_client = id_client
-        self.id_batch = 0
+        self.id_batch = id_batch
 
     def getpeername(self):
         return self.comm.getpeername()
@@ -60,14 +60,16 @@ class CommunicationClient:
 
     def __send_data(self, msg):
         self.comm.send_message(msg)
-        self.id_batch += 1
 
     def recv_status_session(self):
         header, _ = self.__recv_message(decode_payload=True)
         return header.msg_type == MessageServer.ACCEPTED_CONNECTION
 
     def recv_ack(self):
-        return self.__recv_message()
+        self.id_batch += 1
+        self.__recv_message()
+
+        return self.id_batch
 
     def recv_results(self):
         return self.__recv_message(decode_payload=True)
