@@ -36,7 +36,9 @@ class Client:
         )
 
     def run(self, filepath, types_files, addr_consult):
-        self.conn = connect(self.addresses, self.id_client, self.suscriptions, self.id_batch)
+        self.conn = connect(
+            self.addresses, self.id_client, self.suscriptions, self.id_batch
+        )
         self.__init_session()
         self.__send_files(filepath, types_files)
         self.__get_results(addr_consult)
@@ -60,10 +62,10 @@ class Client:
                 self.__reconnect()
 
     def __reconnect(self):
-        print(
-            f"action: error_server | msg: connection closed from server"
+        print(f"action: error_server | msg: connection closed from server")
+        self.conn = connect(
+            self.addresses, self.id_client, self.suscriptions, self.id_batch
         )
-        self.conn = connect(self.addresses, self.id_client, self.suscriptions, self.id_batch)
 
     def __send_files(self, filepath, types_files):
         for file in types_files:

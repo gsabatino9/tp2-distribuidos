@@ -13,11 +13,14 @@ def get_id_worker(header):
 def eof_msg(header):
     return MessageEOF(MessageEOF.EOF, header.id_client).encode()
 
+
 def abort_msg(header):
     return MessageEOF(MessageEOF.ABORT, header.id_client).encode()
 
+
 def eof_msg_from_id(id_client):
     return MessageEOF(MessageEOF.EOF, id_client).encode()
+
 
 def abort_msg_from_id(id_client):
     return MessageEOF(MessageEOF.ABORT, id_client).encode()
@@ -26,12 +29,15 @@ def abort_msg_from_id(id_client):
 def is_eof(header):
     return header.msg_type == MessageEOF.EOF
 
+
 def is_abort(header):
     return header.msg_type == MessageEOF.ABORT
+
 
 def is_abort_decode(header_bytes):
     header = decode(header_bytes)
     return header.msg_type == MessageEOF.ABORT
+
 
 def is_ack_abort(header):
     return header.msg_type == MessageEOF.ACK_ABORT

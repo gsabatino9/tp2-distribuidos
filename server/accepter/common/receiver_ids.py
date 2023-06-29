@@ -33,7 +33,7 @@ class ReceiverIds(Thread):
             self.queue_connection.start_receiving()
         except:
             if self.running:
-                raise  # gracefull quit
+                print("error.")
 
     def receive_id(self, body):
         id_client, is_session_accepted = decode_reply(body)

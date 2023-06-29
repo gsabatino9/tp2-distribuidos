@@ -12,9 +12,9 @@ ID_CLIENT = int(os.environ.get("ID_CLIENT"))
 
 def main():
     if CITY == "montreal":
-        suscriptions = [1,2,3,4]
+        suscriptions = [1, 2, 3, 4]
     else:
-        suscriptions = [1,2,4]
+        suscriptions = [1, 2, 4]
     addresses = ast.literal_eval(ADDRESSES)
 
     client = Client(addresses, CHUNK_SIZE, MAX_RETRIES, ID_CLIENT, suscriptions)
