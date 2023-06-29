@@ -28,4 +28,5 @@ class JoinData:
             # TODO: ver esta excepción.
             # por nuestros datos, hay algunos joins que no se realizan.
             # raise ValueError()
-        return self.data.get(key)
+        else:
+            return self.data.get(key)
