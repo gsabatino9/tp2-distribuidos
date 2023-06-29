@@ -2,7 +2,7 @@ import signal, sys
 from server.common.queue.connection import Connection
 from server.groupby.common.state_manager import StateManager
 from server.common.utils_messages_client import decode
-from server.common.utils_messages_eof import ack_msg, get_id_client
+from server.common.utils_messages_eof import ack_msg, get_id_client, is_abort_decode
 from server.common.utils_messages_group import construct_msg
 from server.common.keep_alive.keep_alive import KeepAlive
 from server.common.utils_messages import is_message_eof
@@ -135,7 +135,9 @@ class GroupbyController:
         id_client = get_id_client(body)
         print("action: eof_trips_arrived")
 
-        self.__send_to_apply(id_client)
+        if not is_abort_decode(body):
+            self.__send_to_apply(id_client)
+
         self.__delete_client(id_client)
         self.em_queue.send(ack_msg(body, self.id_worker))
 

@@ -27,6 +27,10 @@ def is_eof(header):
 def is_abort(header):
     return header.msg_type == MessageEOF.ABORT
 
+def is_abort_decode(header_bytes):
+    header = decode(header_bytes)
+    return header.msg_type == MessageEOF.ABORT
+
 
 def ack_msg(header_bytes, id_worker):
     id_client = get_id_client(header_bytes)
