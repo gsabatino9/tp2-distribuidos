@@ -1,10 +1,12 @@
 import random, time, socket, signal
 from protocol.communication_client import CommunicationClient
 
+MAX_TIME_POLLING = 60
 
 def connect(addresses, id_client, suscriptions, id_batch=0):
     not_connected = True
     conn = None
+    time_to_sleep = 1
 
     while not_connected:
         try:
@@ -20,9 +22,10 @@ def connect(addresses, id_client, suscriptions, id_batch=0):
             not_connected = False
         except:
             print(
-                f"action: client_connected | result: failures | msg: retrying in 1sec"
+                f"action: client_connected | result: failures | msg: retrying in {time_to_sleep}sec"
             )
-            time.sleep(1)
+            time.sleep(min(time_to_sleep, MAX_TIME_POLLING))
+            time_to_sleep *= 2
 
     return conn
 

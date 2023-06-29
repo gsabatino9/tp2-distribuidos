@@ -34,11 +34,9 @@ class SessionManager:
     def __connect_queue(self, name_recv_queue, name_send_queue, name_em_queue):
         try:
             self.queue_connection = Connection()
-            self.recv_queue = self.queue_connection.pubsub_queue(
-                name_recv_queue, auto_ack=False
-            )
+            self.recv_queue = self.queue_connection.basic_queue(name_recv_queue)
             self.send_queue = self.queue_connection.pubsub_queue(name_send_queue)
-            self.em_queue = self.queue_connection.pubsub_queue(name_em_queue)
+            self.em_queue = self.queue_connection.basic_queue(name_em_queue)
         except OSError as e:
             print(f"error: creating_queue_connection | log: {e}")
             self.stop()
@@ -83,7 +81,6 @@ class SessionManager:
             print("action: request_session | result: failure")
 
         self.state.write_checkpoint()
-        self.recv_queue.ack_all()
         self.send_queue.send(msg)
 
     def __verify_timestamps(self):
@@ -96,6 +93,8 @@ class SessionManager:
             self.em_queue.send(eof_msg_from_id(id_client))
             self.state.mark_start_deleting(id_client)
 
+        self.state.write_checkpoint()
+
     def __server_not_full(self, id_client):
         # TODO: verificar si el cliente está
         return self.state.count_clients() < self.max_clients
@@ -104,11 +103,12 @@ class SessionManager:
         self.state.delete_client(id_client)
 
         self.state.write_checkpoint()
-        self.recv_queue.ack_all()
 
     def abort_session(self, id_client):
         self.em_queue.send(abort_msg_from_id(id_client))
         self.state.mark_start_deleting(id_client)
+
+        self.state.write_checkpoint()
 
     def stop(self, *args):
         if self.running:

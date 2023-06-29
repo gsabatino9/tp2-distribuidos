@@ -34,7 +34,7 @@ class BasicQueue(GenericQueue):
         self.__build_queue()
 
     def __build_queue(self):
-        self.channel.queue_declare(queue=self.queue_name)
+        self.channel.queue_declare(queue=self.queue_name, durable=True)
 
     def receive(self, callback, prefetch_count=1):
         self.channel.basic_qos(prefetch_count=prefetch_count)
@@ -42,53 +42,11 @@ class BasicQueue(GenericQueue):
 
     def send(self, message):
         self.channel.basic_publish(
-            exchange="", routing_key=self.queue_name, body=message
+            exchange="", routing_key=self.queue_name, body=message,
+            properties=pika.BasicProperties(
+                delivery_mode = 2
+            )
         )
-
-
-class PubsubQueue(GenericQueue):
-    def __init__(self, channel, exchange_name, auto_ack=True):
-        super().__init__(channel, auto_ack)
-        self.exchange_name = exchange_name
-        self.__build_exchange()
-
-    def __build_exchange(self):
-        self.channel.exchange_declare(
-            exchange=self.exchange_name, exchange_type="fanout"
-        )
-
-    def receive(self, callback):
-        result = self.channel.queue_declare(queue="", exclusive=True)
-        queue_name = result.method.queue
-        self.channel.queue_bind(exchange=self.exchange_name, queue=queue_name)
-        self.receive_msg(queue_name, callback)
-
-    def send(self, message):
-        self.channel.basic_publish(
-            exchange=self.exchange_name, routing_key="", body=message
-        )
-
-
-class PubsubWorkerQueue(GenericQueue):
-    def __init__(self, channel, exchange_name, queue_name, auto_ack=True):
-        super().__init__(channel, auto_ack)
-        self.exchange_name = exchange_name
-        self.queue_name = queue_name
-        self.__build_queue()
-
-    def __build_queue(self):
-        self.channel.exchange_declare(
-            exchange=self.exchange_name, exchange_type="fanout"
-        )
-
-        self.channel.queue_declare(queue=self.queue_name)
-
-        self.channel.queue_bind(
-            exchange=self.exchange_name, queue=self.queue_name, routing_key=""
-        )
-
-    def receive(self, callback):
-        self.receive_msg(self.queue_name, callback)
 
 
 class RoutingQueue(GenericQueue):
@@ -102,8 +60,8 @@ class RoutingQueue(GenericQueue):
             exchange=self.exchange_name, exchange_type="direct"
         )
 
-        result = self.channel.queue_declare(queue="", exclusive=True)
-        self.queue_name = result.method.queue
+        result = self.channel.queue_declare(queue=self.exchange_name, durable=True)
+        self.queue_name = self.exchange_name
 
         for routing_key in routing_keys:
             self.channel.queue_bind(
@@ -127,7 +85,10 @@ class RoutingQueue(GenericQueue):
 
     def send(self, message, routing_key):
         self.channel.basic_publish(
-            exchange=self.exchange_name, routing_key=routing_key, body=message
+            exchange=self.exchange_name, routing_key=routing_key, body=message,
+            properties=pika.BasicProperties(
+                delivery_mode = 2
+            )
         )
 
 
@@ -151,7 +112,10 @@ class RoutingBuildQueue(GenericQueue):
 
     def send(self, message, routing_key):
         self.channel.basic_publish(
-            exchange=self.exchange_name, routing_key=routing_key, body=message
+            exchange=self.exchange_name, routing_key=routing_key, body=message,
+            properties=pika.BasicProperties(
+                delivery_mode = 2
+            )
         )
 
     def broadcast_workers(self, amount_nodes, msg):
@@ -181,14 +145,17 @@ class MultipleQueues(GenericQueue):
         for i, name_queue in enumerate(self.names_queues):
             for idx_worker in range(1, self.amount_nodes[i] + 1):
                 name_queue += str(idx_worker)
-                self.channel.queue_declare(queue=name_queue)
+                self.channel.queue_declare(queue=name_queue, durable=True)
 
     def send(self, message):
         for i, name_queue in enumerate(self.names_queues):
             # we use round-robin
             idx_worker = (self.list_workers[i] % self.amount_nodes[i]) + 1
             self.channel.basic_publish(
-                exchange="", routing_key=name_queue + str(idx_worker), body=message
+                exchange="", routing_key=name_queue + str(idx_worker), body=message,
+                properties=pika.BasicProperties(
+                    delivery_mode = 2
+                )
             )
             self.list_workers[i] += 1
 
@@ -198,7 +165,10 @@ class MultipleQueues(GenericQueue):
                 # we use round-robin
                 idx_worker = (self.list_workers[i] % self.amount_nodes[i]) + 1
                 self.channel.basic_publish(
-                    exchange="", routing_key=name_queue + str(idx_worker), body=message
+                    exchange="", routing_key=name_queue + str(idx_worker), body=message,
+                    properties=pika.BasicProperties(
+                        delivery_mode = 2
+                    )
                 )
                 self.list_workers[i] += 1
 
@@ -206,7 +176,10 @@ class MultipleQueues(GenericQueue):
         for i, name_queue in enumerate(self.names_queues):
             for idx_worker in range(1, self.amount_nodes[i] + 1):
                 self.channel.basic_publish(
-                    exchange="", routing_key=name_queue + str(idx_worker), body=message
+                    exchange="", routing_key=name_queue + str(idx_worker), body=message,
+                    properties=pika.BasicProperties(
+                        delivery_mode = 2
+                    )
                 )
 
 
@@ -230,7 +203,7 @@ class ShardingQueue(GenericQueue):
 
     def __build_queues(self):
         for idx_worker in range(1, self.amount_nodes + 1):
-            self.channel.queue_declare(queue=self.name_queue + str(idx_worker))
+            self.channel.queue_declare(queue=self.name_queue + str(idx_worker), durable=True)
 
     def __get_shards(self, id_client):
         start_idx = id_client % self.amount_nodes
@@ -245,10 +218,40 @@ class ShardingQueue(GenericQueue):
     def send_static(self, msg, id_client):
         list_shards = self.__get_shards(id_client)
         for name_queue in list_shards:
-            self.channel.basic_publish(exchange="", routing_key=name_queue, body=msg)
+            self.channel.basic_publish(
+                exchange="", routing_key=name_queue, body=msg,
+                properties=pika.BasicProperties(
+                    delivery_mode = 2
+                )
+            )
 
     def send_workers(self, msg, id_client):
         list_shards = self.__get_shards(id_client)
         self.channel.basic_publish(
-            exchange="", routing_key=random.choice(list_shards), body=msg
+            exchange="", routing_key=random.choice(list_shards), body=msg,
+            properties=pika.BasicProperties(
+                delivery_mode = 2
+            )
+        )
+
+class PubsubQueue(GenericQueue):
+    def __init__(self, channel, exchange_name, auto_ack=True):
+        super().__init__(channel, auto_ack)
+        self.exchange_name = exchange_name
+        self.__build_exchange()
+
+    def __build_exchange(self):
+        self.channel.exchange_declare(
+            exchange=self.exchange_name, exchange_type="fanout"
+        )
+
+    def receive(self, callback):
+        result = self.channel.queue_declare(queue="", exclusive=True)
+        queue_name = result.method.queue
+        self.channel.queue_bind(exchange=self.exchange_name, queue=queue_name)
+        self.receive_msg(queue_name, callback)
+
+    def send(self, message):
+        self.channel.basic_publish(
+            exchange=self.exchange_name, routing_key="", body=message
         )

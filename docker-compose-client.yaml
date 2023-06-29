@@ -14,13 +14,33 @@ services:
       - MAX_RETRIES=50
       - CITY=montreal
       - FILE_PATH=data/
-      - ID_CLIENT=8240553679140242566
+      - ID_CLIENT=3286641464125246527
     image: client:latest
     networks:      
       - testing_net
     volumes:
     - ./client/results:/results
-    - ./data/client_5:/data
+    - ./data/client_1:/data
+
+  client_2:
+    container_name: client_2
+    entrypoint: python3 /main.py
+    environment:
+      - PYTHONUNBUFFERED=1
+      - ADDRESSES=[('accepter_1', 12345), ('accepter_2', 12346)]
+      - HOST_CONSULT=results_verifier
+      - PORT_CONSULT=13000
+      - CHUNK_SIZE=100
+      - MAX_RETRIES=50
+      - CITY=montreal
+      - FILE_PATH=data/
+      - ID_CLIENT=14925862772474200819
+    image: client:latest
+    networks:      
+      - testing_net
+    volumes:
+    - ./client/results:/results
+    - ./data/client_2:/data
 
 networks:
     testing_net:

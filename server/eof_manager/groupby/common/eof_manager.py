@@ -29,15 +29,15 @@ class EOFManager:
     ):
         try:
             self.queue_connection = Connection()
-            self.recv_queue = self.queue_connection.pubsub_queue(
+            self.recv_queue = self.queue_connection.basic_queue(
                 name_recv_queue, auto_ack=False
             )
             self.groupby_queues = [
                 self.queue_connection.sharding_queue(queue_name, amount_nodes, 1)
                 for queue_name, amount_nodes in nodes_groupby
             ]
-            self.send_queue = self.queue_connection.pubsub_queue(name_send_queue)
-            self.status_queue = self.queue_connection.pubsub_queue(name_status_queue)
+            self.send_queue = self.queue_connection.basic_queue(name_send_queue)
+            self.status_queue = self.queue_connection.basic_queue(name_status_queue)
         except OSError as e:
             print(f"error: creating_queue_connection | log: {e}")
             self.stop()

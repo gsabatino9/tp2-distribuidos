@@ -26,13 +26,13 @@ class EOFManager:
     def __connect(self, name_recv_queue, name_verifier_queue, name_status_queue):
         try:
             self.queue_connection = Connection()
-            self.recv_queue = self.queue_connection.pubsub_queue(
+            self.recv_queue = self.queue_connection.basic_queue(
                 name_recv_queue, auto_ack=False
             )
             self.verifier_queue = self.queue_connection.routing_queue(
                 name_verifier_queue
             )
-            self.status_queue = self.queue_connection.pubsub_queue(name_status_queue)
+            self.status_queue = self.queue_connection.basic_queue(name_status_queue)
         except OSError as e:
             print(f"error: creating_queue_connection | log: {e}")
             self.stop()

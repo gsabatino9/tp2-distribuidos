@@ -90,11 +90,11 @@ class ResultsVerifier:
                 auto_ack=False,
             )
 
-            self.session_manager_queue = self.queue_connection.pubsub_queue(
+            self.session_manager_queue = self.queue_connection.basic_queue(
                 name_session_manager_queue
             )
 
-            self.em_queue = self.queue_connection.pubsub_queue(name_em_queue)
+            self.em_queue = self.queue_connection.basic_queue(name_em_queue)
             self.send_queue = self.queue_connection.routing_building_queue(
                 name_send_exchange, name_send_queue
             )

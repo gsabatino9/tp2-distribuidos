@@ -62,7 +62,7 @@ class JoinerController:
                 name_recv_queue, auto_ack=False
             )
             self.trips_queue = self.queue_connection.basic_queue(name_trips_queue)
-            self.em_queue = self.queue_connection.pubsub_queue(name_em_queue)
+            self.em_queue = self.queue_connection.basic_queue(name_em_queue)
             self.next_stage_queues = self.queue_connection.multiple_queues(
                 name_next_stage_queues, self.size_workers_next_stage
             )

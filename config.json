@@ -50,23 +50,23 @@
 		},
 		"amount_nodes": {
 			"accepter": 2,
-			"joiner_stations": 1,
-			"joiner_weather": 1,
-			"sharding_amount": 1,
-			"filter_year": 1,
-			"filter_pretoc": 1,
-			"filter_distance": 1,
-			"applier_query1": 1,
-			"applier_query2": 1,
-			"applier_query3": 1,
-			"applier_query4": 1,
+			"joiner_stations": 2,
+			"joiner_weather": 2,
+			"sharding_amount": 2,
+			"filter_year": 2,
+			"filter_pretoc": 2,
+			"filter_distance": 2,
+			"applier_query1": 2,
+			"applier_query2": 2,
+			"applier_query3": 2,
+			"applier_query4": 2,
 			"groupby": {
-				"groupby_query1": 1,
-				"groupby_query2": 1,
-				"groupby_query3": 1,
-				"groupby_query4": 1
+				"groupby_query1": 2,
+				"groupby_query2": 2,
+				"groupby_query3": 2,
+				"groupby_query4": 2
 			}
 		},
-		"max_clients": 1
+		"max_clients": 3
 	}
 }
