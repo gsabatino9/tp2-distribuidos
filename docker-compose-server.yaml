@@ -491,7 +491,7 @@ services:
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
-      - MAX_CLIENTS=3
+      - MAX_CLIENTS=1
       - NAME_RECV_QUEUE=session_manager_q
       - NAME_SEND_QUEUE=accepter_q
       - NAME_EM_QUEUE=eof_manager_joiners_q
