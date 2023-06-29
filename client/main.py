@@ -20,9 +20,8 @@ def main():
     client = Client(addresses, CHUNK_SIZE, MAX_RETRIES, ID_CLIENT, suscriptions)
 
     types_files = ["stations", "weather", "trips"]
-    client.run(FILE_PATH, types_files, ADDR_CONSULT)
-    client.stop()
 
+    client.run(FILE_PATH, types_files, ADDR_CONSULT)
 
 if __name__ == "__main__":
     main()
