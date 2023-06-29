@@ -7,7 +7,7 @@ def connect(addresses, id_client, suscriptions, id_batch=0):
     not_connected = True
     conn = None
     time_to_sleep = 0.25
-    max_tries = 10
+    max_tries = 15
 
     while not_connected and max_tries > 0:
         try:
