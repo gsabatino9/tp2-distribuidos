@@ -3,6 +3,8 @@ from struct import pack, unpack, calcsize
 
 
 class MessageClient:
+    MSG_CODE = 0
+
     # Constants for data types
     STATION_DATA = 0
     WEATHER_DATA = 1
@@ -15,6 +17,7 @@ class MessageClient:
     GET_RESULTS = 3
 
     # Struct format for message header
+    MSG_CODE_LEN = "B"
     DATA_TYPE_LEN = "B"
     MSG_TYPE_LEN = "B"
     ID_CLIENT_LEN = "Q"
@@ -23,6 +26,7 @@ class MessageClient:
     LEN_PAYLOAD_LEN = "I"
     HEADER_CODE = (
         "!"
+        + MSG_CODE_LEN
         + DATA_TYPE_LEN
         + MSG_TYPE_LEN
         + ID_CLIENT_LEN
@@ -35,7 +39,7 @@ class MessageClient:
 
     # Define the named tuples used in the protocol
     Header = namedtuple(
-        "Header", "data_type msg_type id_client id_batch queries_suscriptions len"
+        "Header", "msg_code data_type msg_type id_client id_batch queries_suscriptions len"
     )
     Payload = namedtuple("Payload", "data")
 
@@ -54,6 +58,7 @@ class MessageClient:
         payload_bytes = self._pack_payload(payload)
 
         self.header = self.Header(
+            self.MSG_CODE,
             data_type,
             msg_type,
             id_client,

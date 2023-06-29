@@ -16,19 +16,21 @@ def decode_reply(msg_bytes):
 
 
 class MessageNewClient:
+    MSG_CODE = 4
+
     # msg types
     ASSIGNED_ID = 0
     ERROR = 1
 
     # Struct format for message header
-    HEADER_CODE = "!BQ"
+    HEADER_CODE = "!BBQ"
     # Size of header in bytes
 
     # Define the named tuples used in the protocol
-    Header = namedtuple("Header", "msg_type id_client")
+    Header = namedtuple("Header", "msg_code msg_type id_client")
 
     def __init__(self, msg_type, id_client):
-        self.header = self.Header(msg_type, id_client)
+        self.header = self.Header(self.MSG_CODE, msg_type, id_client)
 
     def encode(self):
         return pack(self.HEADER_CODE, *self.header)
@@ -55,19 +57,21 @@ def decode_msg_session(msg):
 
 
 class MessageStatusSession:
+    MSG_CODE = 5
+
     INIT_SESSION = 0
     EOF_SENT = 1
     DELETE_CLIENT = 2
 
     # Struct format for message header
-    HEADER_CODE = "!BQ"
+    HEADER_CODE = "!BBQ"
     # Size of header in bytes
 
     # Define the named tuples used in the protocol
-    Header = namedtuple("Header", "msg_type id_client")
+    Header = namedtuple("Header", "msg_code msg_type id_client")
 
     def __init__(self, msg_type, id_client):
-        self.header = self.Header(msg_type, id_client)
+        self.header = self.Header(self.MSG_CODE, msg_type, id_client)
 
     def encode(self):
         return pack(self.HEADER_CODE, *self.header)

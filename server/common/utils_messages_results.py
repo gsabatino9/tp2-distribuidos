@@ -43,16 +43,18 @@ def is_delete_message(message_bytes):
 
 
 class MessageResults:
+    MSG_CODE = 6
+
     # msg types
     REQUEST_RESULTS = 0
     ERROR = 1
     DELETE_CLIENT = 2
 
-    HEADER_CODE = "!BBQ"
-    Header = namedtuple("Header", "code id_client_handler id_client")
+    HEADER_CODE = "!BBBQ"
+    Header = namedtuple("Header", "msg_code code id_client_handler id_client")
 
     def __init__(self, code, id_client_handler, id_client):
-        self.header = self.Header(code, id_client_handler, id_client)
+        self.header = self.Header(self.MSG_CODE, code, id_client_handler, id_client)
 
     def encode(self):
         return pack(self.HEADER_CODE, *self.header)

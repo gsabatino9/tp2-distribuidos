@@ -3,6 +3,8 @@ from struct import pack, unpack, calcsize
 
 
 class MessageServer:
+    MSG_CODE = 1
+
     # Constants for message types
     BATCH_RECEIVED = 0
     SEND_RESULT = 1
@@ -11,12 +13,12 @@ class MessageServer:
     ERROR_MESSAGE = 4
 
     # Struct format for message header
-    HEADER_CODE = "!BIII"
+    HEADER_CODE = "!BBIII"
     # Size of header in bytes
     SIZE_HEADER = calcsize(HEADER_CODE)
 
     # Define the named tuples used in the protocol
-    Header = namedtuple("Header", "msg_type id_query id_batch len")
+    Header = namedtuple("Header", "msg_code msg_type id_query id_batch len")
     Payload = namedtuple("Payload", "data")
 
     def __init__(self, msg_type, id_query, id_batch, payload):
@@ -24,7 +26,7 @@ class MessageServer:
             payload = list("")
         payload_bytes = self._pack_payload(payload)
 
-        self.header = self.Header(msg_type, id_query, id_batch, len(payload_bytes))
+        self.header = self.Header(self.MSG_CODE, msg_type, id_query, id_batch, len(payload_bytes))
         self.payload = self.Payload(payload_bytes)
 
     def encode(self):

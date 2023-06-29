@@ -29,17 +29,19 @@ def get_id_client(header_bytes):
 
 
 class MessageEOF:
+    MSG_CODE = 2
+
     # msg type
     EOF = 0
     ACK = 1
 
-    HEADER_CODE = "!BQ"
+    HEADER_CODE = "!BBQ"
     SIZE_HEADER = calcsize(HEADER_CODE)
 
-    Header = namedtuple("Header", "msg_type id_client")
+    Header = namedtuple("Header", "msg_code msg_type id_client")
 
     def __init__(self, msg_type, id_client):
-        self.header = self.Header(msg_type, id_client)
+        self.header = self.Header(self.MSG_CODE, msg_type, id_client)
 
     def encode(self):
         return pack(self.HEADER_CODE, *self.header)
