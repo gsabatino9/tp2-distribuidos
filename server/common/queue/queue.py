@@ -44,7 +44,7 @@ class BasicQueue(GenericQueue):
         self.channel.basic_publish(
             exchange="", routing_key=self.queue_name, body=message,
             properties=pika.BasicProperties(
-                delivery_mode = pika.spec.PERSISTENT_DELIVERY_MODE
+                delivery_mode = 2
             )
         )
 
@@ -60,7 +60,7 @@ class RoutingQueue(GenericQueue):
             exchange=self.exchange_name, exchange_type="direct"
         )
 
-        result = self.channel.queue_declare(queue="", exclusive=True)
+        result = self.channel.queue_declare(queue="", exclusive=True, durable=True)
         self.queue_name = result.method.queue
 
         for routing_key in routing_keys:
@@ -87,7 +87,7 @@ class RoutingQueue(GenericQueue):
         self.channel.basic_publish(
             exchange=self.exchange_name, routing_key=routing_key, body=message,
             properties=pika.BasicProperties(
-                delivery_mode = pika.spec.PERSISTENT_DELIVERY_MODE
+                delivery_mode = 2
             )
         )
 
@@ -114,7 +114,7 @@ class RoutingBuildQueue(GenericQueue):
         self.channel.basic_publish(
             exchange=self.exchange_name, routing_key=routing_key, body=message,
             properties=pika.BasicProperties(
-                delivery_mode = pika.spec.PERSISTENT_DELIVERY_MODE
+                delivery_mode = 2
             )
         )
 
@@ -145,7 +145,7 @@ class MultipleQueues(GenericQueue):
         for i, name_queue in enumerate(self.names_queues):
             for idx_worker in range(1, self.amount_nodes[i] + 1):
                 name_queue += str(idx_worker)
-                self.channel.queue_declare(queue=name_queue)
+                self.channel.queue_declare(queue=name_queue, durable=True)
 
     def send(self, message):
         for i, name_queue in enumerate(self.names_queues):
@@ -154,7 +154,7 @@ class MultipleQueues(GenericQueue):
             self.channel.basic_publish(
                 exchange="", routing_key=name_queue + str(idx_worker), body=message,
                 properties=pika.BasicProperties(
-                    delivery_mode = pika.spec.PERSISTENT_DELIVERY_MODE
+                    delivery_mode = 2
                 )
             )
             self.list_workers[i] += 1
@@ -167,7 +167,7 @@ class MultipleQueues(GenericQueue):
                 self.channel.basic_publish(
                     exchange="", routing_key=name_queue + str(idx_worker), body=message,
                     properties=pika.BasicProperties(
-                        delivery_mode = pika.spec.PERSISTENT_DELIVERY_MODE
+                        delivery_mode = 2
                     )
                 )
                 self.list_workers[i] += 1
@@ -178,7 +178,7 @@ class MultipleQueues(GenericQueue):
                 self.channel.basic_publish(
                     exchange="", routing_key=name_queue + str(idx_worker), body=message,
                     properties=pika.BasicProperties(
-                        delivery_mode = pika.spec.PERSISTENT_DELIVERY_MODE
+                        delivery_mode = 2
                     )
                 )
 
@@ -203,7 +203,7 @@ class ShardingQueue(GenericQueue):
 
     def __build_queues(self):
         for idx_worker in range(1, self.amount_nodes + 1):
-            self.channel.queue_declare(queue=self.name_queue + str(idx_worker))
+            self.channel.queue_declare(queue=self.name_queue + str(idx_worker), durable=True)
 
     def __get_shards(self, id_client):
         start_idx = id_client % self.amount_nodes
@@ -221,7 +221,7 @@ class ShardingQueue(GenericQueue):
             self.channel.basic_publish(
                 exchange="", routing_key=name_queue, body=msg,
                 properties=pika.BasicProperties(
-                    delivery_mode = pika.spec.PERSISTENT_DELIVERY_MODE
+                    delivery_mode = 2
                 )
             )
 
@@ -230,6 +230,6 @@ class ShardingQueue(GenericQueue):
         self.channel.basic_publish(
             exchange="", routing_key=random.choice(list_shards), body=msg,
             properties=pika.BasicProperties(
-                delivery_mode = pika.spec.PERSISTENT_DELIVERY_MODE
+                delivery_mode = 2
             )
         )
