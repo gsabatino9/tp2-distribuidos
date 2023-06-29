@@ -35,24 +35,24 @@ class MessageEOF:
     EOF = 0
     ACK = 1
 
-    HEADER_CODE = "!BBQ"
+    HEADER_CODE = "!BBQ20s"
     SIZE_HEADER = calcsize(HEADER_CODE)
 
-    Header = namedtuple("Header", "msg_code msg_type id_client")
+    Header = namedtuple("Header", "msg_code msg_type id_client id_worker")
 
-    def __init__(self, msg_type, id_client):
-        self.header = self.Header(self.MSG_CODE, msg_type, id_client)
+    def __init__(self, msg_type, id_client, id_worker=""):
+        self.header = self.Header(self.MSG_CODE, msg_type, id_client, id_worker.encode())
 
     def encode(self):
         return pack(self.HEADER_CODE, *self.header)
 
     @classmethod
-    def eof(cls, id_client):
-        return cls(cls.EOF, id_client).encode()
+    def eof(cls, id_client, id_worker=""):
+        return cls(cls.EOF, id_client, id_worker).encode()
 
     @classmethod
-    def ack(cls, id_client):
-        return cls(cls.ACK, id_client).encode()
+    def ack(cls, id_client, id_worker=""):
+        return cls(cls.ACK, id_client, id_worker).encode()
 
     @staticmethod
     def decode(header_bytes):
