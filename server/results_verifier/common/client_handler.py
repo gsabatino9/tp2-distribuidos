@@ -31,7 +31,6 @@ class ClientHandler(Thread):
     def run(self):
         while self.running:
             self.client_connection = self.queue_client_connections.get()
-            self.client_address = self.client_connection.get_addr()
             if not self.client_connection or not self.running:
                 continue
             if not self.__connect_queues():
@@ -47,8 +46,8 @@ class ClientHandler(Thread):
                 self.queue_connection.close()
 
     def __handle_connection(self):
-        self.client_address = self.client_connection.getpeername()[0]
         header, _ = self.client_connection.recv_data(decode_payload=False)
+        
         self.__send_request_results_verifier(header.id_client)
         results_batches = self.queue_results.get()
         if not results_batches or not self.running:
