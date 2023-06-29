@@ -55,6 +55,8 @@ class JoinerController:
         size_workers_next_stage,
     ):
         try:
+            self.name_next_stage_queues = name_next_stage_queues
+
             self.queue_connection = Connection()
             self.recv_queue = self.queue_connection.basic_queue(
                 name_recv_queue, auto_ack=False
@@ -139,7 +141,9 @@ class JoinerController:
     def __send_next_stage(self, header, joined_trips):
         if len(joined_trips) > 0:
             msg = construct_msg(header, joined_trips)
-            self.next_stage_queues.send(msg)
+            self.next_stage_queues.send_to_queues(
+                msg, queues_suscripted(header, self.name_next_stage_queues)
+            )
 
     def __last_trip_arrived(self, body):
         self.joiner.delete_client(get_id_client(body))

@@ -192,6 +192,16 @@ class MultipleQueues(GenericQueue):
             )
             self.list_workers[i] += 1
 
+    def send_to_queues(self, message, wanted_queues):
+        for i, name_queue in enumerate(self.names_queues):
+            if name_queue in wanted_queues:
+                # we use round-robin
+                idx_worker = (self.list_workers[i] % self.amount_nodes[i]) + 1
+                self.channel.basic_publish(
+                    exchange="", routing_key=name_queue + str(idx_worker), body=message
+                )
+                self.list_workers[i] += 1
+
     def broadcast(self, message):
         for i, name_queue in enumerate(self.names_queues):
             for idx_worker in range(1, self.amount_nodes[i] + 1):

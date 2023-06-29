@@ -59,3 +59,24 @@ def last_message():
 def is_last_message(body):
     header, _ = MessageServer.decode(body)
     return header.msg_type == MessageServer.SEND_LAST_RESULT
+
+map_suscriptions = {
+    'filter_pretoc': 1,
+    'filter_year': 2,
+    'filter_distance': 3,
+}
+
+
+def client_suscripted(queries_suscriptions, name_query):
+    real_name = name_query.split('_q')[0]
+    return (map_suscriptions[real_name] in queries_suscriptions)
+
+def queues_suscripted(header, queues):
+    ret = []
+    queries_suscriptions = number_to_suscriptions(header.queries_suscriptions)
+
+    for queue in queues:
+        if client_suscripted(queries_suscriptions, queue):
+            ret.append(queue)
+
+    return ret
