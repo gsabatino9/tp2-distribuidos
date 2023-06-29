@@ -38,6 +38,7 @@ class SessionManagerState:
         for i, (id_client_tmp, tmp, is_deleting) in enumerate(self.sessions):
             if (id_client_tmp == id_client) and (not is_deleting):
                 self.sessions[i] = [id_client, tmp, True]
+                self.bucket.set("sessions", self.sessions)
 
     def count_clients(self):
         return len(self.sessions)
@@ -46,6 +47,7 @@ class SessionManagerState:
         for i, (id_client_tmp, tmp, is_deleting) in enumerate(self.sessions):
             if (id_client_tmp == id_client) and is_deleting:
                 del self.sessions[i]
+                self.bucket.set("sessions", self.sessions)
                 print(f"action: end_session | result: success | id_client: {id_client}")
                 return
 
