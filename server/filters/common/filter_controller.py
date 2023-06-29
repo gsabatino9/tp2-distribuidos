@@ -3,11 +3,11 @@ from server.common.queue.connection import Connection
 from server.filters.common.filter import Filter
 from server.common.utils_messages_client import (
     decode,
-    is_eof,
     construct_msg,
     customer_subscribed_to_query,
 )
 from server.common.utils_messages_eof import ack_msg
+from server.common.utils_messages import is_message_eof
 from server.common.keep_alive.keep_alive import KeepAlive
 
 
@@ -78,7 +78,7 @@ class FilterController:
         self.keep_alive.join()
 
     def proccess_message(self, body):
-        if is_eof(body):
+        if is_message_eof(body):
             self.__eof_arrived(body)
         else:
             self.__trips_arrived(body)
