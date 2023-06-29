@@ -123,11 +123,11 @@ class GroupbyController:
 
     def __eof_arrived(self, body):
         id_client = get_id_client(body)
+        print("action: eof_trips_arrived")
 
         self.__send_to_apply(id_client)
         self.__delete_client(id_client)
         self.em_queue.send(ack_msg(body, self.id_worker))
-        print("action: eof_trips_arrived")
 
     def __delete_client(self, id_client):
         if self.state.delete_client(id_client):

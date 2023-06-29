@@ -69,7 +69,7 @@ class EOFManager:
 
     def __verify_client(self, id_client):
         if id_client not in self.clients_acks:
-            self.clients_acks[id_client] = 0
+            self.clients_acks[id_client] = set()
 
     def __send_eofs(self, header, msg):
         """
@@ -83,9 +83,9 @@ class EOFManager:
         """
         if the number of workers that returned ack reaches the maximum count, it sends EOF to the next stage.
         """
-        self.clients_acks[header.id_client] += 1
+        self.clients_acks[header.id_client].add(header.id_worker)
 
-        if self.clients_acks[header.id_client] == len(self.groupby_queues):
+        if len(self.clients_acks[header.id_client]) == len(self.groupby_queues):
             print(
                 f"action: close_stage | result: success | id_client: {header.id_client}"
             )

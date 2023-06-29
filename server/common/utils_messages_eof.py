@@ -35,7 +35,7 @@ class MessageEOF:
     EOF = 0
     ACK = 1
 
-    HEADER_CODE = "!BBQ20s"
+    HEADER_CODE = "!BBQ30s"
     SIZE_HEADER = calcsize(HEADER_CODE)
 
     Header = namedtuple("Header", "msg_code msg_type id_client id_worker")
