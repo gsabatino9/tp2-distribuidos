@@ -18,14 +18,6 @@ def is_eof(header):
     return header.msg_type == MessageEOF.EOF
 
 
-def is_station(header):
-    return header.data_type == MessageEOF.STATION
-
-
-def is_weather(header):
-    return header.data_type == MessageEOF.WEATHER
-
-
 def ack_msg(header_bytes):
     id_client = get_id_client(header_bytes)
     return MessageEOF.ack(MessageEOF.TRIP, id_client)
