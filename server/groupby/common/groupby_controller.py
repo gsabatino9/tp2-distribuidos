@@ -90,9 +90,6 @@ class GroupbyController:
         self.keep_alive.join()
 
     def process_messages(self, body):
-        # TODO: evaluate if it's a good idea to use 80~90% of the prefetch limit.
-        # I (Lucho) added this because i was getting off-by-one errors and just
-        # wanted to get it working fast.
         if self.current_fetch_count * 10 // 8 > self.prefetch_limit:
             self.__ack_messages()
 

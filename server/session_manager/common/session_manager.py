@@ -15,7 +15,6 @@ from common.state import SessionManagerState
 
 
 class SessionManager:
-    # TODO: ponerlo en docker-compose
     LIMIT_WAIT = 3600.0
 
     def __init__(self, max_clients, name_recv_queue, name_send_queue, name_em_queue):
@@ -61,7 +60,6 @@ class SessionManager:
             self.init_session(msg.id_client)
         elif is_eof_sent(msg):
             self.send_eof_client(msg.id_client)
-            # TODO: no debería ir el ack_all acá también?
         elif is_abort_session(msg):
             self.abort_session(msg.id_client)
         else:
@@ -86,7 +84,7 @@ class SessionManager:
     def __verify_timestamps(self):
         expired_sessions = self.state.get_expired_sessions(self.LIMIT_WAIT)
         for id_client in expired_sessions:
-            self.send_eof_client(id_client)
+            self.abort_session(id_client)
 
     def send_eof_client(self, id_client):
         if self.state.is_deleting_client(id_client):
@@ -96,7 +94,6 @@ class SessionManager:
         self.state.write_checkpoint()
 
     def __server_not_full(self, id_client):
-        # TODO: verificar si el cliente está
         return self.state.count_clients() < self.max_clients
 
     def end_session(self, id_client):
