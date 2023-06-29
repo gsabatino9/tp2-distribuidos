@@ -44,7 +44,6 @@ class ClientHandler(Thread):
             self.__connect_queues()
             self.__handle_client()
             self.queue_connection.close()
-        print("termina el client handler")
 
     def __handle_client(self):
         self.active = True

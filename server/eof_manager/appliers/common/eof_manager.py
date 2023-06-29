@@ -97,7 +97,7 @@ class EOFManager:
     def __recv_ack_trips(self, header, body):
         """
         if the number of workers that returned ack reaches the maximum count, it sends EOF to the next stage.
-        """        
+        """
         self.state.add_ack_client(header.id_client, get_id_worker(header))
 
         if self.state.amount_acks(header.id_client) == self.sum_workers:

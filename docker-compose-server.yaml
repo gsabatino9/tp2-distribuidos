@@ -502,6 +502,7 @@ services:
       rabbitmq:
         condition: service_healthy
 
+  
 
 networks:
   testing_net:

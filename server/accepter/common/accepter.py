@@ -97,10 +97,8 @@ class Accepter:
                 raise
 
     def __free_resources(self):
-        print("sale del accept")
         [client_handler.stop() for client_handler in self.clients_handlers]
         [client_handler.join() for client_handler in self.clients_handlers]
-        print("sale del ch")
 
         try:
             while True:
@@ -111,7 +109,6 @@ class Accepter:
             pass
         self.recv_ids.stop()
         self.recv_ids.join()
-        print("sale del rid")
         self.keep_alive.stop()
         self.keep_alive.join()
 

@@ -39,7 +39,8 @@ class MessageClient:
 
     # Define the named tuples used in the protocol
     Header = namedtuple(
-        "Header", "msg_code data_type msg_type id_client id_batch queries_suscriptions len"
+        "Header",
+        "msg_code data_type msg_type id_client id_batch queries_suscriptions len",
     )
     Payload = namedtuple("Payload", "data")
 

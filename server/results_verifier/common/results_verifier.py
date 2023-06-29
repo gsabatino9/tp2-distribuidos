@@ -109,7 +109,7 @@ class ResultsVerifier:
         except:
             if self.running:
                 raise  # rethrow ex if not graceful quitting
-
+        self.sender.stop()
         self.sender.join()
         self.keep_alive.stop()
         self.keep_alive.join()

@@ -17,7 +17,9 @@ class JoinerController:
         joiner,
         is_static_data,
     ):
-        self.__init_joiner(joiner, is_static_data, size_workers_next_stage, name_recv_queue)
+        self.__init_joiner(
+            joiner, is_static_data, size_workers_next_stage, name_recv_queue
+        )
 
         self.__connect(
             name_recv_queue,
@@ -29,7 +31,9 @@ class JoinerController:
 
         self.__run()
 
-    def __init_joiner(self, joiner, is_static_data, size_workers_next_stage, name_recv_queue):
+    def __init_joiner(
+        self, joiner, is_static_data, size_workers_next_stage, name_recv_queue
+    ):
         self.running = True
         signal.signal(signal.SIGTERM, self.stop)
 

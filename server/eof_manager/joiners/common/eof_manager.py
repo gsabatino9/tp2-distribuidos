@@ -110,7 +110,10 @@ class EOFManager:
         """
         self.state.add_ack_client(header.id_client, get_id_worker(header))
 
-        if self.state.amount_acks(header.id_client) == self.size_stations+self.size_weather:
+        if (
+            self.state.amount_acks(header.id_client)
+            == self.size_stations + self.size_weather
+        ):
             print(
                 f"action: close_stage | result: success | id_client: {header.id_client}"
             )

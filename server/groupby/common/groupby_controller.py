@@ -8,7 +8,6 @@ from server.common.keep_alive.keep_alive import KeepAlive
 from server.common.utils_messages import is_message_eof
 
 
-
 class GroupbyController:
     def __init__(
         self,
@@ -22,7 +21,12 @@ class GroupbyController:
         chunk_size,
     ):
         self.__init_groupby(
-            chunk_size, operation, base_data, gen_key_value, size_workers_send, name_recv_queue
+            chunk_size,
+            operation,
+            base_data,
+            gen_key_value,
+            size_workers_send,
+            name_recv_queue,
         )
         self.__connect(
             name_recv_queue, name_em_queue, name_send_queue, size_workers_send
@@ -30,7 +34,13 @@ class GroupbyController:
         self.__run()
 
     def __init_groupby(
-        self, chunk_size, operation, base_data, gen_key_value, size_workers_send, name_recv_queue
+        self,
+        chunk_size,
+        operation,
+        base_data,
+        gen_key_value,
+        size_workers_send,
+        name_recv_queue,
     ):
         self.running = True
         signal.signal(signal.SIGTERM, self.stop)

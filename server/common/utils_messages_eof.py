@@ -5,8 +5,10 @@ from struct import pack, unpack, calcsize
 def decode(header_bytes):
     return MessageEOF.decode(header_bytes)
 
+
 def get_id_worker(header):
-    return header.id_worker.decode().split('\0')[0]
+    return header.id_worker.decode().split("\0")[0]
+
 
 def eof_msg(header):
     return MessageEOF(MessageEOF.EOF, header.id_client).encode()
@@ -43,7 +45,9 @@ class MessageEOF:
     Header = namedtuple("Header", "msg_code msg_type id_client id_worker")
 
     def __init__(self, msg_type, id_client, id_worker=""):
-        self.header = self.Header(self.MSG_CODE, msg_type, id_client, id_worker.encode())
+        self.header = self.Header(
+            self.MSG_CODE, msg_type, id_client, id_worker.encode()
+        )
 
     def encode(self):
         return pack(self.HEADER_CODE, *self.header)

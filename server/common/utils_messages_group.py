@@ -36,7 +36,9 @@ class MessageGroup:
             payload = []
         payload_bytes = self._pack_payload(payload)
 
-        self.header = self.Header(self.MSG_CODE, id_client, id_batch, len(payload_bytes))
+        self.header = self.Header(
+            self.MSG_CODE, id_client, id_batch, len(payload_bytes)
+        )
         self.payload = self.Payload(payload_bytes)
 
     def encode(self):

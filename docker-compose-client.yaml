@@ -14,7 +14,7 @@ services:
       - MAX_RETRIES=50
       - SUSCRIPTIONS=[1,2,3,4]
       - FILE_PATH=data/
-      - ID_CLIENT=517361823446420551
+      - ID_CLIENT=13960139026554897339
     image: client:latest
     networks:      
       - testing_net
@@ -34,7 +34,7 @@ services:
       - MAX_RETRIES=50
       - SUSCRIPTIONS=[1,2,3,4]
       - FILE_PATH=data/
-      - ID_CLIENT=15242106211054275334
+      - ID_CLIENT=6877774477295569753
     image: client:latest
     networks:      
       - testing_net
@@ -54,7 +54,7 @@ services:
       - MAX_RETRIES=50
       - SUSCRIPTIONS=[1,2,3,4]
       - FILE_PATH=data/
-      - ID_CLIENT=17003835304959231927
+      - ID_CLIENT=18113931970747844510
     image: client:latest
     networks:      
       - testing_net
