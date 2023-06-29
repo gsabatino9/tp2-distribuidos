@@ -136,7 +136,7 @@ class ClientHandler(Thread):
                 self.queue_connection.sharding_queue(queue_name, size_node, 1)
                 for queue_name, size_node in self.nodes_to_send_trips_direct
             ]
-            self.session_manager_queue = self.queue_connection.pubsub_queue(
+            self.session_manager_queue = self.queue_connection.basic_queue(
                 self.name_session_manager_queue
             )
         except OSError as e:

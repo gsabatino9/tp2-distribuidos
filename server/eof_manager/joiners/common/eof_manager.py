@@ -51,8 +51,8 @@ class EOFManager:
     ):
         try:
             self.queue_connection = Connection()
-            self.send_queue = self.queue_connection.pubsub_queue(name_send_queue)
-            self.recv_queue = self.queue_connection.pubsub_queue(
+            self.send_queue = self.queue_connection.basic_queue(name_send_queue)
+            self.recv_queue = self.queue_connection.basic_queue(
                 name_recv_queue, auto_ack=False
             )
             self.joiners_queue = self.queue_connection.multiple_queues(
@@ -61,7 +61,7 @@ class EOFManager:
             self.stations_queue = self.queue_connection.basic_queue(name_stations_queue)
             self.weather_queue = self.queue_connection.basic_queue(name_weather_queue)
 
-            self.status_queue = self.queue_connection.pubsub_queue(name_status_queue)
+            self.status_queue = self.queue_connection.basic_queue(name_status_queue)
 
         except OSError as e:
             print(f"error: creating_queue_connection | log: {e}")

@@ -62,7 +62,7 @@ class ClientHandler(Thread):
     def __connect_queues(self):
         try:
             self.queue_connection = Connection()
-            self.session_manager_queue = self.queue_connection.pubsub_queue(
+            self.session_manager_queue = self.queue_connection.basic_queue(
                 self.name_session_manager_queue
             )
             self.request_queue = self.queue_connection.routing_queue(
