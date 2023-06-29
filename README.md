@@ -2,6 +2,7 @@
 > Alumnos: 
 Gonzalo Sabatino. Padrón: 104609.
 Mateo Capón Blanquer. Padrón: 104258.
+Luciano Sportelli Castro. Padrón 99565.
 
 - [Link al set de datos](https://www.kaggle.com/datasets/jeanmidev/public-bike-sharing-in-north-america).
 - [Link a notebook de muestra de comandos](https://www.kaggle.com/code/pablodroca/bike-rides-analyzer).
