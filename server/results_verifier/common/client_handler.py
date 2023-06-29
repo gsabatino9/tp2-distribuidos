@@ -47,7 +47,7 @@ class ClientHandler(Thread):
 
     def __handle_connection(self):
         header, _ = self.client_connection.recv_data(decode_payload=False)
-        
+
         self.__send_request_results_verifier(header.id_client)
         results_batches = self.queue_results.get()
         if not results_batches or not self.running:

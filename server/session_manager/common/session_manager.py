@@ -7,7 +7,7 @@ from server.common.utils_messages_new_client import (
     decode_msg_session,
     is_request_session,
     is_eof_sent,
-    is_abort_session
+    is_abort_session,
 )
 from server.common.queue.connection import Connection
 from server.common.keep_alive.keep_alive import KeepAlive

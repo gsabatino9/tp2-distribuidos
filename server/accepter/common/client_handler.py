@@ -3,7 +3,11 @@ from threading import Thread
 from server.common.queue.connection import Connection
 from server.common.utils_messages_eof import eof_msg
 from server.common.utils_messages_client import is_station, is_weather, encode_header
-from server.common.utils_messages_new_client import request_init_session, eof_sent, abort_client
+from server.common.utils_messages_new_client import (
+    request_init_session,
+    eof_sent,
+    abort_client,
+)
 from common.utils import is_init_session, is_eof
 
 
@@ -38,12 +42,16 @@ class ClientHandler(Thread):
 
     def run(self):
         while self.running:
-            self.client_connection = self.accepter_queue.get()
-            if not self.client_connection or not self.running:
-                break
-            self.__connect_queues()
-            self.__handle_client()
-            self.queue_connection.close()
+            try:
+                self.client_connection = self.accepter_queue.get()
+                if not self.client_connection or not self.running:
+                    break
+                self.__connect_queues()
+                self.__handle_client()
+                self.queue_connection.close()
+            except:
+                if self.running:
+                    print("error.")
 
     def __handle_client(self):
         self.active = True
