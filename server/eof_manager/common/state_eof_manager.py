@@ -25,7 +25,7 @@ class EofManagerState:
         return len(self.clients_acks[id_client])
 
     def delete_client(self, id_client):
-        del self.clients_acks[header.id_client]
+        del self.clients_acks[id_client]
         self.bucket.set("clients_acks", self.clients_acks)
 
     def write_checkpoint(self):

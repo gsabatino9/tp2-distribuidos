@@ -108,7 +108,7 @@ class EOFManager:
         """
         if the number of workers (for that type of data) that returned ack reaches the maximum count, it sends EOF to the next stage.
         """
-        self.state.add_ack_client(header.id_client, header.id_worker.decode().split('\0')[0])
+        self.state.add_ack_client(header.id_client, get_id_worker(header))
 
         if self.state.amount_acks(header.id_client) == self.size_stations+self.size_weather:
             print(

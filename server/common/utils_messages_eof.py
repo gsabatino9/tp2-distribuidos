@@ -5,6 +5,8 @@ from struct import pack, unpack, calcsize
 def decode(header_bytes):
     return MessageEOF.decode(header_bytes)
 
+def get_id_worker(header):
+    return header.id_worker.decode().split('\0')[0]
 
 def eof_msg(header):
     return MessageEOF(MessageEOF.EOF, header.id_client).encode()
