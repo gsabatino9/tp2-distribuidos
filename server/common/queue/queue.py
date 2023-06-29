@@ -60,7 +60,7 @@ class RoutingQueue(GenericQueue):
             exchange=self.exchange_name, exchange_type="direct"
         )
 
-        result = self.channel.queue_declare(queue=self.exchange_name, exclusive=True, durable=True)
+        result = self.channel.queue_declare(queue=self.exchange_name, durable=True)
         self.queue_name = self.exchange_name
 
         for routing_key in routing_keys:
