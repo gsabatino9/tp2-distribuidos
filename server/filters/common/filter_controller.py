@@ -47,6 +47,7 @@ class FilterController:
         self.not_filtered = 0
         self.filter = Filter(columns_names, reduced_columns, func_filter)
         self.keep_alive = KeepAlive()
+        self.id_worker = name_recv_queue
         print("action: filter_started | result: success")
 
     def __connect(self, name_recv_queue, name_em_queue, node_to_send_trips):
@@ -110,7 +111,7 @@ class FilterController:
             self.send_queue.send_static(msg, header.id_client)
 
     def __eof_arrived(self, body):
-        self.em_queue.send(ack_msg(body))
+        self.em_queue.send(ack_msg(body, self.id_worker))
         print(f"action: eof_trips_arrived | not_filtered_trips: {self.not_filtered}")
 
     def stop(self, *args):

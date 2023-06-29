@@ -18,9 +18,9 @@ def is_eof(header):
     return header.msg_type == MessageEOF.EOF
 
 
-def ack_msg(header_bytes):
+def ack_msg(header_bytes, id_worker):
     id_client = get_id_client(header_bytes)
-    return MessageEOF.ack(id_client)
+    return MessageEOF.ack(id_client, id_worker)
 
 
 def get_id_client(header_bytes):

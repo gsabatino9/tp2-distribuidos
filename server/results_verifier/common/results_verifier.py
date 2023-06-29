@@ -66,6 +66,7 @@ class ResultsVerifier:
             address_consult_clients,
             self.client_handlers_queues,
         )
+        self.id_worker = name_recv_queue
         self.keep_alive = KeepAlive()
         print("action: results_verifier_started | result: success")
 
@@ -171,7 +172,7 @@ class ResultsVerifier:
         """
         id_client = get_id_client(body)
         self.__verify_client(id_client)
-        self.em_queue.send(ack_msg(body))
+        self.em_queue.send(ack_msg(body, self.id_worker))
         self.state.mark_query_as_ended(id_client, id_query)
 
         self.__verify_last_result(id_client)

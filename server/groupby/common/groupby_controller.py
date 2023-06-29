@@ -22,7 +22,7 @@ class GroupbyController:
         chunk_size,
     ):
         self.__init_groupby(
-            chunk_size, operation, base_data, gen_key_value, size_workers_send
+            chunk_size, operation, base_data, gen_key_value, size_workers_send, name_recv_queue
         )
         self.__connect(
             name_recv_queue, name_em_queue, name_send_queue, size_workers_send
@@ -30,7 +30,7 @@ class GroupbyController:
         self.__run()
 
     def __init_groupby(
-        self, chunk_size, operation, base_data, gen_key_value, size_workers_send
+        self, chunk_size, operation, base_data, gen_key_value, size_workers_send, name_recv_queue
     ):
         self.running = True
         signal.signal(signal.SIGTERM, self.stop)
@@ -42,6 +42,7 @@ class GroupbyController:
         self.size_workers_send = size_workers_send
         self.gen_key_value = gen_key_value
         self.keep_alive = KeepAlive()
+        self.id_worker = name_recv_queue
         print("action: groupby_started | result: success")
 
     def __connect(
@@ -125,7 +126,7 @@ class GroupbyController:
 
         self.__send_to_apply(id_client)
         self.__delete_client(id_client)
-        self.em_queue.send(ack_msg(body))
+        self.em_queue.send(ack_msg(body, self.id_worker))
         print("action: eof_trips_arrived")
 
     def __delete_client(self, id_client):

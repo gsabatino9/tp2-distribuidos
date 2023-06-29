@@ -17,7 +17,7 @@ class JoinerController:
         joiner,
         is_static_data,
     ):
-        self.__init_joiner(joiner, is_static_data, size_workers_next_stage)
+        self.__init_joiner(joiner, is_static_data, size_workers_next_stage, name_recv_queue)
 
         self.__connect(
             name_recv_queue,
@@ -29,7 +29,7 @@ class JoinerController:
 
         self.__run()
 
-    def __init_joiner(self, joiner, is_static_data, size_workers_next_stage):
+    def __init_joiner(self, joiner, is_static_data, size_workers_next_stage, name_recv_queue):
         self.running = True
         signal.signal(signal.SIGTERM, self.stop)
 
@@ -39,6 +39,7 @@ class JoinerController:
         self.prefetch_limit = 1000
         self.current_fetch_count = 0
         self.keep_alive = KeepAlive()
+        self.id_worker = name_recv_queue
         print("action: joiner_started | result: success")
 
     def __connect(
@@ -138,7 +139,7 @@ class JoinerController:
 
     def __last_trip_arrived(self, body):
         self.joiner.delete_client(get_id_client(body))
-        self.em_queue.send(ack_msg(body))
+        self.em_queue.send(ack_msg(body, self.id_worker))
 
     def stop(self, *args):
         if self.running:
