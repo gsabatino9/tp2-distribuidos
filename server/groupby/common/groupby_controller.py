@@ -1,10 +1,12 @@
 import signal, sys
 from server.common.queue.connection import Connection
 from server.groupby.common.state_manager import StateManager
-from server.common.utils_messages_client import decode, is_eof
+from server.common.utils_messages_client import decode
 from server.common.utils_messages_eof import ack_msg, get_id_client
 from server.common.utils_messages_group import construct_msg
 from server.common.keep_alive.keep_alive import KeepAlive
+from server.common.utils_messages import is_message_eof
+
 
 
 class GroupbyController:
@@ -84,7 +86,7 @@ class GroupbyController:
             self.__ack_messages()
 
         self.current_fetch_count += 1
-        if is_eof(body):
+        if is_message_eof(body):
             self.__eof_arrived(body)
             self.__ack_messages()
         else:

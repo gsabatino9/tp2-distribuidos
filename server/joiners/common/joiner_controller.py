@@ -3,6 +3,7 @@ from server.common.queue.connection import Connection
 from server.common.utils_messages_client import *
 from server.common.utils_messages_eof import ack_msg, get_id_client
 from server.common.keep_alive.keep_alive import KeepAlive
+from server.common.utils_messages import is_message_eof
 
 
 class JoinerController:
@@ -83,16 +84,13 @@ class JoinerController:
         if self.current_fetch_count * 10 // 8 > self.prefetch_limit:
             self.__ack_messages()
 
-        try:
-            header, payload = decode(body)
-            is_eof = False
-        except:
-            is_eof = True
-
-        if is_eof:
+        if is_message_eof(body):
             self.__last_trip_arrived(body)
             self.__ack_messages()
-        elif self.is_static_data(header):
+            return
+
+        header, payload = decode(body)
+        if self.is_static_data(header):
             self.__static_data_arrived(header, payload)
         else:  # is_trip
             self.__request_join_arrived(header, payload)
