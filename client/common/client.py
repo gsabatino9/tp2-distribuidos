@@ -13,6 +13,8 @@ from common.middleware_communication import connect
 
 
 class Client:
+    MAX_TIME_POLLING = 60
+
     def __init__(self, addresses, chunk_size, max_retries, id_client, suscriptions):
         self.running = True
         signal.signal(signal.SIGTERM, self.stop)
@@ -45,6 +47,7 @@ class Client:
 
     def __init_session(self):
         session_accepted = False
+        time_to_sleep = 1
         while not session_accepted:
             try:
                 self.conn.send_init_session()
@@ -55,9 +58,10 @@ class Client:
                     )
                 else:
                     print(
-                        f"action: id_client_received | result: failure | msg: retrying in 1sec"
+                        f"action: id_client_received | result: failure | msg: retrying in {time_to_sleep}sec"
                     )
-                    time.sleep(1)
+                    time.sleep(min(time_to_sleep, self.MAX_TIME_POLLING))
+                    time_to_sleep *= 2
             except struct.error:
                 self.__reconnect()
 
@@ -153,6 +157,7 @@ class Client:
     def __get_results(self, addr_consult):
         results = {i: [] for i in self.suscriptions}
         ended = False
+        time_to_sleep = 1
         while not ended:
             try:
                 self.__connect_with_consults_server(addr_consult[0], addr_consult[1])
@@ -166,9 +171,10 @@ class Client:
                 ended = True
             except:
                 print(
-                    f"action: results_obtained | result: failure | msg: retrying in 1sec"
+                    f"action: results_obtained | result: failure | msg: retrying in {time_to_sleep}sec"
                 )
-                time.sleep(1)
+                time.sleep(min(time_to_sleep, self.MAX_TIME_POLLING))
+                time_to_sleep *= 2
 
         print(f"action: results_obtained | result: success | results: {results}")
         self.__save_results(results)

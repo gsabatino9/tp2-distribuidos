@@ -14,7 +14,7 @@ services:
       - MAX_RETRIES=50
       - CITY=montreal
       - FILE_PATH=data/
-      - ID_CLIENT=17443477241502056616
+      - ID_CLIENT=3286641464125246527
     image: client:latest
     networks:      
       - testing_net
@@ -34,33 +34,13 @@ services:
       - MAX_RETRIES=50
       - CITY=montreal
       - FILE_PATH=data/
-      - ID_CLIENT=14506602646419754940
+      - ID_CLIENT=14925862772474200819
     image: client:latest
     networks:      
       - testing_net
     volumes:
     - ./client/results:/results
     - ./data/client_2:/data
-
-  client_3:
-    container_name: client_3
-    entrypoint: python3 /main.py
-    environment:
-      - PYTHONUNBUFFERED=1
-      - ADDRESSES=[('accepter_1', 12345), ('accepter_2', 12346)]
-      - HOST_CONSULT=results_verifier
-      - PORT_CONSULT=13000
-      - CHUNK_SIZE=100
-      - MAX_RETRIES=50
-      - CITY=montreal
-      - FILE_PATH=data/
-      - ID_CLIENT=8849177582078019389
-    image: client:latest
-    networks:      
-      - testing_net
-    volumes:
-    - ./client/results:/results
-    - ./data/client_3:/data
 
 networks:
     testing_net:
