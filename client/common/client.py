@@ -38,17 +38,23 @@ class Client:
         )
 
     def run(self, filepath, types_files, addr_consult):
-        self.conn = connect(
-            self.addresses, self.id_client, self.suscriptions, self.id_batch
-        )
-        self.__init_session()
-        self.__send_files(filepath, types_files)
-        self.__get_results(addr_consult)
+        try:
 
+            self.conn = connect(
+                self.addresses, self.id_client, self.suscriptions, self.id_batch
+            )
+            self.__init_session()
+            if not self.running:
+                return
+            self.__send_files(filepath, types_files)
+            self.__get_results(addr_consult)
+        except:
+            if self.running:
+                print("error.")
     def __init_session(self):
         session_accepted = False
         time_to_sleep = 1
-        while not session_accepted:
+        while not session_accepted and self.running:
             try:
                 self.conn.send_init_session()
                 session_accepted = self.conn.recv_status_session()
@@ -158,7 +164,7 @@ class Client:
         results = {i: [] for i in self.suscriptions}
         ended = False
         time_to_sleep = 1
-        while not ended:
+        while not ended and self.running:
             try:
                 self.__connect_with_consults_server(addr_consult[0], addr_consult[1])
                 while True:

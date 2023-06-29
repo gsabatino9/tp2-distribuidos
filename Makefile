@@ -74,13 +74,13 @@ server-run: server-image
 .PHONY: server-run
 
 client-run: client-image
-	#python3 create_client.py $(amount_clients)
+	python3 create_client.py $(amount_clients)
 	docker compose -f docker-compose-client.yaml up -d --build
 	docker compose -f docker-compose-client.yaml logs -f
 .PHONY: client-run
 
 client-down:
-	docker compose -f docker-compose-client.yaml stop -t 1
+	docker compose -f docker-compose-client.yaml stop -t 60
 	docker compose -f docker-compose-client.yaml down
 .PHONY: client-down
 
