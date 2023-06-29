@@ -5,6 +5,7 @@ from server.common.queue.queue import (
     RoutingBuildQueue,
     MultipleQueues,
     ShardingQueue,
+    PubsubQueue
 )
 
 
@@ -26,6 +27,9 @@ class Connection:
 
     def multiple_queues(self, names_queues, amount_nodes):
         return MultipleQueues(self.channel, names_queues, amount_nodes)
+
+    def pubsub_queue(self, name_exchange, auto_ack=True):
+        return PubsubQueue(self.channel, name_exchange, auto_ack=auto_ack)
 
     def sharding_queue(self, name_queue, amount_nodes, sharding_amount):
         return ShardingQueue(self.channel, name_queue, amount_nodes, sharding_amount)

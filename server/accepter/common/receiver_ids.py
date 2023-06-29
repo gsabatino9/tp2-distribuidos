@@ -20,7 +20,7 @@ class ReceiverIds(Thread):
     def __connect_queue(self, name_recv_ids_queue):
         try:
             self.queue_connection = Connection()
-            self.recv_ids_queue = self.queue_connection.basic_queue(
+            self.recv_ids_queue = self.queue_connection.pubsub_queue(
                 name_recv_ids_queue
             )
         except OSError as e:

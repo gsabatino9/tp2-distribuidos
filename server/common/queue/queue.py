@@ -233,3 +233,25 @@ class ShardingQueue(GenericQueue):
                 delivery_mode = 2
             )
         )
+
+class PubsubQueue(GenericQueue):
+    def __init__(self, channel, exchange_name, auto_ack=True):
+        super().__init__(channel, auto_ack)
+        self.exchange_name = exchange_name
+        self.__build_exchange()
+
+    def __build_exchange(self):
+        self.channel.exchange_declare(
+            exchange=self.exchange_name, exchange_type="fanout"
+        )
+
+    def receive(self, callback):
+        result = self.channel.queue_declare(queue="", exclusive=True)
+        queue_name = result.method.queue
+        self.channel.queue_bind(exchange=self.exchange_name, queue=queue_name)
+        self.receive_msg(queue_name, callback)
+
+    def send(self, message):
+        self.channel.basic_publish(
+            exchange=self.exchange_name, routing_key="", body=message
+        )
