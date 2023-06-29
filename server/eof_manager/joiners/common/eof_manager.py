@@ -16,7 +16,7 @@ class EOFManager:
         size_stations,
         size_weather,
     ):
-        self.__init_eof_manager()
+        self.__init_eof_manager(size_stations, size_weather)
         self.__connect(
             name_recv_queue,
             name_send_queue,
@@ -28,12 +28,14 @@ class EOFManager:
         )
         self.__run()
 
-    def __init_eof_manager(self):
+    def __init_eof_manager(self, size_stations, size_weather):
         self.running = True
         signal.signal(signal.SIGTERM, self.stop)
 
         self.clients_acks = {}
         self.keep_alive = KeepAlive()
+        self.size_stations = size_stations
+        self.size_weather = size_weather
         print("action: eof_manager_started | result: success")
 
     def __connect(
@@ -107,7 +109,7 @@ class EOFManager:
         """
         self.clients_acks[header.id_client].add(header.id_worker)
 
-        if len(self.clients_acks[header.id_client]) == 2:
+        if len(self.clients_acks[header.id_client]) == self.size_stations+self.size_weather:
             print(
                 f"action: close_stage | result: success | id_client: {header.id_client}"
             )
