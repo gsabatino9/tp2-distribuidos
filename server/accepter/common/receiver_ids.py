@@ -45,4 +45,8 @@ class ReceiverIds(Thread):
     def stop(self):
         if self.running:
             self.running = False
-            self.queue_connection.stop_receiving()
+            try:
+                self.queue_connection.stop_receiving()
+            except:
+                # if doest not have queue_connection yet
+                pass

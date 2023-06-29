@@ -20,7 +20,7 @@ services:
       - testing_net
     volumes:
     - ./client/results:/results
-    - ./data/client_1:/data
+    - ./data/client_5:/data
 
 networks:
     testing_net:
