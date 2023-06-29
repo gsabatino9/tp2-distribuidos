@@ -84,6 +84,16 @@ client-down:
 	docker compose -f docker-compose-client.yaml down
 .PHONY: client-down
 
+big-client-run: client-image
+	docker compose -f docker-compose-big-client.yaml up -d --build
+	docker compose -f docker-compose-big-client.yaml logs -f
+.PHONY: big-client-run
+
+big-client-down:
+	docker compose -f docker-compose-big-client.yaml stop -t 60
+	docker compose -f docker-compose-big-client.yaml down
+.PHONY: big-client-down
+
 format:
 	black server/
 	black client/

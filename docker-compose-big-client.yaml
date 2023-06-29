@@ -1,0 +1,67 @@
+
+version: '3'
+services:
+  montreal:
+    container_name: montreal
+    entrypoint: python3 /main.py
+    environment:
+      - PYTHONUNBUFFERED=1
+      - ADDRESSES=[('accepter_1', 12345), ('accepter_2', 12346)]
+      - HOST_CONSULT=results_verifier
+      - PORT_CONSULT=13000
+      - CHUNK_SIZE=100
+      - MAX_RETRIES=50
+      - CITY=montreal
+      - FILE_PATH=data/
+      - ID_CLIENT=2943392337904094972
+    image: client:latest
+    networks:      
+      - testing_net
+    volumes:
+    - ./client/results:/results
+    - ./data/montreal:/data
+
+  toronto:
+    container_name: toronto
+    entrypoint: python3 /main.py
+    environment:
+      - PYTHONUNBUFFERED=1
+      - ADDRESSES=[('accepter_1', 12345), ('accepter_2', 12346)]
+      - HOST_CONSULT=results_verifier
+      - PORT_CONSULT=13000
+      - CHUNK_SIZE=100
+      - MAX_RETRIES=50
+      - CITY=toronto
+      - FILE_PATH=data/
+      - ID_CLIENT=7233808773547641214
+    image: client:latest
+    networks:      
+      - testing_net
+    volumes:
+    - ./client/results:/results
+    - ./data/toronto:/data
+
+  washington:
+    container_name: washington
+    entrypoint: python3 /main.py
+    environment:
+      - PYTHONUNBUFFERED=1
+      - ADDRESSES=[('accepter_1', 12345), ('accepter_2', 12346)]
+      - HOST_CONSULT=results_verifier
+      - PORT_CONSULT=13000
+      - CHUNK_SIZE=100
+      - MAX_RETRIES=50
+      - CITY=washington
+      - FILE_PATH=data/
+      - ID_CLIENT=6124179607300229324
+    image: client:latest
+    networks:      
+      - testing_net
+    volumes:
+    - ./client/results:/results
+    - ./data/washington:/data
+
+networks:
+    testing_net:
+      name: tp2-distribuidos_testing_net
+      external: true

@@ -64,7 +64,7 @@ class Client:
                     )
                 else:
                     print(
-                        f"action: id_client_received | result: failure | msg: retrying in {time_to_sleep}sec"
+                        f"action: id_client_received | result: failure | msg: retrying in {min(time_to_sleep, self.MAX_TIME_POLLING)}sec"
                     )
                     time.sleep(min(time_to_sleep, self.MAX_TIME_POLLING))
                     time_to_sleep *= 2
@@ -177,7 +177,7 @@ class Client:
                 ended = True
             except:
                 print(
-                    f"action: results_obtained | result: failure | msg: retrying in {time_to_sleep}sec"
+                    f"action: results_obtained | result: failure | msg: retrying in {min(time_to_sleep, self.MAX_TIME_POLLING)}sec"
                 )
                 time.sleep(min(time_to_sleep, self.MAX_TIME_POLLING))
                 time_to_sleep *= 2

@@ -23,7 +23,7 @@ def connect(addresses, id_client, suscriptions, id_batch=0):
             not_connected = False
         except:
             print(
-                f"action: client_connected | result: failures | msg: retrying in {time_to_sleep}sec"
+                f"action: client_connected | result: failures | msg: retrying in {min(time_to_sleep, self.MAX_TIME_POLLING)}sec"
             )
             time.sleep(min(time_to_sleep, MAX_TIME_POLLING))
             time_to_sleep *= 2
