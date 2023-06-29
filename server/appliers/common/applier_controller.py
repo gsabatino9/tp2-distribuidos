@@ -2,8 +2,9 @@ import signal, sys
 from server.common.queue.connection import Connection
 from server.appliers.common.applier import Applier
 from server.common.utils_messages_eof import ack_msg
-from server.common.utils_messages_group import decode, is_eof, construct_msg
+from server.common.utils_messages_group import decode, construct_msg
 from server.common.keep_alive.keep_alive import KeepAlive
+from server.common.utils_messages import is_message_eof
 
 
 class ApplierController:
@@ -57,14 +58,13 @@ class ApplierController:
         self.keep_alive.join()
 
     def process_messages(self, body):
-        if is_eof(body):
+        if is_message_eof(body):
             self.__eof_arrived(body)
         else:
             self.__agroup_trips_arrived(body)
 
     def __agroup_trips_arrived(self, body):
         header, agrouped_trips = decode(body)
-        print("llegó trip:", header)
 
         result_trips = self.__apply_condition_to_agrouped_trips(agrouped_trips)
         self.__send_result(header.id_client, header.id_batch, result_trips)

@@ -1,11 +1,8 @@
 import socket, signal, sys, queue, random
 from protocol.communication_server import CommunicationServer
 from server.common.queue.connection import Connection
-from common.utils import is_eof
 from common.receiver_ids import ReceiverIds
 from common.client_handler import ClientHandler
-from server.common.utils_messages_eof import eof_msg
-from server.common.utils_messages_client import is_station, is_weather, encode_header
 from server.common.keep_alive.keep_alive import KeepAlive
 
 
