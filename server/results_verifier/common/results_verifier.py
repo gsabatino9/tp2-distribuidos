@@ -4,7 +4,8 @@ from common.state import ResultsVerifierState
 from server.common.queue.connection import Connection
 from server.common.utils_messages_client import results_message, last_message
 from server.common.utils_messages_eof import ack_msg, get_id_client
-from server.common.utils_messages_group import decode, is_eof
+from server.common.utils_messages_group import decode
+from server.common.utils_messages import is_message_eof
 from server.common.utils_messages_results import (
     decode_request_results,
     error_message,
@@ -132,7 +133,7 @@ class ResultsVerifier:
                 self.__ack_messages()
         else:
             id_query = int(id_query)
-            if is_eof(body):
+            if is_message_eof(body):
                 print("action: eof_trips_arrived")
                 self.__eof_arrived(id_query, body)
                 self.__ack_messages()

@@ -14,6 +14,7 @@ from common.state import SessionManagerState
 
 
 class SessionManager:
+    # TODO: ponerlo en docker-compose
     LIMIT_WAIT = 3600.0
 
     def __init__(self, max_clients, name_recv_queue, name_send_queue, name_em_queue):
