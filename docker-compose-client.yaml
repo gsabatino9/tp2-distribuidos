@@ -14,13 +14,13 @@ services:
       - MAX_RETRIES=50
       - CITY=montreal
       - FILE_PATH=data/
-      - ID_CLIENT=11815755993918162924
+      - ID_CLIENT=17672888917432092893
     image: client:latest
     networks:      
       - testing_net
     volumes:
     - ./client/results:/results
-    - ./data/client_1:/data
+    - ./data/client_5:/data
 
 networks:
     testing_net:
