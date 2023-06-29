@@ -14,12 +14,12 @@ class EofManagerState:
     def verify_client(self, id_client):
         if id_client not in self.clients_acks:
             self.clients_acks[id_client] = []
-        self.bucket.set("clients_acks", self.clients_acks)
+            self.bucket.set("clients_acks", self.clients_acks)
 
     def add_ack_client(self, id_client, id_worker):
         if id_worker not in self.clients_acks[id_client]:
             self.clients_acks[id_client].append(id_worker)
-        self.bucket.set("clients_acks", self.clients_acks)
+            self.bucket.set("clients_acks", self.clients_acks)
 
     def amount_acks(self, id_client):
         return len(self.clients_acks[id_client])
