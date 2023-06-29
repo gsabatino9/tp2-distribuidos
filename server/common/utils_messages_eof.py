@@ -17,9 +17,15 @@ def eof_msg(header):
 def eof_msg_from_id(id_client):
     return MessageEOF(MessageEOF.EOF, id_client).encode()
 
+def abort_msg_from_id(id_client):
+    return MessageEOF(MessageEOF.ABORT, id_client).encode()
+
 
 def is_eof(header):
     return header.msg_type == MessageEOF.EOF
+
+def is_abort(header):
+    return header.msg_type == MessageEOF.ABORT
 
 
 def ack_msg(header_bytes, id_worker):
@@ -38,6 +44,7 @@ class MessageEOF:
     # msg type
     EOF = 0
     ACK = 1
+    ABORT = 2
 
     HEADER_CODE = "!BBQ30s"
     SIZE_HEADER = calcsize(HEADER_CODE)

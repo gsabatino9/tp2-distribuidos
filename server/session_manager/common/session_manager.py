@@ -7,6 +7,7 @@ from server.common.utils_messages_new_client import (
     decode_msg_session,
     is_request_session,
     is_eof_sent,
+    is_abort_session
 )
 from server.common.queue.connection import Connection
 from server.common.keep_alive.keep_alive import KeepAlive
@@ -63,6 +64,8 @@ class SessionManager:
         elif is_eof_sent(msg):
             self.send_eof_client(msg.id_client)
             # TODO: no debería ir el ack_all acá también?
+        elif is_abort_session(msg):
+            self.abort_session(msg.id_client)
         else:
             self.end_session(msg.id_client)
 
@@ -102,6 +105,10 @@ class SessionManager:
 
         self.state.write_checkpoint()
         self.recv_queue.ack_all()
+
+    def abort_session(self, id_client):
+        self.em_queue.send(abort_msg_from_id(id_client))
+        self.state.mark_start_deleting(id_client)
 
     def stop(self, *args):
         if self.running:

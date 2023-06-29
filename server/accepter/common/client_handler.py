@@ -3,7 +3,7 @@ from threading import Thread
 from server.common.queue.connection import Connection
 from server.common.utils_messages_eof import eof_msg
 from server.common.utils_messages_client import is_station, is_weather, encode_header
-from server.common.utils_messages_new_client import request_init_session, eof_sent
+from server.common.utils_messages_new_client import request_init_session, eof_sent, abort_client
 from common.utils import is_init_session, is_eof
 
 
@@ -66,7 +66,7 @@ class ClientHandler(Thread):
                 if self.running:
                     print("action: client_clossed")
                     self.active = False
-                    self.__send_eof(header)
+                    self.__abort_client(header)
 
     def __request_init_session(self, id_client):
         self.session_manager_queue.send(request_init_session(id_client))
@@ -87,6 +87,9 @@ class ClientHandler(Thread):
 
     def __send_eof(self, header):
         self.session_manager_queue.send(eof_sent(header.id_client))
+
+    def __abort_client(self, header):
+        self.session_manager_queue.send(abort_client(header.id_client))
 
     def __route_message(self, header, payload_bytes):
         """
