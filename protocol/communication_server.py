@@ -21,8 +21,11 @@ class CommunicationServer:
     def getpeername(self):
         return self.comm.getpeername()
 
-    def send_id_client(self, id_client):
-        msg = MessageServer.id_client_message(id_client)
+    def get_addr(self):
+        return self.comm.get_addr()
+
+    def send_accepted_connection(self):
+        msg = MessageServer.accepted_connection_message()
         self.comm.send_message(msg)
 
     def send_ack_batch(self, id_batch):

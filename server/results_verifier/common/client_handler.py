@@ -1,6 +1,7 @@
 import queue
 from threading import Thread
 from server.common.utils_messages_client import last_message
+from server.common.utils_messages_new_client import delete_client
 from server.common.utils_messages_results import (
     request_message,
     is_error,
@@ -44,10 +45,9 @@ class ClientHandler(Thread):
                 self.client_connection.stop()
                 self.queue_connection.close()
 
-
     def __handle_connection(self):
-        self.client_address = self.client_connection.getpeername()[0]
         header, _ = self.client_connection.recv_data(decode_payload=False)
+        
         self.__send_request_results_verifier(header.id_client)
         results_batches = self.queue_results.get()
         if not results_batches or not self.running:
@@ -81,8 +81,8 @@ class ClientHandler(Thread):
         self.request_queue.send(
             delete_message(id_client), routing_key="request_results"
         )
-        self.session_manager_queue.send(self.client_address)
 
+        self.session_manager_queue.send(delete_client(id_client))
 
     def stop(self):
         if self.running:

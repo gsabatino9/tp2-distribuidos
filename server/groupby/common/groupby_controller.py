@@ -1,10 +1,11 @@
 import signal, sys
 from server.common.queue.connection import Connection
 from server.groupby.common.state_manager import StateManager
-from server.common.utils_messages_client import decode, is_eof
-from server.common.utils_messages_eof import ack_msg, get_id_client
+from server.common.utils_messages_client import decode
+from server.common.utils_messages_eof import ack_msg, get_id_client, is_abort_decode
 from server.common.utils_messages_group import construct_msg
 from server.common.keep_alive.keep_alive import KeepAlive
+from server.common.utils_messages import is_message_eof
 
 
 class GroupbyController:
@@ -20,7 +21,12 @@ class GroupbyController:
         chunk_size,
     ):
         self.__init_groupby(
-            chunk_size, operation, base_data, gen_key_value, size_workers_send
+            chunk_size,
+            operation,
+            base_data,
+            gen_key_value,
+            size_workers_send,
+            name_recv_queue,
         )
         self.__connect(
             name_recv_queue, name_em_queue, name_send_queue, size_workers_send
@@ -28,7 +34,13 @@ class GroupbyController:
         self.__run()
 
     def __init_groupby(
-        self, chunk_size, operation, base_data, gen_key_value, size_workers_send
+        self,
+        chunk_size,
+        operation,
+        base_data,
+        gen_key_value,
+        size_workers_send,
+        name_recv_queue,
     ):
         self.running = True
         signal.signal(signal.SIGTERM, self.stop)
@@ -40,6 +52,7 @@ class GroupbyController:
         self.size_workers_send = size_workers_send
         self.gen_key_value = gen_key_value
         self.keep_alive = KeepAlive()
+        self.id_worker = name_recv_queue
         print("action: groupby_started | result: success")
 
     def __connect(
@@ -84,7 +97,7 @@ class GroupbyController:
             self.__ack_messages()
 
         self.current_fetch_count += 1
-        if is_eof(body):
+        if is_message_eof(body):
             self.__eof_arrived(body)
             self.__ack_messages()
         else:
@@ -120,11 +133,13 @@ class GroupbyController:
 
     def __eof_arrived(self, body):
         id_client = get_id_client(body)
-
-        self.__send_to_apply(id_client)
-        self.__delete_client(id_client)
-        self.em_queue.send(ack_msg(body))
         print("action: eof_trips_arrived")
+
+        if not is_abort_decode(body):
+            self.__send_to_apply(id_client)
+
+        self.__delete_client(id_client)
+        self.em_queue.send(ack_msg(body, self.id_worker))
 
     def __delete_client(self, id_client):
         if self.state.delete_client(id_client):

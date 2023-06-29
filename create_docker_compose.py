@@ -47,7 +47,7 @@ def main():
         queues, em_queues, status_queues
     )
 
-    session_manager = init_session_manager(queues, max_clients)
+    session_manager = init_session_manager(queues, max_clients, em_queues)
 
     process_restarter = init_process_restarters(restarter_config, amount_nodes)
 
@@ -380,7 +380,7 @@ def init_results_verifier(queues, em_queues, status_queues):
     results_verifier = RESULTS_VERIFIER.format(
         queues["results_verifier"],
         em_queues["results_verifier"],
-        queues["session_manager"]["end_session"],
+        queues["session_manager"]["init_session"],
     )
 
     em_results = EM_RESULTS.format(
@@ -392,12 +392,12 @@ def init_results_verifier(queues, em_queues, status_queues):
     return results_verifier, em_results
 
 
-def init_session_manager(queues, max_clients):
+def init_session_manager(queues, max_clients, em_queues):
     return SESSION_MANAGER.format(
         max_clients,
         queues["session_manager"]["init_session"],
         queues["accepter"],
-        queues["session_manager"]["end_session"],
+        em_queues["joiners"],
     )
 
 
@@ -471,6 +471,7 @@ def init_process_stopper(random_fails, amount_nodes, n_restarters):
         return ""
     process_stopper = ""
     processes_to_stop = get_containers_keep_alive(amount_nodes)
+    processes_to_stop += ','
     processes_to_stop += ",".join(["processes-restarter-"+str(i) for i in range(n_restarters)])
     return PROCESS_STOPPER.format(processes_to_stop)
     

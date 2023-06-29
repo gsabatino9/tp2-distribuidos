@@ -2,8 +2,9 @@ import signal, sys
 from server.common.queue.connection import Connection
 from server.appliers.common.applier import Applier
 from server.common.utils_messages_eof import ack_msg
-from server.common.utils_messages_group import decode, is_eof, construct_msg
+from server.common.utils_messages_group import decode, construct_msg
 from server.common.keep_alive.keep_alive import KeepAlive
+from server.common.utils_messages import is_message_eof
 
 
 class ApplierController:
@@ -16,12 +17,12 @@ class ApplierController:
         operation,
         gen_result_msg,
     ):
-        self.__init_applier(str(id_query), gen_result_msg, operation)
+        self.__init_applier(str(id_query), gen_result_msg, operation, name_recv_queue)
 
         self.__connect(name_recv_queue, name_em_queue, name_send_queue)
         self.__run()
 
-    def __init_applier(self, id_query, gen_result_msg, operation):
+    def __init_applier(self, id_query, gen_result_msg, operation, name_recv_queue):
         self.running = True
         signal.signal(signal.SIGTERM, self.stop)
 
@@ -29,6 +30,7 @@ class ApplierController:
         self.gen_result_msg = gen_result_msg
         self.applier = Applier(operation)
         self.keep_alive = KeepAlive()
+        self.id_worker = name_recv_queue
         print("action: applier_started | result: success")
 
     def __connect(self, name_recv_queue, name_em_queue, name_send_queue):
@@ -57,14 +59,13 @@ class ApplierController:
         self.keep_alive.join()
 
     def process_messages(self, body):
-        if is_eof(body):
+        if is_message_eof(body):
             self.__eof_arrived(body)
         else:
             self.__agroup_trips_arrived(body)
 
     def __agroup_trips_arrived(self, body):
         header, agrouped_trips = decode(body)
-        print("llegó trip:", header)
 
         result_trips = self.__apply_condition_to_agrouped_trips(agrouped_trips)
         self.__send_result(header.id_client, header.id_batch, result_trips)
@@ -95,7 +96,7 @@ class ApplierController:
             self.send_queue.send(msg, routing_key=self.id_query)
 
     def __eof_arrived(self, body):
-        self.em_queue.send(ack_msg(body))
+        self.em_queue.send(ack_msg(body, self.id_worker))
         print("action: eof_trips_arrived")
 
     def stop(self, *args):

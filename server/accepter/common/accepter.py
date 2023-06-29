@@ -1,11 +1,8 @@
 import socket, signal, sys, queue, random
 from protocol.communication_server import CommunicationServer
 from server.common.queue.connection import Connection
-from common.utils import is_eof
 from common.receiver_ids import ReceiverIds
 from common.client_handler import ClientHandler
-from server.common.utils_messages_eof import eof_msg
-from server.common.utils_messages_client import is_station, is_weather, encode_header
 from server.common.keep_alive.keep_alive import KeepAlive
 
 
@@ -17,7 +14,6 @@ class Accepter:
         name_stations_queue,
         name_weather_queue,
         name_trips_queues,
-        name_em_queue,
         name_status_queue,
         name_session_manager_queue,
         name_recv_ids_queue,
@@ -39,7 +35,6 @@ class Accepter:
         self.name_weather_queue = name_weather_queue
         self.name_trips_queues = name_trips_queues
         self.name_session_manager_queue = name_session_manager_queue
-        self.name_em_queue = name_em_queue
         queues = self.__create_client_handlers(
             size_stations, size_weather, sharding_amount
         )
@@ -68,7 +63,6 @@ class Accepter:
                 self.name_weather_queue,
                 self.name_trips_queues,
                 self.name_session_manager_queue,
-                self.name_em_queue,
                 self.amount_queries,
                 size_stations,
                 size_weather,

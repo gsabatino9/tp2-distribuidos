@@ -4,9 +4,14 @@ import socket
 class Communication:
     def __init__(self, socket):
         self.socket = socket
+        self.addr = self.socket.getpeername()
+        self.str_addr = f"{self.addr[0]:16}:{self.addr[1]:5}"
 
     def getpeername(self):
-        return self.socket.getpeername()
+        return self.addr
+
+    def get_addr(self):
+        return self.addr[0]
 
     def send_message(self, msg):
         self.socket.sendall(msg)

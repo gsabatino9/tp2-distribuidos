@@ -1,13 +1,16 @@
-import sys, json
+import sys, json, uuid
 from init_config import *
 
 
 def main(amount_clients):
     clients = ""
     for i in range(1, amount_clients + 1):
+        id_client = uuid.uuid4().int >> 64
+
         clients += CLIENT.format(
             i,
             i,
+            id_client,
             i,
         )
 

@@ -3,14 +3,16 @@ from common.results_sender import ResultsSender
 from common.state import ResultsVerifierState
 from server.common.queue.connection import Connection
 from server.common.utils_messages_client import results_message, last_message
-from server.common.utils_messages_eof import ack_msg, get_id_client
-from server.common.utils_messages_group import decode, is_eof
+from server.common.utils_messages_eof import ack_msg, get_id_client, is_abort_decode
+from server.common.utils_messages_group import decode
+from server.common.utils_messages import is_message_eof
 from server.common.utils_messages_results import (
     decode_request_results,
     error_message,
     is_delete_message,
     decode_delete_client,
 )
+from server.common.utils_messages_new_client import delete_client
 from server.common.keep_alive.keep_alive import KeepAlive
 
 
@@ -40,6 +42,7 @@ class ResultsVerifier:
             name_em_queue,
             name_send_exchange,
             name_send_queue,
+            name_session_manager_queue,
             amount_queries,
         )
 
@@ -65,6 +68,7 @@ class ResultsVerifier:
             address_consult_clients,
             self.client_handlers_queues,
         )
+        self.id_worker = name_recv_queue
         self.keep_alive = KeepAlive()
         print("action: results_verifier_started | result: success")
 
@@ -74,6 +78,7 @@ class ResultsVerifier:
         name_em_queue,
         name_send_exchange,
         name_send_queue,
+        name_session_manager_queue,
         amount_queries,
     ):
         try:
@@ -83,6 +88,10 @@ class ResultsVerifier:
                 routing_keys=[str(i) for i in range(1, amount_queries + 1)]
                 + ["request_results"],
                 auto_ack=False,
+            )
+
+            self.session_manager_queue = self.queue_connection.pubsub_queue(
+                name_session_manager_queue
             )
 
             self.em_queue = self.queue_connection.pubsub_queue(name_em_queue)
@@ -132,7 +141,7 @@ class ResultsVerifier:
                 self.__ack_messages()
         else:
             id_query = int(id_query)
-            if is_eof(body):
+            if is_message_eof(body):
                 print("action: eof_trips_arrived")
                 self.__eof_arrived(id_query, body)
                 self.__ack_messages()
@@ -170,10 +179,14 @@ class ResultsVerifier:
         """
         id_client = get_id_client(body)
         self.__verify_client(id_client)
-        self.em_queue.send(ack_msg(body))
+        self.em_queue.send(ack_msg(body, self.id_worker))
         self.state.mark_query_as_ended(id_client, id_query)
 
         self.__verify_last_result(id_client)
+
+        if is_abort_decode(body):
+            self.__delete_client(id_client)
+            self.session_manager_queue.send(delete_client(id_client))
 
     def __verify_client(self, id_client):
         if self.state.add_client(id_client):

@@ -13,48 +13,57 @@ from common.middleware_communication import connect
 
 
 class Client:
-    def __init__(self, addresses, chunk_size, max_retries, suscriptions):
+    def __init__(self, addresses, chunk_size, max_retries, id_client, suscriptions):
         self.running = True
         signal.signal(signal.SIGTERM, self.stop)
 
         self.addresses = addresses
+        self.id_client = id_client
         self.suscriptions = suscriptions
         self.chunk_size = chunk_size
         self.max_retries = max_retries
+        self.id_batch = 0
 
     def __connect(self, host, port):
         client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         client_socket.connect((host, port))
-        self.conn = CommunicationClient(client_socket, self.suscriptions)
+        self.conn = CommunicationClient(
+            client_socket, self.id_client, self.suscriptions
+        )
 
         print(
             f"action: client_connected | result: success | addr: {self.conn.getpeername()} | suscriptions: {self.suscriptions}"
         )
 
     def run(self, filepath, types_files, addr_consult):
-        self.conn = connect(self.addresses, self.suscriptions)
-        self.__receive_id()
+        self.conn = connect(self.addresses, self.id_client, self.suscriptions, self.id_batch)
+        self.__init_session()
         self.__send_files(filepath, types_files)
         self.__get_results(addr_consult)
 
-    def __receive_id(self):
-        id_not_assigned = True
-        while id_not_assigned:
-            self.conn.send_get_id()
-            header, payload = self.conn.recv_id_client()
-            if is_id_client(header):
-                self.id_client = get_id_client(payload)
-                self.conn.set_id_client(self.id_client)
-                id_not_assigned = False
+    def __init_session(self):
+        session_accepted = False
+        while not session_accepted:
+            try:
+                self.conn.send_init_session()
+                session_accepted = self.conn.recv_status_session()
+                if session_accepted:
+                    print(
+                        f"action: id_client_received | result: success | id_client: {self.id_client}"
+                    )
+                else:
+                    print(
+                        f"action: id_client_received | result: failure | msg: retrying in 1sec"
+                    )
+                    time.sleep(1)
+            except struct.error:
+                self.__reconnect()
 
-                print(
-                    f"action: id_client_received | result: success | id_client: {self.id_client}"
-                )
-            else:
-                print(
-                    f"action: id_client_received | result: failure | msg: retrying in 1sec"
-                )
-                time.sleep(1)
+    def __reconnect(self):
+        print(
+            f"action: error_server | msg: connection closed from server"
+        )
+        self.conn = connect(self.addresses, self.id_client, self.suscriptions, self.id_batch)
 
     def __send_files(self, filepath, types_files):
         for file in types_files:
@@ -100,13 +109,19 @@ class Client:
         self.__send_chunk(type_file, list(""), True)
 
     def __send_chunk(self, data_type, chunk, last_chunk):
-        payload = construct_payload(chunk)
-        self.conn.send(data_type, payload, last_chunk)
+        ack_received = False
+        while not ack_received:
+            try:
+                payload = construct_payload(chunk)
+                self.conn.send(data_type, payload, last_chunk)
 
-        self.__recv_ack_chunk()
+                self.__recv_ack_chunk()
+                ack_received = True
+            except struct.error:
+                self.__reconnect()
 
     def __recv_ack_chunk(self):
-        self.conn.recv_ack()
+        self.id_batch = self.conn.recv_ack()
 
     def __preprocess_chunk(self, type_file, chunk):
         if type_file == "trips":
@@ -149,7 +164,7 @@ class Client:
                 ended = True
             except:
                 print(
-                    f"action: id_client_received | result: failure | msg: retrying in 1sec"
+                    f"action: results_obtained | result: failure | msg: retrying in 1sec"
                 )
                 time.sleep(1)
 
@@ -161,7 +176,6 @@ class Client:
 
     def __connect_with_consults_server(self, host, port):
         self.__connect(host, port)
-        self.conn.set_id_client(self.id_client)
         print("action: connection_consult_server | result: success")
         self.__send_request_results()
 

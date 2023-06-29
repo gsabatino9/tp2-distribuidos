@@ -3,6 +3,7 @@ from server.common.queue.connection import Connection
 from server.common.utils_messages_eof import *
 from server.common.utils_messages_status import get_id_client_from_msg
 from server.common.keep_alive.keep_alive import KeepAlive
+from server.eof_manager.common.state_eof_manager import EofManagerState
 
 
 class EOFManager:
@@ -19,7 +20,7 @@ class EOFManager:
         self.running = True
         signal.signal(signal.SIGTERM, self.stop)
 
-        self.clients_acks = {}
+        self.state = EofManagerState("groupby")
         self.keep_alive = KeepAlive()
         print("action: eof_manager_started | result: success")
 
@@ -28,7 +29,9 @@ class EOFManager:
     ):
         try:
             self.queue_connection = Connection()
-            self.recv_queue = self.queue_connection.pubsub_queue(name_recv_queue)
+            self.recv_queue = self.queue_connection.pubsub_queue(
+                name_recv_queue, auto_ack=False
+            )
             self.groupby_queues = [
                 self.queue_connection.sharding_queue(queue_name, amount_nodes, 1)
                 for queue_name, amount_nodes in nodes_groupby
@@ -60,16 +63,12 @@ class EOFManager:
 
     def receive_msg(self, body):
         header = decode(body)
-        self.__verify_client(header.id_client)
+        self.state.verify_client(header.id_client)
 
-        if is_eof(header):
+        if is_eof(header) or is_abort(header):
             self.__send_eofs(header, body)
         else:
             self.__recv_ack_trips(header, body)
-
-    def __verify_client(self, id_client):
-        if id_client not in self.clients_acks:
-            self.clients_acks[id_client] = 0
 
     def __send_eofs(self, header, msg):
         """
@@ -79,18 +78,26 @@ class EOFManager:
         for q in self.groupby_queues:
             q.send_static(msg, header.id_client)
 
+        self.recv_queue.ack_all()
+
     def __recv_ack_trips(self, header, body):
         """
         if the number of workers that returned ack reaches the maximum count, it sends EOF to the next stage.
         """
-        self.clients_acks[header.id_client] += 1
+        self.state.add_ack_client(header.id_client, get_id_worker(header))
 
-        if self.clients_acks[header.id_client] == len(self.groupby_queues):
+        if self.state.amount_acks(header.id_client) == len(self.groupby_queues):
             print(
                 f"action: close_stage | result: success | id_client: {header.id_client}"
             )
-            self.send_queue.send(eof_msg(header))
-            del self.clients_acks[header.id_client]
+            if is_ack_abort(header):
+                self.send_queue.send(abort_msg(header))
+            else:
+                self.send_queue.send(eof_msg(header))
+            self.state.delete_client(header.id_client)
+
+        self.state.write_checkpoint()
+        self.recv_queue.ack_all()
 
     def stop(self, *args):
         if self.running:

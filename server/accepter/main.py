@@ -6,7 +6,6 @@ PORT = int(os.environ.get("PORT"))
 NAME_STATIONS_QUEUE = os.environ.get("NAME_STATIONS_QUEUE")
 NAME_WEATHER_QUEUE = os.environ.get("NAME_WEATHER_QUEUE")
 NODES_TO_SEND_TRIPS = os.environ.get("NODES_TO_SEND_TRIPS")
-NAME_EM_QUEUE = os.environ.get("NAME_EM_QUEUE")
 NAME_STATUS_QUEUE = os.environ.get("NAME_STATUS_QUEUE")
 NAME_SM_QUEUE = os.environ.get("NAME_SM_QUEUE")
 NAME_RECV_QUEUE = os.environ.get("NAME_RECV_QUEUE")
@@ -24,7 +23,6 @@ def main():
         NAME_STATIONS_QUEUE,
         NAME_WEATHER_QUEUE,
         nodes_to_send_trips,
-        NAME_EM_QUEUE,
         NAME_STATUS_QUEUE,
         NAME_SM_QUEUE,
         NAME_RECV_QUEUE,

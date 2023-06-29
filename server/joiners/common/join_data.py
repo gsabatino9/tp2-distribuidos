@@ -23,7 +23,5 @@ class JoinData:
             self.backing_storage.set(f"{key}", entry)
 
     def find_record(self, key):
-        if key not in self.data:
-            print(f"key {key} not in {self.data}")
-            raise ValueError()
-        return self.data.get(key)
+        if key in self.data:
+            return self.data.get(key)

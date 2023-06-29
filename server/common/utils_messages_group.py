@@ -20,13 +20,15 @@ def is_eof(body):
 
 
 class MessageGroup:
+    MSG_CODE = 3
+
     # Struct format for message header
-    HEADER_CODE = "!QBI"
+    HEADER_CODE = "!BQBI"
     # Size of header in bytes
     SIZE_HEADER = calcsize(HEADER_CODE)
 
     # Define the named tuples used in the protocol
-    Header = namedtuple("Header", "id_client id_batch len")
+    Header = namedtuple("Header", "msg_code, id_client id_batch len")
     Payload = namedtuple("Payload", "data")
 
     def __init__(self, id_client, id_batch, payload):
@@ -34,7 +36,9 @@ class MessageGroup:
             payload = []
         payload_bytes = self._pack_payload(payload)
 
-        self.header = self.Header(id_client, id_batch, len(payload_bytes))
+        self.header = self.Header(
+            self.MSG_CODE, id_client, id_batch, len(payload_bytes)
+        )
         self.payload = self.Payload(payload_bytes)
 
     def encode(self):

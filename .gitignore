@@ -29,3 +29,5 @@ Temporary Items
 # Elimino directorios de datos
 data/
 client/results/
+
+output.txt

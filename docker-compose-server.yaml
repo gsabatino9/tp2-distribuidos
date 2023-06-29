@@ -26,14 +26,14 @@ services:
       - PORT=12345
       - NAME_STATIONS_QUEUE=joiner_stations_q
       - NAME_WEATHER_QUEUE=joiner_weather_q
-      - NODES_TO_SEND_TRIPS=[('groupby_all_elements_q', 2)]
+      - NODES_TO_SEND_TRIPS=[('groupby_all_elements_q', 1)]
       - NAME_EM_QUEUE=eof_manager_joiners_q
       - NAME_STATUS_QUEUE=new_clients_q
       - NAME_SM_QUEUE=session_manager_q
       - NAME_RECV_QUEUE=accepter_q
-      - SIZE_STATIONS=3
-      - SIZE_WEATHER=3
-      - SHARDING_AMOUNT=2
+      - SIZE_STATIONS=1
+      - SIZE_WEATHER=1
+      - SHARDING_AMOUNT=1
       - AMOUNT_QUERIES=3
     image: accepter:latest
     ports:
@@ -53,14 +53,14 @@ services:
       - PORT=12346
       - NAME_STATIONS_QUEUE=joiner_stations_q
       - NAME_WEATHER_QUEUE=joiner_weather_q
-      - NODES_TO_SEND_TRIPS=[('groupby_all_elements_q', 2)]
+      - NODES_TO_SEND_TRIPS=[('groupby_all_elements_q', 1)]
       - NAME_EM_QUEUE=eof_manager_joiners_q
       - NAME_STATUS_QUEUE=new_clients_q
       - NAME_SM_QUEUE=session_manager_q
       - NAME_RECV_QUEUE=accepter_q
-      - SIZE_STATIONS=3
-      - SIZE_WEATHER=3
-      - SHARDING_AMOUNT=2
+      - SIZE_STATIONS=1
+      - SIZE_WEATHER=1
+      - SHARDING_AMOUNT=1
       - AMOUNT_QUERIES=3
     image: accepter:latest
     ports:
@@ -82,7 +82,7 @@ services:
       - LOGGING_LEVEL=INFO
       - ID_ELECTION=0
       - N_PROCESS_ELECTION=2
-      - CONTAINERS_KEEP_ALIVE=accepter_1,accepter_2,filter_year_1,filter_pretoc_1,filter_distance_1,eof_manager_filters,mean_duration_applier_1_1,double_year_applier_1,mean_distance_applier_1,mean_duration_applier_4_1,eof_manager_appliers,groupby_start_date_1,groupby_start_date_2,groupby_start_station_1,groupby_start_station_2,groupby_start_station_3,groupby_end_station_1,groupby_end_station_2,groupby_end_station_3,groupby_end_station_4,groupby_all_elements_1,groupby_all_elements_2,eof_manager_groupby,joiner_weather_1,joiner_weather_2,joiner_weather_3,joiner_stations_1,joiner_stations_2,joiner_stations_3,eof_manager_joiners,session_manager,results_verifier,eof_manager_query_results
+      - CONTAINERS_KEEP_ALIVE=accepter_1,accepter_2,filter_year_1,filter_pretoc_1,filter_distance_1,eof_manager_filters,mean_duration_applier_1_1,double_year_applier_1,mean_distance_applier_1,mean_duration_applier_4_1,eof_manager_appliers,groupby_start_date_1,groupby_start_station_1,groupby_end_station_1,groupby_all_elements_1,eof_manager_groupby,joiner_weather_1,joiner_stations_1,eof_manager_joiners,session_manager,results_verifier,eof_manager_query_results
       - CONTAINER_RESTARTER_NAME=processes-restarter-
       - NETWORK_PROBLEMS=0
       - BASE_IP_ADDRESS=172.25.125.4
@@ -101,7 +101,7 @@ services:
       - LOGGING_LEVEL=INFO
       - ID_ELECTION=1
       - N_PROCESS_ELECTION=2
-      - CONTAINERS_KEEP_ALIVE=accepter_1,accepter_2,filter_year_1,filter_pretoc_1,filter_distance_1,eof_manager_filters,mean_duration_applier_1_1,double_year_applier_1,mean_distance_applier_1,mean_duration_applier_4_1,eof_manager_appliers,groupby_start_date_1,groupby_start_date_2,groupby_start_station_1,groupby_start_station_2,groupby_start_station_3,groupby_end_station_1,groupby_end_station_2,groupby_end_station_3,groupby_end_station_4,groupby_all_elements_1,groupby_all_elements_2,eof_manager_groupby,joiner_weather_1,joiner_weather_2,joiner_weather_3,joiner_stations_1,joiner_stations_2,joiner_stations_3,eof_manager_joiners,session_manager,results_verifier,eof_manager_query_results
+      - CONTAINERS_KEEP_ALIVE=accepter_1,accepter_2,filter_year_1,filter_pretoc_1,filter_distance_1,eof_manager_filters,mean_duration_applier_1_1,double_year_applier_1,mean_distance_applier_1,mean_duration_applier_4_1,eof_manager_appliers,groupby_start_date_1,groupby_start_station_1,groupby_end_station_1,groupby_all_elements_1,eof_manager_groupby,joiner_weather_1,joiner_stations_1,eof_manager_joiners,session_manager,results_verifier,eof_manager_query_results
       - CONTAINER_RESTARTER_NAME=processes-restarter-
       - NETWORK_PROBLEMS=0
       - BASE_IP_ADDRESS=172.25.125.4
@@ -132,44 +132,6 @@ services:
       rabbitmq:
         condition: service_healthy
 
-  joiner_stations_2:
-    container_name: joiner_stations_2
-    entrypoint: python3 /main.py
-    environment:
-      - PYTHONUNBUFFERED=1
-      - NAME_RECV_QUEUE=joiner_stations_q
-      - NAME_TRIPS_QUEUE=join_trip_stations_q
-      - NAME_EM_QUEUE=eof_manager_joiners_q
-      - NAME_NEXT_STAGE_EXCHANGE=filters_exchange
-      - NAME_NEXT_STAGE_QUEUE=['filter_year_q', 'filter_distance_q']
-      - SIZE_WORKERS=[1, 1]
-      - ID_JOINER=2
-    image: joiner_stations:latest
-    networks:      
-      - testing_net
-    depends_on:
-      rabbitmq:
-        condition: service_healthy
-
-  joiner_stations_3:
-    container_name: joiner_stations_3
-    entrypoint: python3 /main.py
-    environment:
-      - PYTHONUNBUFFERED=1
-      - NAME_RECV_QUEUE=joiner_stations_q
-      - NAME_TRIPS_QUEUE=join_trip_stations_q
-      - NAME_EM_QUEUE=eof_manager_joiners_q
-      - NAME_NEXT_STAGE_EXCHANGE=filters_exchange
-      - NAME_NEXT_STAGE_QUEUE=['filter_year_q', 'filter_distance_q']
-      - SIZE_WORKERS=[1, 1]
-      - ID_JOINER=3
-    image: joiner_stations:latest
-    networks:      
-      - testing_net
-    depends_on:
-      rabbitmq:
-        condition: service_healthy
-
   
   joiner_weather_1:
     container_name: joiner_weather_1
@@ -190,44 +152,6 @@ services:
       rabbitmq:
         condition: service_healthy
 
-  joiner_weather_2:
-    container_name: joiner_weather_2
-    entrypoint: python3 /main.py
-    environment:
-      - PYTHONUNBUFFERED=1
-      - NAME_RECV_QUEUE=joiner_weather_q
-      - NAME_TRIPS_QUEUE=join_trip_weather_q
-      - NAME_EM_QUEUE=eof_manager_joiners_q
-      - NAME_NEXT_STAGE_EXCHANGE=filters_exchange
-      - NAME_NEXT_STAGE_QUEUE=['filter_pretoc_q']
-      - SIZE_WORKERS=[1]
-      - ID_JOINER=2
-    image: joiner_weather:latest
-    networks:      
-      - testing_net
-    depends_on:
-      rabbitmq:
-        condition: service_healthy
-
-  joiner_weather_3:
-    container_name: joiner_weather_3
-    entrypoint: python3 /main.py
-    environment:
-      - PYTHONUNBUFFERED=1
-      - NAME_RECV_QUEUE=joiner_weather_q
-      - NAME_TRIPS_QUEUE=join_trip_weather_q
-      - NAME_EM_QUEUE=eof_manager_joiners_q
-      - NAME_NEXT_STAGE_EXCHANGE=filters_exchange
-      - NAME_NEXT_STAGE_QUEUE=['filter_pretoc_q']
-      - SIZE_WORKERS=[1]
-      - ID_JOINER=3
-    image: joiner_weather:latest
-    networks:      
-      - testing_net
-    depends_on:
-      rabbitmq:
-        condition: service_healthy
-
 
   
   filter_pretoc_1:
@@ -238,7 +162,7 @@ services:
       - NAME_RECV_EXCHANGE=filters_exchange
       - NAME_RECV_QUEUE=filter_pretoc_q
       - NAME_EM_QUEUE=eof_manager_filters_q
-      - NODE_TO_SEND_TRIPS=['groupby_start_date_q', 2]
+      - NODE_TO_SEND_TRIPS=['groupby_start_date_q', 1]
       - ID_QUERY=1
       - ID_FILTER=1
     image: filter_pretoc:latest
@@ -257,7 +181,7 @@ services:
       - NAME_RECV_EXCHANGE=filters_exchange
       - NAME_RECV_QUEUE=filter_year_q
       - NAME_EM_QUEUE=eof_manager_filters_q
-      - NODE_TO_SEND_TRIPS=['groupby_start_station_q', 3]
+      - NODE_TO_SEND_TRIPS=['groupby_start_station_q', 1]
       - ID_QUERY=2
       - ID_FILTER=1
     image: filter_year:latest
@@ -275,7 +199,7 @@ services:
       - NAME_RECV_EXCHANGE=filters_exchange
       - NAME_RECV_QUEUE=filter_distance_q
       - NAME_EM_QUEUE=eof_manager_filters_q
-      - NODE_TO_SEND_TRIPS=['groupby_end_station_q', 4]
+      - NODE_TO_SEND_TRIPS=['groupby_end_station_q', 1]
       - ID_QUERY=3
       - ID_FILTER=1
     image: filter_distance:latest
@@ -307,25 +231,6 @@ services:
       rabbitmq:
         condition: service_healthy
 
-  groupby_start_date_2:
-    container_name: groupby_start_date_2
-    entrypoint: python3 /main.py
-    environment:
-      - PYTHONUNBUFFERED=1
-      - NAME_RECV_QUEUE=groupby_start_date_q
-      - NAME_EM_QUEUE=eof_manager_groupby_q
-      - NAME_SEND_EXCHANGE=appliers_exchange
-      - NAME_SEND_QUEUE=mean_duration_applier_1_q
-      - SIZE_WORKERS_SEND=1
-      - ID_WORKER=2
-      - CHUNK_SIZE=100
-    image: groupby_start_date:latest
-    networks:      
-      - testing_net
-    depends_on:
-      rabbitmq:
-        condition: service_healthy
-
   
   groupby_start_station_1:
     container_name: groupby_start_station_1
@@ -338,44 +243,6 @@ services:
       - NAME_SEND_QUEUE=double_year_applier_q
       - SIZE_WORKERS_SEND=1
       - ID_WORKER=1
-      - CHUNK_SIZE=100
-    image: groupby_start_station:latest
-    networks:      
-      - testing_net
-    depends_on:
-      rabbitmq:
-        condition: service_healthy
-
-  groupby_start_station_2:
-    container_name: groupby_start_station_2
-    entrypoint: python3 /main.py
-    environment:
-      - PYTHONUNBUFFERED=1
-      - NAME_RECV_QUEUE=groupby_start_station_q
-      - NAME_EM_QUEUE=eof_manager_groupby_q
-      - NAME_SEND_EXCHANGE=appliers_exchange
-      - NAME_SEND_QUEUE=double_year_applier_q
-      - SIZE_WORKERS_SEND=1
-      - ID_WORKER=2
-      - CHUNK_SIZE=100
-    image: groupby_start_station:latest
-    networks:      
-      - testing_net
-    depends_on:
-      rabbitmq:
-        condition: service_healthy
-
-  groupby_start_station_3:
-    container_name: groupby_start_station_3
-    entrypoint: python3 /main.py
-    environment:
-      - PYTHONUNBUFFERED=1
-      - NAME_RECV_QUEUE=groupby_start_station_q
-      - NAME_EM_QUEUE=eof_manager_groupby_q
-      - NAME_SEND_EXCHANGE=appliers_exchange
-      - NAME_SEND_QUEUE=double_year_applier_q
-      - SIZE_WORKERS_SEND=1
-      - ID_WORKER=3
       - CHUNK_SIZE=100
     image: groupby_start_station:latest
     networks:      
@@ -404,63 +271,6 @@ services:
       rabbitmq:
         condition: service_healthy
 
-  groupby_end_station_2:
-    container_name: groupby_end_station_2
-    entrypoint: python3 /main.py
-    environment:
-      - PYTHONUNBUFFERED=1
-      - NAME_RECV_QUEUE=groupby_end_station_q
-      - NAME_EM_QUEUE=eof_manager_groupby_q
-      - NAME_SEND_EXCHANGE=appliers_exchange
-      - NAME_SEND_QUEUE=mean_distance_applier_q
-      - SIZE_WORKERS_SEND=1
-      - ID_WORKER=2
-      - CHUNK_SIZE=100
-    image: groupby_end_station:latest
-    networks:      
-      - testing_net
-    depends_on:
-      rabbitmq:
-        condition: service_healthy
-
-  groupby_end_station_3:
-    container_name: groupby_end_station_3
-    entrypoint: python3 /main.py
-    environment:
-      - PYTHONUNBUFFERED=1
-      - NAME_RECV_QUEUE=groupby_end_station_q
-      - NAME_EM_QUEUE=eof_manager_groupby_q
-      - NAME_SEND_EXCHANGE=appliers_exchange
-      - NAME_SEND_QUEUE=mean_distance_applier_q
-      - SIZE_WORKERS_SEND=1
-      - ID_WORKER=3
-      - CHUNK_SIZE=100
-    image: groupby_end_station:latest
-    networks:      
-      - testing_net
-    depends_on:
-      rabbitmq:
-        condition: service_healthy
-
-  groupby_end_station_4:
-    container_name: groupby_end_station_4
-    entrypoint: python3 /main.py
-    environment:
-      - PYTHONUNBUFFERED=1
-      - NAME_RECV_QUEUE=groupby_end_station_q
-      - NAME_EM_QUEUE=eof_manager_groupby_q
-      - NAME_SEND_EXCHANGE=appliers_exchange
-      - NAME_SEND_QUEUE=mean_distance_applier_q
-      - SIZE_WORKERS_SEND=1
-      - ID_WORKER=4
-      - CHUNK_SIZE=100
-    image: groupby_end_station:latest
-    networks:      
-      - testing_net
-    depends_on:
-      rabbitmq:
-        condition: service_healthy
-
   
   groupby_all_elements_1:
     container_name: groupby_all_elements_1
@@ -473,26 +283,6 @@ services:
       - NAME_SEND_QUEUE=mean_duration_applier_4_q
       - SIZE_WORKERS_SEND=1
       - ID_WORKER=1
-      - ID_QUERY=4
-      - CHUNK_SIZE=100
-    image: groupby_all_elements:latest
-    networks:      
-      - testing_net
-    depends_on:
-      rabbitmq:
-        condition: service_healthy
-
-  groupby_all_elements_2:
-    container_name: groupby_all_elements_2
-    entrypoint: python3 /main.py
-    environment:
-      - PYTHONUNBUFFERED=1
-      - NAME_RECV_QUEUE=groupby_all_elements_q
-      - NAME_EM_QUEUE=eof_manager_groupby_q
-      - NAME_SEND_EXCHANGE=appliers_exchange
-      - NAME_SEND_QUEUE=mean_duration_applier_4_q
-      - SIZE_WORKERS_SEND=1
-      - ID_WORKER=2
       - ID_QUERY=4
       - CHUNK_SIZE=100
     image: groupby_all_elements:latest
@@ -586,7 +376,7 @@ services:
       - PYTHONUNBUFFERED=1
       - NAME_RECV_QUEUE=query_results_q
       - NAME_EM_QUEUE=eof_manager_query_result_q
-      - NAME_SM_QUEUE=end_session_q
+      - NAME_SM_QUEUE=session_manager_q
       - AMOUNT_QUERIES=4
       - HOST=results_verifier
       - PORT=13000
@@ -613,8 +403,8 @@ services:
       - NAME_JOIN_STATIONS_QUEUE=join_trip_stations_q
       - NAME_JOIN_WEATHER_QUEUE=join_trip_weather_q
       - NAME_STATUS_QUEUE=new_clients_q
-      - SIZE_STATIONS=3
-      - SIZE_WEATHER=3
+      - SIZE_STATIONS=1
+      - SIZE_WEATHER=1
     image: eof_manager_joiners:latest
     networks:      
       - testing_net
@@ -648,7 +438,7 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
       - NAME_RECV_QUEUE=eof_manager_groupby_q
-      - NODES_GROUPBY=[('groupby_start_date_q', 2), ('groupby_start_station_q', 3), ('groupby_end_station_q', 4), ('groupby_all_elements_q', 2)]
+      - NODES_GROUPBY=[('groupby_start_date_q', 1), ('groupby_start_station_q', 1), ('groupby_end_station_q', 1), ('groupby_all_elements_q', 1)]
       - NAME_SEND_QUEUE=eof_manager_applier_q
       - NAME_STATUS_QUEUE=new_clients_q
     image: eof_manager_groupby:latest
@@ -701,10 +491,10 @@ services:
     entrypoint: python3 /main.py
     environment:
       - PYTHONUNBUFFERED=1
-      - MAX_CLIENTS=3
+      - MAX_CLIENTS=1
       - NAME_RECV_QUEUE=session_manager_q
       - NAME_SEND_QUEUE=accepter_q
-      - NAME_END_SESSION_QUEUE=end_session_q
+      - NAME_EM_QUEUE=eof_manager_joiners_q
     image: session_manager:latest
     networks:      
       - testing_net
@@ -713,19 +503,6 @@ services:
         condition: service_healthy
 
   
-  processes-stopper:
-    container_name: processes-stopper
-    image: processes_stopper:latest
-    entrypoint: python3 /main.py
-    environment:
-      - PYTHONUNBUFFERED=1
-      - LOGGING_LEVEL=INFO
-      - CONTAINERS_TO_STOP=accepter_1,accepter_2,filter_year_1,filter_pretoc_1,filter_distance_1,eof_manager_filters,mean_duration_applier_1_1,double_year_applier_1,mean_distance_applier_1,mean_duration_applier_4_1,eof_manager_appliers,groupby_start_date_1,groupby_start_date_2,groupby_start_station_1,groupby_start_station_2,groupby_start_station_3,groupby_end_station_1,groupby_end_station_2,groupby_end_station_3,groupby_end_station_4,groupby_all_elements_1,groupby_all_elements_2,eof_manager_groupby,joiner_weather_1,joiner_weather_2,joiner_weather_3,joiner_stations_1,joiner_stations_2,joiner_stations_3,eof_manager_joiners,session_manager,results_verifier,eof_manager_query_resultsprocesses-restarter-0,processes-restarter-1
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
-    networks:
-      - testing_net
-
 
 networks:
   testing_net:

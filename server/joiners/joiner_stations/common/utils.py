@@ -13,4 +13,7 @@ class StationsData:
         start_station = self._data.find_record((start_code, yearid))
         end_station = self._data.find_record((end_code, yearid))
 
-        return ",".join(trip + start_station + end_station)
+        if start_station and end_station:
+            return ",".join(trip + start_station + end_station)
+        else:
+            return None

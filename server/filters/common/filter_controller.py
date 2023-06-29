@@ -3,11 +3,10 @@ from server.common.queue.connection import Connection
 from server.filters.common.filter import Filter
 from server.common.utils_messages_client import (
     decode,
-    is_eof,
     construct_msg,
-    customer_subscribed_to_query,
 )
 from server.common.utils_messages_eof import ack_msg
+from server.common.utils_messages import is_message_eof
 from server.common.keep_alive.keep_alive import KeepAlive
 
 
@@ -47,6 +46,7 @@ class FilterController:
         self.not_filtered = 0
         self.filter = Filter(columns_names, reduced_columns, func_filter)
         self.keep_alive = KeepAlive()
+        self.id_worker = name_recv_queue
         print("action: filter_started | result: success")
 
     def __connect(self, name_recv_queue, name_em_queue, node_to_send_trips):
@@ -78,7 +78,7 @@ class FilterController:
         self.keep_alive.join()
 
     def proccess_message(self, body):
-        if is_eof(body):
+        if is_message_eof(body):
             self.__eof_arrived(body)
         else:
             self.__trips_arrived(body)
@@ -86,9 +86,8 @@ class FilterController:
     def __trips_arrived(self, body):
         header, joined_trips = decode(body)
 
-        if customer_subscribed_to_query(header, self.id_query):
-            trips_to_next_stage = self.__filter_trips(joined_trips)
-            self.__send_to_next_stage(header, trips_to_next_stage)
+        trips_to_next_stage = self.__filter_trips(joined_trips)
+        self.__send_to_next_stage(header, trips_to_next_stage)
 
     def __filter_trips(self, trips):
         """
@@ -110,7 +109,7 @@ class FilterController:
             self.send_queue.send_static(msg, header.id_client)
 
     def __eof_arrived(self, body):
-        self.em_queue.send(ack_msg(body))
+        self.em_queue.send(ack_msg(body, self.id_worker))
         print(f"action: eof_trips_arrived | not_filtered_trips: {self.not_filtered}")
 
     def stop(self, *args):

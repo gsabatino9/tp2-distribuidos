@@ -3,6 +3,7 @@ from server.common.queue.connection import Connection
 from server.common.utils_messages_client import *
 from server.common.utils_messages_eof import ack_msg, get_id_client
 from server.common.keep_alive.keep_alive import KeepAlive
+from server.common.utils_messages import is_message_eof
 
 
 class JoinerController:
@@ -16,7 +17,9 @@ class JoinerController:
         joiner,
         is_static_data,
     ):
-        self.__init_joiner(joiner, is_static_data, size_workers_next_stage)
+        self.__init_joiner(
+            joiner, is_static_data, size_workers_next_stage, name_recv_queue
+        )
 
         self.__connect(
             name_recv_queue,
@@ -28,7 +31,9 @@ class JoinerController:
 
         self.__run()
 
-    def __init_joiner(self, joiner, is_static_data, size_workers_next_stage):
+    def __init_joiner(
+        self, joiner, is_static_data, size_workers_next_stage, name_recv_queue
+    ):
         self.running = True
         signal.signal(signal.SIGTERM, self.stop)
 
@@ -38,6 +43,7 @@ class JoinerController:
         self.prefetch_limit = 1000
         self.current_fetch_count = 0
         self.keep_alive = KeepAlive()
+        self.id_worker = name_recv_queue
         print("action: joiner_started | result: success")
 
     def __connect(
@@ -49,6 +55,8 @@ class JoinerController:
         size_workers_next_stage,
     ):
         try:
+            self.name_next_stage_queues = name_next_stage_queues
+
             self.queue_connection = Connection()
             self.recv_queue = self.queue_connection.basic_queue(
                 name_recv_queue, auto_ack=False
@@ -83,16 +91,13 @@ class JoinerController:
         if self.current_fetch_count * 10 // 8 > self.prefetch_limit:
             self.__ack_messages()
 
-        try:
-            header, payload = decode(body)
-            is_eof = False
-        except:
-            is_eof = True
-
-        if is_eof:
+        if is_message_eof(body):
             self.__last_trip_arrived(body)
             self.__ack_messages()
-        elif self.is_static_data(header):
+            return
+
+        header, payload = decode(body)
+        if self.is_static_data(header):
             self.__static_data_arrived(header, payload)
         else:  # is_trip
             self.__request_join_arrived(header, payload)
@@ -136,11 +141,13 @@ class JoinerController:
     def __send_next_stage(self, header, joined_trips):
         if len(joined_trips) > 0:
             msg = construct_msg(header, joined_trips)
-            self.next_stage_queues.send(msg)
+            self.next_stage_queues.send_to_queues(
+                msg, queues_suscripted(header, self.name_next_stage_queues)
+            )
 
     def __last_trip_arrived(self, body):
         self.joiner.delete_client(get_id_client(body))
-        self.em_queue.send(ack_msg(body))
+        self.em_queue.send(ack_msg(body, self.id_worker))
 
     def stop(self, *args):
         if self.running:

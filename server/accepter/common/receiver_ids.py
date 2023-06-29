@@ -1,7 +1,7 @@
 import signal
 from threading import Thread
 from server.common.queue.connection import Connection
-from server.common.utils_messages_new_client import decode
+from server.common.utils_messages_new_client import decode_reply
 
 
 class ReceiverIds(Thread):
@@ -36,13 +36,17 @@ class ReceiverIds(Thread):
                 raise  # gracefull quit
 
     def receive_id(self, body):
-        id_client, client_address = decode(body)
+        id_client, is_session_accepted = decode_reply(body)
         for queue_client in self.clients_queues:
-            queue_client.put((id_client, client_address))
+            queue_client.put((id_client, is_session_accepted))
 
         print(f"action: id_arrived_client | result: success | id_client: {id_client}")
 
     def stop(self):
         if self.running:
             self.running = False
-            self.queue_connection.stop_receiving()
+            try:
+                self.queue_connection.stop_receiving()
+            except:
+                # if doest not have queue_connection yet
+                pass

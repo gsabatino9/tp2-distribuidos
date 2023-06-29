@@ -14,4 +14,7 @@ class WeatherData:
         start_weather = self._data.find_record((start_date,))
         end_weather = self._data.find_record((end_date,))
 
-        return ",".join(trip + start_weather + end_weather)
+        if start_weather and end_weather:
+            return ",".join(trip + start_weather + end_weather)
+        else:
+            return None

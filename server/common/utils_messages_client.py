@@ -37,11 +37,14 @@ def is_eof(body):
 
 
 def construct_msg(header, trips_array):
-    msg_client = MessageClient(header.queries_suscriptions, header.id_client)
-
-    return msg_client.new_message(
-        header.data_type, header.msg_type, trips_array, header.id_batch
-    )
+    return MessageClient(
+        header.data_type,
+        header.msg_type,
+        header.id_client,
+        header.id_batch,
+        header.queries_suscriptions,
+        trips_array,
+    ).encode()
 
 
 def customer_subscribed_to_query(header, id_query):
@@ -56,3 +59,24 @@ def last_message():
 def is_last_message(body):
     header, _ = MessageServer.decode(body)
     return header.msg_type == MessageServer.SEND_LAST_RESULT
+
+map_suscriptions = {
+    'filter_pretoc': 1,
+    'filter_year': 2,
+    'filter_distance': 3,
+}
+
+
+def client_suscripted(queries_suscriptions, name_query):
+    real_name = name_query.split('_q')[0]
+    return (map_suscriptions[real_name] in queries_suscriptions)
+
+def queues_suscripted(header, queues):
+    ret = []
+    queries_suscriptions = number_to_suscriptions(header.queries_suscriptions)
+
+    for queue in queues:
+        if client_suscripted(queries_suscriptions, queue):
+            ret.append(queue)
+
+    return ret

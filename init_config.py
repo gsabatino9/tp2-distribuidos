@@ -481,7 +481,7 @@ SESSION_MANAGER = """
       - MAX_CLIENTS={}
       - NAME_RECV_QUEUE={}
       - NAME_SEND_QUEUE={}
-      - NAME_END_SESSION_QUEUE={}
+      - NAME_EM_QUEUE={}
     image: session_manager:latest
     networks:      
       - testing_net
@@ -511,8 +511,9 @@ CLIENT = """
       - PORT_CONSULT=13000
       - CHUNK_SIZE=100
       - MAX_RETRIES=50
-      - SUSCRIPTIONS=[1,2,3,4]
+      - CITY=montreal
       - FILE_PATH=data/
+      - ID_CLIENT={}
     image: client:latest
     networks:      
       - testing_net
