@@ -62,6 +62,7 @@ class SessionManager:
             self.init_session(msg.id_client)
         elif is_eof_sent(msg):
             self.send_eof_client(msg.id_client)
+            # TODO: no debería ir el ack_all acá también?
         else:
             self.end_session(msg.id_client)
 

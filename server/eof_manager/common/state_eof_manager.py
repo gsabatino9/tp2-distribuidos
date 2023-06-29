@@ -2,51 +2,31 @@ from server.common.atomic_storage.atomic_storage import AtomicBucket
 
 
 class EofManagerState:
-    def __init__(self):
-        self.sessions = []
-        self.bucket = AtomicBucket("session-manager")
+    def __init__(self, name):
+        self.clients_acks = {}
+        self.bucket = AtomicBucket(f"eof-manager-{name}")
         self.__try_recover_state()
 
     def __try_recover_state(self):
-        aux = list(self.bucket.items())
-        if aux:
-            self.sessions = aux[0][1]
+        for id_client, set_acks in self.bucket.items():
+            self.clients_acks[id_client] = set_acks
 
-    def add_client(self, id_client):
-        self.sessions.append([id_client, time.time(), False])
-        self.bucket.set("sessions", self.sessions)
+    def verify_client(self, id_client):
+        if id_client not in self.clients_acks:
+            self.clients_acks[id_client] = []
+        self.bucket.set("clients_acks", self.clients_acks)
 
-    def get_expired_sessions(self, limit_time):
-        expired_sessions = []
+    def add_ack_client(self, id_client, id_worker):
+        if id_worker not in self.clients_acks[id_client]:
+            self.clients_acks[id_client].append(id_worker)
+        self.bucket.set("clients_acks", self.clients_acks)
 
-        time_now = time.time()
-        for id_client, tmp, is_deleting in self.sessions:
-            if (time_now - tmp) > limit_time and (not is_deleting):
-                expired_sessions.append(id_client)
-
-        return expired_sessions
-
-    def is_deleting_client(self, id_client):
-        for i, (id_client_tmp, tmp, is_deleting) in enumerate(self.sessions):
-            if (id_client_tmp == id_client) and (not is_deleting):
-                return True
-
-        return False
-
-    def mark_start_deleting(self, id_client):
-        for i, (id_client_tmp, tmp, is_deleting) in enumerate(self.sessions):
-            if (id_client_tmp == id_client) and (not is_deleting):
-                self.sessions[i] = [id_client, tmp, True]
-
-    def count_clients(self):
-        return len(self.sessions)
+    def amount_acks(self, id_client):
+        return len(self.clients_acks[id_client])
 
     def delete_client(self, id_client):
-        for i, (id_client_tmp, tmp, is_deleting) in enumerate(self.sessions):
-            if (id_client_tmp == id_client) and is_deleting:
-                del self.sessions[i]
-                print(f"action: end_session | result: success | id_client: {id_client}")
-                return
+        del self.clients_acks[header.id_client]
+        self.bucket.set("clients_acks", self.clients_acks)
 
     def write_checkpoint(self):
         self.bucket.write_checkpoint()
