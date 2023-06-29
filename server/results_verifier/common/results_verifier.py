@@ -3,7 +3,7 @@ from common.results_sender import ResultsSender
 from common.state import ResultsVerifierState
 from server.common.queue.connection import Connection
 from server.common.utils_messages_client import results_message, last_message
-from server.common.utils_messages_eof import ack_msg, get_id_client
+from server.common.utils_messages_eof import ack_msg, get_id_client, is_abort_decode
 from server.common.utils_messages_group import decode
 from server.common.utils_messages import is_message_eof
 from server.common.utils_messages_results import (
@@ -12,6 +12,7 @@ from server.common.utils_messages_results import (
     is_delete_message,
     decode_delete_client,
 )
+from server.common.utils_messages_new_client import delete_client
 from server.common.keep_alive.keep_alive import KeepAlive
 
 
@@ -41,6 +42,7 @@ class ResultsVerifier:
             name_em_queue,
             name_send_exchange,
             name_send_queue,
+            name_session_manager_queue,
             amount_queries,
         )
 
@@ -76,6 +78,7 @@ class ResultsVerifier:
         name_em_queue,
         name_send_exchange,
         name_send_queue,
+        name_session_manager_queue,
         amount_queries,
     ):
         try:
@@ -85,6 +88,10 @@ class ResultsVerifier:
                 routing_keys=[str(i) for i in range(1, amount_queries + 1)]
                 + ["request_results"],
                 auto_ack=False,
+            )
+
+            self.session_manager_queue = self.queue_connection.pubsub_queue(
+                name_session_manager_queue
             )
 
             self.em_queue = self.queue_connection.pubsub_queue(name_em_queue)
@@ -176,6 +183,10 @@ class ResultsVerifier:
         self.state.mark_query_as_ended(id_client, id_query)
 
         self.__verify_last_result(id_client)
+
+        if is_abort_decode(body):
+            self.__delete_client(id_client)
+            self.session_manager_queue.send(delete_client(id_client))
 
     def __verify_client(self, id_client):
         if self.state.add_client(id_client):

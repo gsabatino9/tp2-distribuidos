@@ -52,6 +52,9 @@ def delete_client(id_client):
     return MessageStatusSession(MessageStatusSession.DELETE_CLIENT, id_client).encode()
 
 
+def abort_client(id_client):
+    return MessageStatusSession(MessageStatusSession.ABORT_SESSION, id_client).encode()
+
 def decode_msg_session(msg):
     return MessageStatusSession.decode(msg)
 
@@ -62,6 +65,7 @@ class MessageStatusSession:
     INIT_SESSION = 0
     EOF_SENT = 1
     DELETE_CLIENT = 2
+    ABORT_SESSION = 3
 
     # Struct format for message header
     HEADER_CODE = "!BBQ"
@@ -89,3 +93,6 @@ def is_request_session(header):
 
 def is_eof_sent(header):
     return header.msg_type == MessageStatusSession.EOF_SENT
+
+def is_abort_session(header):
+    return header.msg_type == MessageStatusSession.ABORT_SESSION

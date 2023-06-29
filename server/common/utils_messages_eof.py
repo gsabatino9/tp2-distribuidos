@@ -13,18 +13,36 @@ def get_id_worker(header):
 def eof_msg(header):
     return MessageEOF(MessageEOF.EOF, header.id_client).encode()
 
+def abort_msg(header):
+    return MessageEOF(MessageEOF.ABORT, header.id_client).encode()
 
 def eof_msg_from_id(id_client):
     return MessageEOF(MessageEOF.EOF, id_client).encode()
+
+def abort_msg_from_id(id_client):
+    return MessageEOF(MessageEOF.ABORT, id_client).encode()
 
 
 def is_eof(header):
     return header.msg_type == MessageEOF.EOF
 
+def is_abort(header):
+    return header.msg_type == MessageEOF.ABORT
+
+def is_abort_decode(header_bytes):
+    header = decode(header_bytes)
+    return header.msg_type == MessageEOF.ABORT
+
+def is_ack_abort(header):
+    return header.msg_type == MessageEOF.ACK_ABORT
+
 
 def ack_msg(header_bytes, id_worker):
-    id_client = get_id_client(header_bytes)
-    return MessageEOF.ack(id_client, id_worker)
+    header = decode(header_bytes)
+    if is_abort(header):
+        return MessageEOF(MessageEOF.ACK_ABORT, header.id_client, id_worker).encode()
+    else:
+        return MessageEOF(MessageEOF.ACK, header.id_client, id_worker).encode()
 
 
 def get_id_client(header_bytes):
@@ -38,6 +56,8 @@ class MessageEOF:
     # msg type
     EOF = 0
     ACK = 1
+    ABORT = 2
+    ACK_ABORT = 3
 
     HEADER_CODE = "!BBQ30s"
     SIZE_HEADER = calcsize(HEADER_CODE)

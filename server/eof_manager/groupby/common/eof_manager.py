@@ -65,7 +65,7 @@ class EOFManager:
         header = decode(body)
         self.state.verify_client(header.id_client)
 
-        if is_eof(header):
+        if is_eof(header) or is_abort(header):
             self.__send_eofs(header, body)
         else:
             self.__recv_ack_trips(header, body)
@@ -90,7 +90,10 @@ class EOFManager:
             print(
                 f"action: close_stage | result: success | id_client: {header.id_client}"
             )
-            self.send_queue.send(eof_msg(header))
+            if is_ack_abort(header):
+                self.send_queue.send(abort_msg(header))
+            else:
+                self.send_queue.send(eof_msg(header))
             self.state.delete_client(header.id_client)
 
         self.state.write_checkpoint()

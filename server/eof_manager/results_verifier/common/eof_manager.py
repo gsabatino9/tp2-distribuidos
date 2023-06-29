@@ -60,7 +60,7 @@ class EOFManager:
         header = decode(body)
         self.state.verify_client(header.id_client)
 
-        if is_eof(header):
+        if is_eof(header) or is_abort(header):
             self.__send_eofs(header, body)
         else:
             self.__recv_ack_trips(header, body)
