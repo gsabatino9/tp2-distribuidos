@@ -9,7 +9,7 @@ Alumnos:
 - [Link a notebook de muestra de comandos](https://www.kaggle.com/code/pablodroca/bike-rides-analyzer).
 
 ## Ejecución
-> Nota: La estructura de los archivos de datos debe ser data/montreal, data/toronto, data/washington. Tal cual como fue bajada de kaggle.
+> Nota: La estructura de los archivos de datos debe ser data/client_1, data/client_2, data/client_3, etc. segun la cantidad de clientes. Dentro de estas carpetas deben estar los tres archivos stations.csv, trips.csv y weather.csv, tal cual como fue bajada de kaggle.
 
 
 **Servidor:**
@@ -79,6 +79,8 @@ En el archivo `config.json`, una de las entradas es `amount_nodes`, que especifi
 	"applier_query3": 1
 }
 ```
+
+Dado que la elección de líder usa sockets UDP, se agrega una variable en el archivo `config.json`, `network_problems`, que al ser seteada en 1, simulará la caída de paquetes UDP. 
 
 Si se quiere modificarlo, luego se debe ejecutar el programa de python
 ```python
